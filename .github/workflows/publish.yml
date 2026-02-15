@@ -88,9 +88,15 @@ jobs:
             echo "result=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Setup Node.js ⚙️ - Cache dependencies ⚡ - Install dependencies 🔧
+      - name: Setup Bun 🥟
         if: steps.deploy_check.outputs.result == 'true'
-        uses: ./.github/workflows/setup-node
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies 🔧
+        if: steps.deploy_check.outputs.result == 'true'
+        run: bun install --frozen-lockfile
 
       - name: Setup Pages ⚙️
         if: steps.deploy_check.outputs.result == 'true'
@@ -98,7 +104,7 @@ jobs:
 
       - name: Build with Astro 🏗️
         if: steps.deploy_check.outputs.result == 'true'
-        run: npm run build
+        run: bun run build
 
       - name: Upload artifact 📡
         if: steps.deploy_check.outputs.result == 'true'

@@ -17,12 +17,18 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
+  /* Prevent iOS overscroll bounce artifacts behind sticky header */
+  overscroll-behavior-y: none;
 }
 
 body {
   background-color: var(--colour-bg-primary);
   color: var(--colour-text-inverse);
+  /* Use dvh for iOS Safari address bar; fallback to vh */
   min-height: 100vh;
+  min-height: 100dvh;
+  /* Prevent horizontal overflow on mobile */
+  overflow-x: hidden;
 }
 
 /* Typography */
@@ -354,9 +360,15 @@ a[style*="background: transparent"]:hover {
     z-index: var(--z-index-sticky);
     background: var(--colour-bg-primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    /* Force GPU compositing to prevent iOS scroll repaint artifacts */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Prevent sticky header flicker on iOS momentum scroll */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 
-  /* Fade effect at bottom of header */
+  /* Fade effect at bottom of header — use will-change to reduce repaint */
   header::after {
     content: '';
     position: absolute;
@@ -367,6 +379,7 @@ a[style*="background: transparent"]:hover {
     background: linear-gradient(to bottom, var(--colour-bg-primary), transparent);
     pointer-events: none;
     z-index: var(--z-index-sticky);
+    will-change: transform;
   }
 
   /* Add padding to main content so it doesn't hide under sticky header */
@@ -468,10 +481,13 @@ a[style*="background: transparent"]:hover {
     margin-bottom: var(--space-8) !important;
   }
 
-  /* Improve mobile buttons */
+  /* Improve mobile buttons — enforce 44px minimum touch target */
   a[style*="padding"] {
     padding: var(--space-2) var(--space-4) !important;
     font-size: var(--font-size-sm);
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -503,5 +519,11 @@ a[style*="background: transparent"]:hover {
   /* Stack cards vertically on very small screens */
   div[style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
+  }
+
+  /* Ensure footer links wrap properly on small screens */
+  footer ul {
+    flex-wrap: wrap !important;
+    gap: var(--space-3) var(--space-4) !important;
   }
 }

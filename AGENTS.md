@@ -35,7 +35,7 @@ padding: 16px;        /* BAD */
 ### Build Validation
 **ALWAYS run before committing:**
 ```bash
-npm run build  # Validates TypeScript + builds
+bun run build  # Validates TypeScript + builds
 ```
 
 **Build must pass with:**
@@ -177,6 +177,13 @@ When building or modifying the castle scene (or any SVG component) in Astro, wat
 
 ## Linting and Formatting
 
-- Use **Biome** for linting and formatting. Run `npm run lint` or `biome check .` before committing.
-- Use `npm run lint:fix` or `biome check --write .` to automatically fix issues.
-- Use `npm run format` or `biome format --write .` for formatting.
+- Use **Biome** for linting and formatting. Run `bun run lint` or `biome check .` before committing.
+- Use `bun run lint:fix` or `biome check --write .` to automatically fix issues.
+- Use `bun run format` or `biome format --write .` for formatting.
+
+## Package Manager
+
+- This project uses **Bun** as its package manager and task runner.
+- Use `bun install` to install dependencies, `bun run <script>` to run scripts.
+- Use `bun run test` to run linting and type checks before committing.
+- Do **not** use `npm` or `yarn` — the lockfile is `bun.lock`.

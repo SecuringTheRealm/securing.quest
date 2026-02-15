@@ -8,39 +8,39 @@
 
 ### Essential Prerequisites
 
-**ALWAYS run `npm install` first** - The repository requires dependencies to be installed before any other command will work.
+**ALWAYS run `bun install` first** - The repository requires dependencies to be installed before any other command will work.
 
 ### Command Sequence (Validated)
 
 ```bash
 # 1. Install dependencies (REQUIRED FIRST STEP)
-npm install
+bun install
 # Time: ~30-60 seconds
-# Postcondition: node_modules/ exists, package-lock.json updated
+# Postcondition: node_modules/ exists, bun.lock updated
 
 # 2. Development server
-npm run dev
+bun run dev
 # or
-npm start
+bun start
 # Time: Starts in ~2 seconds
 # URL: http://localhost:4321
 # Hot module replacement: ✅ Enabled
 # Postcondition: Server running, can access site locally
 
 # 3. Linting (Biome)
-npm run lint
+bun run lint
 # Time: ~2 seconds
 # Checks formatting, imports, and code quality
 # Exit code 0: All checks pass (may have warnings)
 
 # 3a. Auto-fix lint issues
-npm run lint:fix
+bun run lint:fix
 # Time: ~3 seconds
 # Fixes formatting and import organization
 # Safe fixes applied automatically
 
 # 3b. Format only
-npm run format
+bun run format
 # Time: ~2 seconds
 # Formats code without linting
 
@@ -50,13 +50,13 @@ npx astro check
 # Must pass with 0 errors before build succeeds
 
 # 5. Production build
-npm run build
+bun run build
 # Time: ~1.8 seconds
 # Output: dist/ directory with static HTML/CSS/JS
 # Postcondition: dist/ contains 9+ HTML pages, assets, sitemap
 
 # 6. Preview production build
-npm run preview
+bun run preview
 # Time: Starts in ~1 second
 # URL: http://localhost:4321 (or 4322 if 4321 is busy)
 # Postcondition: Serves content from dist/
@@ -67,24 +67,29 @@ npm run preview
 **Biome** is used for linting and formatting (replaced ESLint and Prettier).
 
 - **Configuration**: `biome.json`
-- **Lint**: `npm run lint` - Check code quality, formatting, import organization
-- **Fix**: `npm run lint:fix` - Auto-fix safe issues
-- **Format**: `npm run format` - Format code only
+- **Lint**: `bun run lint` - Check code quality, formatting, import organization
+- **Fix**: `bun run lint:fix` - Auto-fix safe issues
+- **Format**: `bun run format` - Format code only
 - **Note**: Warnings are acceptable; only errors block CI/CD
 
 ### Runtime Versions
 
-- **Node.js**: 18+ required (tested with 18.x, 20.x)
-- **npm**: 9+ (comes with Node.js)
-- **TypeScript**: 5.9.3 (installed via npm)
-- **Astro**: 5.14.1
+- **Bun**: latest (package manager and task runner)
+- **Node.js**: 18+ (used by Astro/Vite under the hood)
+- **TypeScript**: 5.9.3 (installed via bun)
+- **Astro**: 5.15.9+
 
 ### Common Issues & Solutions
 
 **Issue**: `sh: astro: not found`
 
 - **Cause**: Dependencies not installed
-- **Solution**: Run `npm install` first
+- **Solution**: Run `bun install` first
+
+**Issue**: Biome binary not found after `bun install`
+
+- **Cause**: Bun may block postinstall scripts
+- **Solution**: Run `bun pm trust @biomejs/biome` then `bun install` again
 
 **Issue**: Build fails with TypeScript errors
 
@@ -251,10 +256,9 @@ posts.map((post: CollectionEntry<'blog'>) => { ... })
 **Steps:**
 
 1. Checkout code
-2. Setup Node.js 20.x
-3. Cache npm dependencies
-4. Run `npm ci` (clean install)
-5. Run `npm run build` (includes type checking)
+2. Setup Bun (via oven-sh/setup-bun@v2)
+3. Run `bun install --frozen-lockfile`
+4. Run `bun run build` (includes type checking)
 6. Upload `dist/` as artifact
 7. Deploy to GitHub Pages
 
@@ -269,7 +273,7 @@ posts.map((post: CollectionEntry<'blog'>) => { ... })
 Before committing, ALWAYS run:
 
 ```bash
-npm run build  # Validates TypeScript and builds
+bun run build  # Validates TypeScript and builds
 ```
 
 If build fails, fix TypeScript errors first. Common issues:
@@ -303,12 +307,12 @@ If build fails, fix TypeScript errors first. Common issues:
 4. **Test locally**:
 
    ```bash
-   npm run dev  # Hot reload enabled
+   bun run dev  # Hot reload enabled
    ```
 
 5. **Validate**:
    ```bash
-   npm run build  # Must pass before committing
+   bun run build  # Must pass before committing
    ```
 
 ### Accessibility Requirements (WCAG AA)
@@ -367,13 +371,13 @@ const sorted = posts.sort((a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'
 ## Important Notes
 
 1. **Trust these instructions**: Only search the codebase if information here is incomplete or incorrect
-2. **Always `npm install` first**: No other command will work without dependencies
+2. **Always `bun install` first**: No other command will work without dependencies. Use Bun, not npm or yarn.
 3. **Use design tokens**: Never hardcode colors (`#0f3c46`) or spacing (`16px`), use CSS variables
 4. **Type everything**: Strict mode requires explicit types on all function parameters
-5. **Test the build**: Run `npm run build` before committing to catch TypeScript errors
+5. **Test the build**: Run `bun run build` before committing to catch TypeScript errors
 6. **Accessibility matters**: All interactive elements need proper ARIA labels and keyboard support
 7. **Castle theme**: Maintain the fantasy/gaming metaphor in all content and UI elements
-8. **Biome linting**: Run `npm run lint` and `npm run lint:fix` regularly to keep code clean. Resolve warnings if possible.
+8. **Biome linting**: Run `bun run lint` and `bun run lint:fix` regularly to keep code clean. Resolve warnings if possible.
 
 ### Common Astro SVG Issues (Castle Scene)
 

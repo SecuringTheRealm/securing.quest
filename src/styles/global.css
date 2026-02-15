@@ -130,6 +130,58 @@ pre {
   margin-bottom: var(--space-4);
 }
 
+/* Prevent double background/padding when code is inside pre */
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Blog/article prose improvements */
+.prose img {
+  border-radius: var(--radius-md);
+  margin: var(--space-4) 0;
+}
+
+.prose blockquote {
+  border-left: 4px solid var(--colour-gold);
+  padding-left: var(--space-4);
+  margin: var(--space-4) 0;
+  color: var(--colour-stone-light);
+  font-style: italic;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-4) 0;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--colour-stone-dark);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.prose th {
+  background: var(--colour-teal-dark);
+  color: var(--colour-gold);
+  font-weight: var(--font-weight-bold);
+}
+
+.prose hr {
+  border: none;
+  border-top: 2px solid var(--colour-stone-dark);
+  margin: var(--space-8) 0;
+}
+
 /* Skip Link */
 .skip-link {
   position: absolute;
@@ -307,11 +359,11 @@ pre {
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger::before {
-  transform: rotate(45deg) translateY(8px);
+  transform: translateY(8px) rotate(45deg);
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger::after {
-  transform: rotate(-45deg) translateY(-8px);
+  transform: translateY(-8px) rotate(-45deg);
 }
 
 .nav-menu {
@@ -324,19 +376,34 @@ pre {
 /* Button hover states */
 button,
 .realm-card,
-a[style*="background: var(--colour-gold)"],
-a[style*="background: transparent"] {
+.btn-primary,
+.btn-outline {
   transition: all var(--transition-base);
 }
 
 button:hover,
-a[style*="background: var(--colour-gold)"]:hover {
+.btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(213, 164, 37, 0.3);
 }
 
-a[style*="background: transparent"]:hover {
-  background: var(--colour-teal-light) !important;
+.btn-outline:hover {
+  background: var(--colour-teal-light);
+}
+
+/* Card focus states */
+.realm-card:focus-visible,
+.feed-item:focus-visible {
+  outline: 3px solid var(--colour-gold);
+  outline-offset: 4px;
+  border-radius: var(--radius-outer);
+}
+
+/* Active navigation link */
+.nav-link[aria-current="page"] {
+  color: var(--colour-gold-light);
+  border-bottom: 2px solid var(--colour-gold);
+  padding-bottom: var(--space-1);
 }
 
 /* Responsive utilities */
@@ -482,8 +549,9 @@ a[style*="background: transparent"]:hover {
   }
 
   /* Improve mobile buttons — enforce 44px minimum touch target */
-  a[style*="padding"] {
-    padding: var(--space-2) var(--space-4) !important;
+  .btn-primary,
+  .btn-outline {
+    padding: var(--space-2) var(--space-4);
     font-size: var(--font-size-sm);
     min-height: 44px;
     display: inline-flex;

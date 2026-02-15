@@ -92,17 +92,17 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
 
           <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
             {talk.videoUrl && !talk.embedUrl && (
-              <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" style="padding: var(--space-2) var(--space-4); background: var(--colour-gold); color: var(--colour-ink); border-radius: var(--radius-md); font-weight: var(--font-weight-bold);">
+              <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary" style="padding: var(--space-2) var(--space-4); background: var(--colour-gold); color: var(--colour-ink); border-radius: var(--radius-md); font-weight: var(--font-weight-bold);">
                 🎥 Watch Video
               </a>
             )}
             {talk.slidesUrl && (
-              <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" style="padding: var(--space-2) var(--space-4); background: transparent; color: var(--colour-gold); border: 2px solid var(--colour-gold); border-radius: var(--radius-md); font-weight: var(--font-weight-bold);">
+              <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" class="btn-outline" style="padding: var(--space-2) var(--space-4); background: transparent; color: var(--colour-gold); border: 2px solid var(--colour-gold); border-radius: var(--radius-md); font-weight: var(--font-weight-bold);">
                 📊 View Slides
               </a>
             )}
             {talk.eventUrl && (
-              <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" style="padding: var(--space-2) var(--space-4); background: transparent; color: var(--colour-gold); border: 2px solid var(--colour-gold); border-radius: var(--radius-md); font-weight: var(--font-weight-bold);">
+              <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" class="btn-outline" style="padding: var(--space-2) var(--space-4); background: transparent; color: var(--colour-gold); border: 2px solid var(--colour-gold); border-radius: var(--radius-md); font-weight: var(--font-weight-bold);">
                 📅 Event Details
               </a>
             )}

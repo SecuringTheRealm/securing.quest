@@ -28,11 +28,21 @@ interface YouTubeEntry {
 const YOUTUBE_PLAYLIST_ID = 'PLo9Ah7HeyG1QVWTBPzOROBQNqinh0ZPWv';
 const YOUTUBE_FEED_URL = `https://www.youtube.com/feeds/videos.xml?playlist_id=${YOUTUBE_PLAYLIST_ID}`;
 
+// Module-level cache to avoid redundant fetches during a single build.
+// Multiple pages call fetchYouTubeTalks() (directly and via buildSearchIndex),
+// so caching saves N-1 HTTP requests to YouTube during static generation.
+let _cachedTalks: YouTubeTalk[] | null = null;
+
 /**
- * Fetches YouTube talks from the channel feed dynamically at build time
+ * Fetches YouTube talks from the channel feed dynamically at build time.
+ * Results are cached in memory for the duration of the build process.
  * @returns Array of YouTube talks
  */
 export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
+	if (_cachedTalks !== null) {
+		return _cachedTalks;
+	}
+
 	try {
 		const response = await fetch(YOUTUBE_FEED_URL);
 		if (!response.ok) {
@@ -59,7 +69,7 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 
 		const entries = parsedXml.feed.entry as YouTubeEntry[];
 
-		return entries.map((entry: YouTubeEntry) => {
+		const talks = entries.map((entry: YouTubeEntry) => {
 			const videoUrl = entry.link['@_href'] || '';
 			const publishedDate = new Date(entry.published);
 
@@ -101,8 +111,12 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 				tags: allTags,
 			};
 		});
+
+		_cachedTalks = talks;
+		return talks;
 	} catch (error) {
 		console.error('Error fetching YouTube talks:', error);
+		_cachedTalks = [];
 		return [];
 	}
 }

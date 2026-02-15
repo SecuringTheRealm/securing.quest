@@ -21,6 +21,8 @@ const {
 	publishDate,
 	tags,
 } = Astro.props;
+
+const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -90,23 +92,27 @@ const {
           <ul class="nav-menu">
             <li>
               <a href="/talks/" class="nav-link" data-castle-name="Tower"
+                aria-current={currentPath.startsWith('/talks') ? 'page' : undefined}
                 >Talks</a>
             </li>
             <li>
               <a href="/blog/" class="nav-link" data-castle-name="Library"
+                aria-current={currentPath.startsWith('/blog') ? 'page' : undefined}
                 >Blog</a>
             </li>
             <li>
               <a href="/forge/" class="nav-link" data-castle-name="Forge"
+                aria-current={currentPath.startsWith('/forge') ? 'page' : undefined}
                 >Code</a>
             </li>
             <li>
               <a
                 href="/newsletter/"
                 class="nav-link"
-                data-castle-name="Arcane Scrolls">Newsletter</a>
+                data-castle-name="Arcane Scrolls"
+                aria-current={currentPath.startsWith('/newsletter') ? 'page' : undefined}>Newsletter</a>
             </li>
-            <li><a href="/about/">About</a></li>
+            <li><a href="/about/" aria-current={currentPath.startsWith('/about') ? 'page' : undefined}>About</a></li>
           </ul>
         </div>
       </nav>
@@ -165,7 +171,7 @@ const {
           Elsewhere
         </h2>
         <ul
-          style="display: flex; justify-content: center; gap: var(--space-8); list-style: none; margin: 0;"
+          style="display: flex; justify-content: center; gap: var(--space-4) var(--space-8); flex-wrap: wrap; list-style: none; margin: 0;"
         >
           <li>
             <a

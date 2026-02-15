@@ -48,14 +48,14 @@ const { Content } = await entry.render();
       )}
     </header>
     
-    <div style="line-height: var(--line-height-relaxed); font-size: var(--font-size-lg);">
+    <div class="prose" style="line-height: var(--line-height-relaxed); font-size: var(--font-size-lg);">
       <Content />
     </div>
 
     <Giscus />
 
     <footer style="margin-top: var(--space-12); padding-top: var(--space-8); border-top: 2px solid var(--colour-gold);">
-      <a href="/blog/" style="display: inline-block; padding: var(--space-3) var(--space-6); background: var(--colour-gold); color: var(--colour-ink); border-radius: var(--radius-outer); font-weight: var(--font-weight-bold);">
+      <a href="/blog/" class="btn-primary" style="display: inline-block; padding: var(--space-3) var(--space-6); background: var(--colour-gold); color: var(--colour-ink); border-radius: var(--radius-outer); font-weight: var(--font-weight-bold);">
         ← Back to Library
       </a>
     </footer>

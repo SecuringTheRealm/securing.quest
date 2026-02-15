@@ -211,16 +211,16 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     y="424"
     width="1040"
     height="56"
-    fill="#5a5a52"
-    stroke="#000"
+    fill="var(--colour-stone)"
+    stroke="var(--colour-black)"
     stroke-width="2"></rect>
   <!-- Right rim highlight (light from top-right) -->
-  <rect x="1112" y="426" width="8" height="52" fill="#fff" opacity="0.15"
+  <rect x="1112" y="426" width="8" height="52" fill="var(--colour-white)" opacity="0.15"
   ></rect>
   <!-- Left shadow face -->
-  <rect x="80" y="426" width="8" height="52" fill="#000" opacity="0.25"></rect>
+  <rect x="80" y="426" width="8" height="52" fill="var(--colour-black)" opacity="0.25"></rect>
   <!-- Hard pixel shadow on ground -->
-  <rect x="88" y="480" width="1024" height="8" fill="#000" opacity="0.3"></rect>
+  <rect x="88" y="480" width="1024" height="8" fill="var(--colour-black)" opacity="0.3"></rect>
 
   <!-- CONNECTING CURTAIN WALLS (Dover-style integrated fortress) -->
   <!-- Wall between Tower and Library -->
@@ -827,11 +827,11 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         Window(752, 352),
       ].map((w) => (
         <g class="window-flicker">
-          <rect {...w.outer} fill="#000" opacity="0.4" />
-          <rect {...w.light} fill="#d5a425" opacity="0.85" />
-          <rect {...w.crossV} fill="#3a3a32" opacity="0.6" />
-          <rect {...w.crossH} fill="#3a3a32" opacity="0.6" />
-          <rect {...w.highlight} fill="#fff" opacity="0.2" />
+          <rect {...w.outer} fill="var(--colour-black)" opacity="0.4" />
+          <rect {...w.light} fill="var(--colour-gold)" opacity="0.85" />
+          <rect {...w.crossV} fill="var(--colour-stone-dark)" opacity="0.6" />
+          <rect {...w.crossH} fill="var(--colour-stone-dark)" opacity="0.6" />
+          <rect {...w.highlight} fill="var(--colour-white)" opacity="0.2" />
         </g>
       ))
     }
@@ -1291,18 +1291,26 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   <!-- NEWSLETTER SCROLLS (On the Lawn) -->
   <a href="/newsletter/" aria-label="Newsletter - Subscribe to updates">
     <g class="castle-section">
-      <!-- Flowers around scroll (Nintendo charm) -->
+      <!-- Flowers around scroll (8-bit pixel flowers) -->
       <!-- Red flower -->
-      <circle cx="1028" cy="540" r="4" fill="var(--colour-forge-orange)"
-      ></circle>
-      <rect x="1026" y="542" width="2" height="8" fill="var(--colour-grass)"
+      <rect x="1024" y="536" width="8" height="8" fill="var(--colour-forge-orange)"
+      ></rect>
+      <rect x="1026" y="538" width="4" height="4" fill="var(--colour-gold)"
+      ></rect>
+      <rect x="1026" y="544" width="2" height="8" fill="var(--colour-grass)"
       ></rect>
       <!-- Yellow flower -->
-      <circle cx="1164" cy="548" r="4" fill="var(--colour-gold)"></circle>
-      <rect x="1162" y="550" width="2" height="8" fill="var(--colour-grass)"
+      <rect x="1160" y="544" width="8" height="8" fill="var(--colour-gold)"
       ></rect>
-      <!-- Pink flower -->
-      <circle cx="1020" cy="560" r="3" fill="var(--colour-gold-light)"></circle>
+      <rect x="1162" y="546" width="4" height="4" fill="var(--colour-white)"
+      ></rect>
+      <rect x="1162" y="552" width="2" height="8" fill="var(--colour-grass)"
+      ></rect>
+      <!-- Small flower -->
+      <rect x="1016" y="556" width="6" height="6" fill="var(--colour-gold-light)"
+      ></rect>
+      <rect x="1018" y="558" width="2" height="2" fill="var(--colour-gold)"
+      ></rect>
       <rect x="1018" y="562" width="2" height="6" fill="var(--colour-grass)"
       ></rect>
 

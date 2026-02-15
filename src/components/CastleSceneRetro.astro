@@ -34,22 +34,6 @@ const Merlon = (x: number, y: number) => ({
 	highlight: { x: x + 18, y: y + 2, width: 4, height: 20 }, // Right rim
 	shadow: { x: x + 2, y: y + 2, width: 4, height: 20 }, // Left face
 });
-
-// Brick pattern - stepped pixel blocks
-const BrickRow = (x: number, y: number, width: number, offset = 0) => {
-	const bricks: Array<{ x: number; y: number; width: number; height: number }> = [];
-	const brickWidth = 16;
-	const brickHeight = 8;
-	for (let i = 0; i < Math.floor(width / brickWidth); i++) {
-		bricks.push({
-			x: x + i * brickWidth + offset,
-			y,
-			width: brickWidth - 2,
-			height: brickHeight,
-		});
-	}
-	return bricks;
-};
 ---
 
 <svg
@@ -93,6 +77,13 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         offset="100%"
         style="stop-color: var(--colour-forge-orange); stop-opacity: 0"></stop>
     </radialGradient>
+
+    <!-- Brick texture pattern (replaces hundreds of individual rects) -->
+    <pattern id={`${uid}-brick`} width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="14" height="7" fill="#000" />
+      <rect x="8" y="8" width="14" height="7" fill="#000" />
+      <rect x="-8" y="8" width="14" height="7" fill="#000" />
+    </pattern>
   </defs>
 
   <!-- Sky Background -->
@@ -150,10 +141,9 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   ></rect>
 
   <!-- Grass texture (pixel tufts, 8px grid) -->
-    <!-- Grass texture (pixel tufts, 8px grid) -->
   {
-    [...Array(60)].map((_: undefined, i: number) => {
-      const x = (i * 113) % 1200
+    [...Array(15)].map((_: undefined, i: number) => {
+      const x = (i * 79) % 1200
       const y = 488 + ((i * 37) % 32)
       return (
         <rect
@@ -315,23 +305,8 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       <circle cx="168" cy="350" r="3" fill="var(--colour-grass)" opacity="0.5"
       ></circle>
 
-      <!-- Brick texture (stepped 8x8 blocks) -->
-      {
-        [...Array(34)].map((_: undefined, row: number) => (
-          <g opacity="0.15">
-            {BrickRow(168, 160 + row * 8, 144, row % 2 === 0 ? 0 : -8).map(
-              (brick: {
-                x: number
-                y: number
-                width: number
-                height: number
-              }) => (
-                <rect {...brick} fill="#000" />
-              )
-            )}
-          </g>
-        ))
-      }
+      <!-- Brick texture (SVG pattern) -->
+      <rect x="168" y="160" width="144" height="272" fill={`url(#${uid}-brick)`} opacity="0.15" />
 
       <!-- Tower flag (animated) -->
       <rect x="236" y="72" width="8" height="48" fill="var(--colour-stone-dark)"
@@ -446,23 +421,8 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         fill="var(--colour-black)"
         opacity="0.15"></rect>
 
-      <!-- Brick texture -->
-      {
-        [...Array(19)].map((_: undefined, row: number) => (
-          <g opacity="0.15">
-            {BrickRow(368, 280 + row * 8, 184, row % 2 === 0 ? 0 : -8).map(
-              (brick: {
-                x: number
-                y: number
-                width: number
-                height: number
-              }) => (
-                <rect {...brick} fill="#000" />
-              )
-            )}
-          </g>
-        ))
-      }
+      <!-- Brick texture (SVG pattern) -->
+      <rect x="368" y="280" width="184" height="152" fill={`url(#${uid}-brick)`} opacity="0.15" />
 
       <!-- Library flag -->
       <rect
@@ -696,23 +656,8 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       fill="var(--colour-stone-dark)"
       opacity="0.3"></rect>
 
-    <!-- Brick texture -->
-    {
-      [...Array(29)].map((_: undefined, row: number) => (
-        <g opacity="0.15">
-          {BrickRow(608, 200 + row * 8, 224, row % 2 === 0 ? 0 : -8).map(
-            (brick: {
-              x: number
-              y: number
-              width: number
-              height: number
-            }) => (
-              <rect {...brick} fill="#000" />
-            )
-          )}
-        </g>
-      ))
-    }
+    <!-- Brick texture (SVG pattern) -->
+    <rect x="608" y="200" width="224" height="232" fill={`url(#${uid}-brick)`} opacity="0.15" />
 
     <!-- Keep flag (tallest) -->
     <rect x="716" y="88" width="8" height="72" fill="var(--colour-stone-dark)"
@@ -971,33 +916,9 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         stroke="var(--colour-black)"
         stroke-width="2"></rect>
 
-      <!-- Brick texture on side walls -->
-      {
-        [...Array(16)].map((_: undefined, row: number) => (
-          <g opacity="0.15">
-            {BrickRow(888, 288 + row * 8, 16, row % 2 === 0 ? 0 : -8).map(
-              (brick: {
-                x: number
-                y: number
-                width: number
-                height: number
-              }) => (
-                <rect {...brick} fill="var(--colour-black)" />
-              )
-            )}
-            {BrickRow(1016, 288 + row * 8, 16, row % 2 === 0 ? 0 : -8).map(
-              (brick: {
-                x: number
-                y: number
-                width: number
-                height: number
-              }) => (
-                <rect {...brick} fill="var(--colour-black)" />
-              )
-            )}
-          </g>
-        ))
-      }
+      <!-- Brick texture on side walls (SVG pattern) -->
+      <rect x="888" y="288" width="16" height="128" fill={`url(#${uid}-brick)`} opacity="0.15" />
+      <rect x="1016" y="288" width="16" height="128" fill={`url(#${uid}-brick)`} opacity="0.15" />
 
       <!-- Chimney -->
       <rect

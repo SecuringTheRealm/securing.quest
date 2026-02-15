@@ -1,6 +1,5 @@
 ---
 import '../styles/global.css';
-import '../styles/print.css';
 import Search from '../components/Search.astro';
 import Seo from '../components/Seo.astro';
 
@@ -33,6 +32,9 @@ const {
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
+    <!-- Print styles (only loaded when printing, excluded from page weight) -->
+    <link rel="stylesheet" href="/print.css" media="print" />
+
     <!-- SEO and Meta Tags -->
     <Seo
       title={title}
@@ -62,9 +64,13 @@ const {
             aria-label="Securing the Realm - Home"
           >
             <img
-              src="/str-logo.png"
+              src="/str-logo-96.png"
+              srcset="/str-logo-96.png 96w, /str-logo-192.png 192w"
+              sizes="48px"
               alt="Securing the Realm logo"
               class="logo-img"
+              width="48"
+              height="48"
             />
             <span class="logo-text">
               Securing the Realm

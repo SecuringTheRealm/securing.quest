@@ -1,0 +1,537 @@
+/**
+ * Print Stylesheet for Securing the Realm
+ * Optimized for printing blog posts, talks, and documentation
+ *
+ * Best Practices Applied:
+ * - Print-friendly color scheme (white bg, black text)
+ * - Serif typography optimized for paper (12pt base)
+ * - Smart page break controls
+ * - Link footnotes for blog content
+ * - Hide interactive/decorative elements
+ * - Include essential metadata
+ *
+ * References:
+ * - https://www.jotform.com/blog/css-perfect-print-stylesheet-98272/
+ * - https://css-tricks.com/css-tricks-finally-gets-a-print-stylesheet/
+ */
+
+@media print {
+  /* ===========================
+     PAGE SETUP & MARGINS
+     =========================== */
+
+  @page {
+    margin: 2cm;
+    size: auto;
+  }
+
+  @page :first {
+    margin-top: 1.5cm;
+  }
+
+  @page :left {
+    margin-left: 2.5cm;
+    margin-right: 2cm;
+  }
+
+  @page :right {
+    margin-left: 2cm;
+    margin-right: 2.5cm;
+  }
+
+  /* ===========================
+     COLOR OVERRIDES
+     Convert dark theme to print-friendly
+     =========================== */
+
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Override design tokens for print */
+  :root {
+    --colour-teal-bg: #ffffff;
+    --colour-teal-dark: #ffffff;
+    --colour-teal-darker: #ffffff;
+    --colour-parchment: #000000;
+    --colour-stone: #333333;
+    --colour-gold: #000000;
+    --colour-gold-light: #000000;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ===========================
+     TYPOGRAPHY FOR PRINT
+     Convert px to pt, optimize for paper
+     =========================== */
+
+  h1, h2, h3, h4, h5, h6 {
+    color: black !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+    font-family: Georgia, serif !important;
+    font-weight: bold !important;
+  }
+
+  h1 {
+    font-size: 24pt !important;
+    margin-top: 0 !important;
+    margin-bottom: 12pt !important;
+    border-bottom: 2pt solid black !important;
+    padding-bottom: 6pt !important;
+  }
+
+  h2 {
+    font-size: 18pt !important;
+    margin-top: 18pt !important;
+    margin-bottom: 9pt !important;
+  }
+
+  h3 {
+    font-size: 14pt !important;
+    margin-top: 14pt !important;
+    margin-bottom: 7pt !important;
+  }
+
+  h4, h5, h6 {
+    font-size: 12pt !important;
+    margin-top: 12pt !important;
+    margin-bottom: 6pt !important;
+  }
+
+  p, li {
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  p {
+    margin: 0 0 9pt 0 !important;
+  }
+
+  /* Code blocks */
+  code, pre {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 10pt !important;
+    background: #f5f5f5 !important;
+    border: 1pt solid #cccccc !important;
+    page-break-inside: avoid;
+  }
+
+  pre {
+    padding: 6pt !important;
+    margin: 9pt 0 !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+  }
+
+  code {
+    padding: 2pt 4pt !important;
+  }
+
+  /* Blockquotes */
+  blockquote {
+    margin: 9pt 0 9pt 18pt !important;
+    padding-left: 12pt !important;
+    border-left: 3pt solid #cccccc !important;
+    font-style: italic !important;
+    page-break-inside: avoid;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 0 0 9pt 0 !important;
+    padding-left: 24pt !important;
+  }
+
+  li {
+    margin-bottom: 3pt !important;
+  }
+
+  /* ===========================
+     LAYOUT & STRUCTURE
+     =========================== */
+
+  /* Main container - use full width */
+  main {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  article {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  /* Remove all decorative borders and backgrounds */
+  div, section, header, footer, aside {
+    border: none !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  /* ===========================
+     HIDE INTERACTIVE & DECORATIVE ELEMENTS
+     =========================== */
+
+  /* Navigation */
+  nav,
+  .skip-link,
+  [role="navigation"],
+  header nav,
+  header a[href],
+  header button,
+  .mobile-menu,
+  .search-component,
+  .menu-toggle {
+    display: none !important;
+  }
+
+  /* Header - hide logo and navigation */
+  header {
+    display: none !important;
+  }
+
+  /* Footer - hide social links */
+  footer {
+    display: none !important;
+  }
+
+  /* Interactive elements */
+  button,
+  input,
+  select,
+  textarea,
+  form {
+    display: none !important;
+  }
+
+  /* Comments system */
+  .giscus,
+  .giscus-frame,
+  iframe[src*="giscus"] {
+    display: none !important;
+  }
+
+  /* Decorative SVGs and icons */
+  svg[class*="icon"],
+  svg[class*="logo"],
+  .decorative-svg {
+    display: none !important;
+  }
+
+  /* ===========================
+     SHOW & FORMAT METADATA
+     =========================== */
+
+  /* Article header metadata */
+  article header {
+    display: block !important;
+    margin-bottom: 18pt !important;
+    padding-bottom: 9pt !important;
+    border-bottom: 1pt solid #cccccc !important;
+  }
+
+  /* Publication date */
+  time,
+  .date,
+  [datetime] {
+    display: block !important;
+    font-size: 11pt !important;
+    font-style: italic !important;
+    margin-bottom: 6pt !important;
+  }
+
+  /* Tags */
+  .tags,
+  [class*="tag"] {
+    display: inline !important;
+    font-size: 10pt !important;
+    margin-top: 6pt !important;
+  }
+
+  .tags::before {
+    content: "Tags: ";
+    font-weight: bold;
+  }
+
+  .tags a,
+  [class*="tag"] a {
+    text-decoration: none !important;
+    color: black !important;
+  }
+
+  .tags a::after,
+  [class*="tag"] a::after {
+    content: ", ";
+  }
+
+  .tags a:last-child::after,
+  [class*="tag"] a:last-child::after {
+    content: "";
+  }
+
+  /* ===========================
+     LINK HANDLING
+     =========================== */
+
+  /* Style links for print */
+  a {
+    color: black !important;
+    text-decoration: underline !important;
+    font-weight: normal !important;
+  }
+
+  /* For blog content links - numbered footnotes */
+  article a[href^="http"]::after,
+  article a[href^="https://"]::after {
+    content: " [" counter(link) "]";
+    counter-increment: link;
+    font-size: 9pt;
+    vertical-align: super;
+    text-decoration: none;
+  }
+
+  /* Don't show URLs for internal anchors */
+  a[href^="#"]::after,
+  a[href^="/"]::after {
+    content: "" !important;
+  }
+
+  /* Initialize link counter */
+  article {
+    counter-reset: link;
+  }
+
+  /* Create footnote section (user would need to add this via JS or manually) */
+  article::after {
+    content: "";
+    display: block;
+    margin-top: 24pt;
+    padding-top: 12pt;
+    border-top: 2pt solid black;
+  }
+
+  /* ===========================
+     VIDEO EMBEDS - SHOW URLs
+     =========================== */
+
+  /* Hide iframe but show alternative content */
+  iframe {
+    display: none !important;
+  }
+
+  /* YouTube embeds - replace with URL */
+  iframe[src*="youtube.com"]::before,
+  iframe[src*="youtu.be"]::before {
+    content: "Watch video at: " attr(src);
+    display: block !important;
+    font-size: 11pt !important;
+    padding: 9pt !important;
+    border: 1pt solid #cccccc !important;
+    background: #f5f5f5 !important;
+    margin: 9pt 0 !important;
+  }
+
+  /* Alternative: Add a class to wrapper divs and handle via pseudo-elements */
+  .video-wrapper,
+  [class*="video"],
+  [class*="embed"] {
+    position: relative;
+    page-break-inside: avoid;
+  }
+
+  .video-wrapper::after {
+    content: "(Video content - view online)";
+    display: block;
+    font-size: 11pt;
+    font-style: italic;
+    padding: 9pt;
+    border: 1pt dashed #cccccc;
+    background: #f9f9f9;
+    margin: 9pt 0;
+  }
+
+  /* ===========================
+     PAGE BREAK CONTROLS
+     =========================== */
+
+  /* Avoid breaking these elements */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  img,
+  figure,
+  table,
+  pre,
+  blockquote {
+    page-break-inside: avoid;
+    page-break-before: auto;
+    page-break-after: auto;
+  }
+
+  /* Keep list items together when possible */
+  li {
+    page-break-inside: avoid;
+  }
+
+  /* Avoid breaks after these elements */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  /* ===========================
+     IMAGES
+     =========================== */
+
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 9pt 0 !important;
+    page-break-inside: avoid;
+  }
+
+  figure {
+    margin: 9pt 0 !important;
+    page-break-inside: avoid;
+  }
+
+  figcaption {
+    font-size: 10pt !important;
+    font-style: italic !important;
+    text-align: center !important;
+    margin-top: 6pt !important;
+  }
+
+  /* ===========================
+     TABLES
+     =========================== */
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin: 9pt 0 !important;
+    page-break-inside: avoid;
+  }
+
+  th, td {
+    border: 1pt solid #cccccc !important;
+    padding: 6pt !important;
+    font-size: 11pt !important;
+    text-align: left !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Repeat table headers on each page */
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+
+  /* ===========================
+     CUSTOM PRINT FOOTER
+     Add URL and copyright to bottom
+     =========================== */
+
+  /* Add "Back to Library" link text at end */
+  article > a[href*="/blog"]::after,
+  article > a[href*="/talks"]::after {
+    display: none !important;
+  }
+
+  /* Print custom footer with URL and copyright */
+  body::after {
+    content: "Read online at: " attr(data-url) "\A© Securing the Realm - All rights reserved";
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12pt 0;
+    font-size: 10pt;
+    text-align: center;
+    white-space: pre-line;
+    border-top: 1pt solid #cccccc;
+    background: white;
+  }
+
+  /* ===========================
+     UTILITY CLASSES
+     =========================== */
+
+  /* Force show/hide for print */
+  .print-only {
+    display: block !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Print-specific text styles */
+  .print-break-before {
+    page-break-before: always;
+  }
+
+  .print-break-after {
+    page-break-after: always;
+  }
+
+  .print-no-break {
+    page-break-inside: avoid;
+  }
+
+  /* ===========================
+     PERFORMANCE OPTIMIZATIONS
+     =========================== */
+
+  /* Disable animations and transitions for faster printing */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Remove any remaining shadows or effects */
+  * {
+    filter: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ===========================
+   PRINT-SPECIFIC HELPER STYLES
+   (Outside @media print for structural changes)
+   =========================== */
+
+/* Add data attribute for URL in footer via JS or template */
+/* Example: <body data-url="https://securingtherealm.com/blog/post-slug"> */

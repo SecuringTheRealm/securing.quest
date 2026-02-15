@@ -110,29 +110,39 @@ const {
     </header>
 
     <script>
-      const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+      const mobileMenuToggle = document.querySelector('.mobile-menu-toggle') as HTMLButtonElement | null;
       const navMenu = document.querySelector('.nav-menu');
+
+      function closeMenu() {
+        mobileMenuToggle?.setAttribute('aria-expanded', 'false');
+        navMenu?.classList.remove('is-open');
+      }
 
       mobileMenuToggle?.addEventListener('click', () => {
         const isExpanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true';
         mobileMenuToggle.setAttribute('aria-expanded', String(!isExpanded));
         navMenu?.classList.toggle('is-open');
+
+        // When opening, move focus to first menu link for keyboard users
+        if (!isExpanded) {
+          const firstLink = navMenu?.querySelector('a') as HTMLElement | null;
+          firstLink?.focus();
+        }
       });
 
       // Close menu when clicking outside
       document.addEventListener('click', (e) => {
         const target = e.target as HTMLElement;
         if (!target.closest('.nav-wrapper')) {
-          mobileMenuToggle?.setAttribute('aria-expanded', 'false');
-          navMenu?.classList.remove('is-open');
+          closeMenu();
         }
       });
 
-      // Close menu on escape key
+      // Close menu on escape key and return focus to toggle button
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          mobileMenuToggle?.setAttribute('aria-expanded', 'false');
-          navMenu?.classList.remove('is-open');
+        if (e.key === 'Escape' && navMenu?.classList.contains('is-open')) {
+          closeMenu();
+          mobileMenuToggle?.focus();
         }
       });
     </script>
@@ -158,35 +168,40 @@ const {
             <a
               href="https://www.youtube.com/@SecuringTheRealm"
               target="_blank"
-              rel="noopener noreferrer">YouTube</a
+              rel="noopener noreferrer"
+              aria-label="YouTube (opens in new tab)">YouTube</a
             >
           </li>
           <li>
             <a
               href="https://github.com/SecuringTheRealm"
               target="_blank"
-              rel="noopener noreferrer">GitHub</a
+              rel="noopener noreferrer"
+              aria-label="GitHub (opens in new tab)">GitHub</a
             >
           </li>
           <li>
             <a
               href="https://www.linkedin.com/company/securing-the-realm"
               target="_blank"
-              rel="noopener noreferrer">LinkedIn</a
+              rel="noopener noreferrer"
+              aria-label="LinkedIn (opens in new tab)">LinkedIn</a
             >
           </li>
           <li>
             <a
               href="https://open.spotify.com/show/SecuringTheRealm"
               target="_blank"
-              rel="noopener noreferrer">Spotify</a
+              rel="noopener noreferrer"
+              aria-label="Spotify (opens in new tab)">Spotify</a
             >
           </li>
           <li>
             <a
               href="https://podcasts.apple.com/podcast/securing-the-realm"
               target="_blank"
-              rel="noopener noreferrer">Apple Podcasts</a
+              rel="noopener noreferrer"
+              aria-label="Apple Podcasts (opens in new tab)">Apple Podcasts</a
             >
           </li>
         </ul>

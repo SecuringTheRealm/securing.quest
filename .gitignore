@@ -668,11 +668,11 @@ web_modules/
 # Optional npm cache directory
 .npm
 
-# Optional eslint cache
-.eslintcache
-
 # Optional stylelint cache
 .stylelintcache
+
+# npm lockfile (project uses bun)
+package-lock.json
 
 # Microbundle cache
 .rpt2_cache/

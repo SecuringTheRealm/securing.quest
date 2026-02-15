@@ -14,11 +14,13 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ⚙️ - Cache dependencies ⚡ - Install dependencies 🔧
-        uses: ./.github/workflows/setup-node
+      - name: Setup Bun 🥟
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
-      - name: Run linter 🔍
-        run: npm run lint
+      - name: Install dependencies 🔧
+        run: bun install --frozen-lockfile
 
-      - name: Type check 🔍
-        run: npm run astro check
+      - name: Run tests (lint + type check) 🔍
+        run: bun run test

@@ -12,7 +12,7 @@ on:
     - cron: "0 0 * * *"
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -115,6 +115,19 @@ jobs:
       - name: Build with Astro 🏗️
         if: steps.deploy_check.outputs.result == 'true'
         run: bun run build
+
+      - name: Send webmentions
+        if: steps.deploy_check.outputs.result == 'true' && github.event_name == 'push'
+        run: bun run send:webmentions
+
+      - name: Commit sent webmentions tracking
+        if: steps.deploy_check.outputs.result == 'true' && github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/sent-webmentions.json
+          git diff --staged --quiet || git commit -m "chore: update sent webmentions tracking [skip ci]"
+          git push
 
       - name: Upload artifact 📡
         if: steps.deploy_check.outputs.result == 'true'

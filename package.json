@@ -11,7 +11,9 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
-		"test": "bun run lint && astro check"
+		"test": "bun run lint && astro check",
+		"sync:webmentions": "bun scripts/sync-webmentions.mjs",
+		"send:webmentions": "bun scripts/send-webmentions.mjs"
 	},
 	"browserslist": "defaults, not ie <= 11",
 	"trustedDependencies": [

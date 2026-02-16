@@ -1,0 +1,181 @@
+---
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+interface WebmentionAuthor {
+  type?: string
+  name?: string
+  url?: string
+  photo?: string
+}
+
+interface Webmention {
+  'wm-id': number
+  'wm-source': string
+  'wm-target': string
+  'wm-property': string
+  'wm-received': string
+  author?: WebmentionAuthor
+  url?: string
+  published?: string
+  content?: { html?: string; text?: string }
+}
+
+let allMentions: Record<string, Webmention[]> = {}
+try {
+  const dataPath = join(__dirname, '..', 'data', 'webmentions.json')
+  const raw = await readFile(dataPath, 'utf-8')
+  allMentions = JSON.parse(raw)
+} catch {
+  // No webmentions data yet
+}
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site).href
+const canonicalWithSlash = canonicalURL.endsWith('/') ? canonicalURL : `${canonicalURL}/`
+const canonicalWithoutSlash = canonicalURL.replace(/\/$/, '')
+
+const mentions = [
+  ...(allMentions[canonicalWithSlash] || []),
+  ...(allMentions[canonicalWithoutSlash] || []),
+]
+
+const seen = new Set<number>()
+const uniqueMentions = mentions.filter((m) => {
+  if (seen.has(m['wm-id'])) return false
+  seen.add(m['wm-id'])
+  return true
+})
+
+const likes = uniqueMentions.filter((m) => m['wm-property'] === 'like-of')
+const reposts = uniqueMentions.filter((m) => m['wm-property'] === 'repost-of')
+const replies = uniqueMentions.filter((m) => m['wm-property'] === 'in-reply-to')
+const otherMentions = uniqueMentions.filter((m) =>
+  m['wm-property'] === 'mention-of' || m['wm-property'] === 'bookmark-of'
+)
+
+const hasAny = uniqueMentions.length > 0
+---
+
+{hasAny && (
+  <div style="margin-top: var(--space-12);">
+    <h2 style="font-size: var(--font-size-xl); margin-bottom: var(--space-6); color: var(--colour-gold);">
+      Webmentions
+    </h2>
+
+    <div style="background: var(--colour-teal-dark); border: 2px solid var(--colour-stone); border-radius: var(--radius-outer); padding: var(--space-6);">
+
+      {likes.length > 0 && (
+        <div style="margin-bottom: var(--space-6);">
+          <h3 style="font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--colour-stone-light); margin-bottom: var(--space-3);">
+            {likes.length} {likes.length === 1 ? 'Like' : 'Likes'}
+          </h3>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-1);">
+            {likes.map((like) => (
+              <a href={like.author?.url || like.url || '#'} target="_blank" rel="noopener noreferrer nofollow" title={like.author?.name || 'Someone'} style="display: block;">
+                {like.author?.photo ? (
+                  <img src={like.author.photo} alt={like.author?.name || ''} style="width: 32px; height: 32px; border-radius: var(--radius-full); border: 2px solid var(--colour-gold-dark);" loading="lazy" />
+                ) : (
+                  <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-full); background: var(--colour-teal-light); color: var(--colour-gold); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold);">
+                    {(like.author?.name || '?').charAt(0)}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {reposts.length > 0 && (
+        <div style="margin-bottom: var(--space-6);">
+          <h3 style="font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--colour-stone-light); margin-bottom: var(--space-3);">
+            {reposts.length} {reposts.length === 1 ? 'Repost' : 'Reposts'}
+          </h3>
+          <div style="display: flex; flex-wrap: wrap; gap: var(--space-1);">
+            {reposts.map((repost) => (
+              <a href={repost.author?.url || repost.url || '#'} target="_blank" rel="noopener noreferrer nofollow" title={repost.author?.name || 'Someone'} style="display: block;">
+                {repost.author?.photo ? (
+                  <img src={repost.author.photo} alt={repost.author?.name || ''} style="width: 32px; height: 32px; border-radius: var(--radius-full); border: 2px solid var(--colour-stone);" loading="lazy" />
+                ) : (
+                  <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--radius-full); background: var(--colour-teal-light); color: var(--colour-parchment); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold);">
+                    {(repost.author?.name || '?').charAt(0)}
+                  </span>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {replies.length > 0 && (
+        <div style="margin-bottom: var(--space-6);">
+          <h3 style="font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--colour-stone-light); margin-bottom: var(--space-3);">
+            {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+            {replies.map((reply) => (
+              <div style="display: flex; gap: var(--space-3);">
+                <a href={reply.author?.url || '#'} target="_blank" rel="noopener noreferrer nofollow" style="flex-shrink: 0;">
+                  {reply.author?.photo ? (
+                    <img src={reply.author.photo} alt={reply.author?.name || ''} style="width: 40px; height: 40px; border-radius: var(--radius-full);" loading="lazy" />
+                  ) : (
+                    <span style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--colour-teal-light); color: var(--colour-parchment); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold);">
+                      {(reply.author?.name || '?').charAt(0)}
+                    </span>
+                  )}
+                </a>
+                <div style="min-width: 0; flex: 1;">
+                  <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-1);">
+                    <a href={reply.author?.url || '#'} target="_blank" rel="noopener noreferrer nofollow" style="font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); color: var(--colour-parchment);">
+                      {reply.author?.name || 'Anonymous'}
+                    </a>
+                    {reply.published && (
+                      <time style="font-size: var(--font-size-xs); color: var(--colour-stone);" datetime={reply.published}>
+                        {new Date(reply.published).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </time>
+                    )}
+                  </div>
+                  {reply.content?.text && (
+                    <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); line-height: var(--line-height-relaxed);">
+                      {reply.content.text.length > 300 ? `${reply.content.text.slice(0, 300)}...` : reply.content.text}
+                    </p>
+                  )}
+                  <a href={reply.url || reply['wm-source']} target="_blank" rel="noopener noreferrer nofollow" style="font-size: var(--font-size-xs); color: var(--colour-gold); margin-top: var(--space-1); display: inline-block;">
+                    View original
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {otherMentions.length > 0 && (
+        <div>
+          <h3 style="font-size: var(--font-size-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--colour-stone-light); margin-bottom: var(--space-3);">
+            {otherMentions.length} {otherMentions.length === 1 ? 'Mention' : 'Mentions'}
+          </h3>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2);">
+            {otherMentions.map((mention) => (
+              <li style="display: flex; align-items: center; gap: var(--space-2);">
+                {mention.author?.photo ? (
+                  <img src={mention.author.photo} alt={mention.author?.name || ''} style="width: 24px; height: 24px; border-radius: var(--radius-full);" loading="lazy" />
+                ) : (
+                  <span style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--colour-teal-light); color: var(--colour-stone-light); font-size: var(--font-size-xs);">
+                    {(mention.author?.name || '?').charAt(0)}
+                  </span>
+                )}
+                <a href={mention.url || mention['wm-source']} target="_blank" rel="noopener noreferrer nofollow" style="font-size: var(--font-size-sm); color: var(--colour-stone-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  {mention.author?.name || mention['wm-source']}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+    </div>
+  </div>
+)}

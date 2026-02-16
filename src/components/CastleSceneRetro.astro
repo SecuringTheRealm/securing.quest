@@ -275,7 +275,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     opacity="0.10"></rect>
 
   <!-- TOWER SECTION (Left) -->
-  <a href="/talks/" aria-label="Tower - View video talks">
+  <a href="/talks/" aria-label="Tower - View video talks" data-castle-nav="Tower">
     <g class="castle-section">
       <!-- Tower Body (TALLER) -->
       <rect
@@ -420,7 +420,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   </a>
 
   <!-- LIBRARY SECTION (Center-Left) -->
-  <a href="/blog/" aria-label="Library - Read blog posts">
+  <a href="/blog/" aria-label="Library - Read blog posts" data-castle-nav="Library">
     <g class="castle-section">
       <!-- Library Body -->
       <rect
@@ -893,7 +893,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   </g>
 
   <!-- FORGE SECTION (Right) -->
-  <a href="/forge/" aria-label="Forge - Explore code projects">
+  <a href="/forge/" aria-label="Forge - Explore code projects" data-castle-nav="Forge">
     <g class="castle-section">
       <!-- Forge Back Wall (visible through open front) -->
       <rect
@@ -1289,7 +1289,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   </a>
 
   <!-- NEWSLETTER SCROLLS (On the Lawn) -->
-  <a href="/newsletter/" aria-label="Newsletter - Subscribe to updates">
+  <a href="/newsletter/" aria-label="Newsletter - Subscribe to updates" data-castle-nav="Newsletter">
     <g class="castle-section">
       <!-- Flowers around scroll (8-bit pixel flowers) -->
       <!-- Red flower -->
@@ -1738,6 +1738,10 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     }
   }
 
+  .castle-section-link {
+    cursor: pointer;
+  }
+
   .flower-sway {
     animation: flower-sway 3.2s steps(4, end) infinite;
     transform-origin: bottom center;
@@ -1784,3 +1788,13 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     }
   }
 </style>
+
+<script is:inline>
+  document.querySelectorAll('[data-castle-nav]').forEach(function (link) {
+    link.addEventListener('click', function () {
+      if (typeof plausible !== 'undefined') {
+        plausible('Castle Navigation', { props: { section: link.getAttribute('data-castle-nav') } });
+      }
+    });
+  });
+</script>

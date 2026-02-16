@@ -1,9 +1,9 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
+import mdxRenderer from '@astrojs/mdx/server.js';
 import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
-import mdxRenderer from '@astrojs/mdx/server.js';
 
 export async function GET(context: APIContext) {
 	const blog = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {

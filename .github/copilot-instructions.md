@@ -45,7 +45,7 @@ bun run format
 # Formats code without linting
 
 # 4. Type checking (runs automatically before build)
-npx astro check
+bunx astro check
 # Time: ~5 seconds
 # Must pass with 0 errors before build succeeds
 

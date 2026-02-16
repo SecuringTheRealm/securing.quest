@@ -49,7 +49,7 @@ const currentPath = Astro.url.pathname;
     />
 
     <!-- Privacy-friendly analytics by Plausible -->
-    <script is:inline async src="https://plausible.io/js/pa-EUZMXoBFB9OR9p1BrnWMh.js"></script>
+    <script is:inline async src="https://plausible.io/js/pa-EUZMXoBFB9OR9p1BrnWMh.outbound-links.file-downloads.js"></script>
     <script is:inline>
       window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
       plausible.init()
@@ -178,7 +178,8 @@ const currentPath = Astro.url.pathname;
               href="https://www.youtube.com/@SecuringTheRealm"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="YouTube (opens in new tab)">YouTube</a
+              aria-label="YouTube (opens in new tab)"
+              data-social="YouTube">YouTube</a
             >
           </li>
           <li>
@@ -186,7 +187,8 @@ const currentPath = Astro.url.pathname;
               href="https://github.com/SecuringTheRealm"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="GitHub (opens in new tab)">GitHub</a
+              aria-label="GitHub (opens in new tab)"
+              data-social="GitHub">GitHub</a
             >
           </li>
           <li>
@@ -194,7 +196,8 @@ const currentPath = Astro.url.pathname;
               href="https://www.linkedin.com/company/securing-the-realm"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="LinkedIn (opens in new tab)">LinkedIn</a
+              aria-label="LinkedIn (opens in new tab)"
+              data-social="LinkedIn">LinkedIn</a
             >
           </li>
           <li>
@@ -202,7 +205,8 @@ const currentPath = Astro.url.pathname;
               href="https://open.spotify.com/show/SecuringTheRealm"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Spotify (opens in new tab)">Spotify</a
+              aria-label="Spotify (opens in new tab)"
+              data-social="Spotify">Spotify</a
             >
           </li>
           <li>
@@ -210,7 +214,8 @@ const currentPath = Astro.url.pathname;
               href="https://podcasts.apple.com/podcast/securing-the-realm"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Apple Podcasts (opens in new tab)">Apple Podcasts</a
+              aria-label="Apple Podcasts (opens in new tab)"
+              data-social="Apple Podcasts">Apple Podcasts</a
             >
           </li>
         </ul>
@@ -222,5 +227,15 @@ const currentPath = Astro.url.pathname;
         </p>
       </div>
     </footer>
+
+    <script is:inline>
+      document.querySelectorAll('[data-social]').forEach(function (link) {
+        link.addEventListener('click', function () {
+          if (typeof plausible !== 'undefined') {
+            plausible('Social Click', { props: { platform: link.getAttribute('data-social') } });
+          }
+        });
+      });
+    </script>
   </body>
 </html>

@@ -50,6 +50,14 @@ const searchData = await buildSearchIndex();
 
 			const results = fuse.search(query);
 			displayResults(results.slice(0, 8)); // Show top 8 results
+
+			// Track search queries in Plausible (debounced)
+			clearTimeout(window._searchTrackTimeout);
+			window._searchTrackTimeout = setTimeout(function () {
+				if (typeof plausible !== 'undefined') {
+					plausible('Search', { props: { query: query, resultCount: String(results.length) } });
+				}
+			}, 1000);
 		});
 
 		// Handle keyboard navigation

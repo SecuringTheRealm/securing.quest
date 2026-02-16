@@ -14,12 +14,12 @@ Securing the Realm transforms complex cybersecurity and AI topics into epic adve
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- [Bun](https://bun.sh/) (package manager and runtime)
 
 ### Installation
 
 ```bash
-npm install
+bun install
 ```
 
 ### Development
@@ -27,7 +27,7 @@ npm install
 Start the development server:
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 The site will be available at [http://localhost:4321](http://localhost:4321).
@@ -37,7 +37,7 @@ The site will be available at [http://localhost:4321](http://localhost:4321).
 Build the static site for production:
 
 ```bash
-npm run build
+bun run build
 ```
 
 This will:
@@ -50,7 +50,7 @@ The built site will be in the `dist/` directory.
 **Note**: To build without syncing YouTube videos (faster for testing), use:
 
 ```bash
-npm run build:fast
+bun run build:fast
 ```
 
 ### Linting and Formatting
@@ -60,19 +60,19 @@ This project uses [Biome](https://biomejs.dev/) for linting and formatting.
 Check for lint and format issues:
 
 ```bash
-npm run lint
+bun run lint
 ```
 
 Auto-fix lint and format issues:
 
 ```bash
-npm run lint:fix
+bun run lint:fix
 ```
 
 Format code only:
 
 ```bash
-npm run format
+bun run format
 ```
 
 ### Syncing YouTube Videos
@@ -82,7 +82,7 @@ The site automatically syncs videos from the [Securing the Realm YouTube channel
 To manually sync YouTube videos:
 
 ```bash
-npm run sync:youtube
+bun run sync:youtube
 ```
 
 This creates JSON files in `src/content/talks/` for each new video.
@@ -92,7 +92,7 @@ This creates JSON files in `src/content/talks/` for each new video.
 Preview the production build locally:
 
 ```bash
-npm run preview
+bun run preview
 ```
 
 ## Project Structure
@@ -170,7 +170,7 @@ The build process automatically syncs videos from the [Securing the Realm YouTub
 To manually trigger a sync:
 
 ```bash
-npm run sync:youtube
+bun run sync:youtube
 ```
 
 ### Projects

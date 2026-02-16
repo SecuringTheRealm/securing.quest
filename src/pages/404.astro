@@ -25,4 +25,12 @@ import Base from '../layouts/Base.astro';
       </a>
     </div>
   </div>
+
+  <script is:inline>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof plausible !== 'undefined') {
+        plausible('404', { props: { path: document.location.pathname } })
+      }
+    })
+  </script>
 </Base>

@@ -1,62 +1,62 @@
 ---
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 interface WebmentionAuthor {
-  type?: string
-  name?: string
-  url?: string
-  photo?: string
+	type?: string;
+	name?: string;
+	url?: string;
+	photo?: string;
 }
 
 interface Webmention {
-  'wm-id': number
-  'wm-source': string
-  'wm-target': string
-  'wm-property': string
-  'wm-received': string
-  author?: WebmentionAuthor
-  url?: string
-  published?: string
-  content?: { html?: string; text?: string }
+	'wm-id': number;
+	'wm-source': string;
+	'wm-target': string;
+	'wm-property': string;
+	'wm-received': string;
+	author?: WebmentionAuthor;
+	url?: string;
+	published?: string;
+	content?: { html?: string; text?: string };
 }
 
-let allMentions: Record<string, Webmention[]> = {}
+let allMentions: Record<string, Webmention[]> = {};
 try {
-  const dataPath = join(__dirname, '..', 'data', 'webmentions.json')
-  const raw = await readFile(dataPath, 'utf-8')
-  allMentions = JSON.parse(raw)
+	const dataPath = join(__dirname, '..', 'data', 'webmentions.json');
+	const raw = await readFile(dataPath, 'utf-8');
+	allMentions = JSON.parse(raw);
 } catch {
-  // No webmentions data yet
+	// No webmentions data yet
 }
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site).href
-const canonicalWithSlash = canonicalURL.endsWith('/') ? canonicalURL : `${canonicalURL}/`
-const canonicalWithoutSlash = canonicalURL.replace(/\/$/, '')
+const canonicalURL = new URL(Astro.url.pathname, Astro.site).href;
+const canonicalWithSlash = canonicalURL.endsWith('/') ? canonicalURL : `${canonicalURL}/`;
+const canonicalWithoutSlash = canonicalURL.replace(/\/$/, '');
 
 const mentions = [
-  ...(allMentions[canonicalWithSlash] || []),
-  ...(allMentions[canonicalWithoutSlash] || []),
-]
+	...(allMentions[canonicalWithSlash] || []),
+	...(allMentions[canonicalWithoutSlash] || []),
+];
 
-const seen = new Set<number>()
+const seen = new Set<number>();
 const uniqueMentions = mentions.filter((m) => {
-  if (seen.has(m['wm-id'])) return false
-  seen.add(m['wm-id'])
-  return true
-})
+	if (seen.has(m['wm-id'])) return false;
+	seen.add(m['wm-id']);
+	return true;
+});
 
-const likes = uniqueMentions.filter((m) => m['wm-property'] === 'like-of')
-const reposts = uniqueMentions.filter((m) => m['wm-property'] === 'repost-of')
-const replies = uniqueMentions.filter((m) => m['wm-property'] === 'in-reply-to')
-const otherMentions = uniqueMentions.filter((m) =>
-  m['wm-property'] === 'mention-of' || m['wm-property'] === 'bookmark-of'
-)
+const likes = uniqueMentions.filter((m) => m['wm-property'] === 'like-of');
+const reposts = uniqueMentions.filter((m) => m['wm-property'] === 'repost-of');
+const replies = uniqueMentions.filter((m) => m['wm-property'] === 'in-reply-to');
+const otherMentions = uniqueMentions.filter(
+	(m) => m['wm-property'] === 'mention-of' || m['wm-property'] === 'bookmark-of'
+);
 
-const hasAny = uniqueMentions.length > 0
+const hasAny = uniqueMentions.length > 0;
 ---
 
 {hasAny && (

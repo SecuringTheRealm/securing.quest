@@ -3,6 +3,8 @@ import '../styles/global.css';
 import '../styles/print.css';
 import Search from '../components/Search.astro';
 import Seo from '../components/Seo.astro';
+import { Image } from 'astro:assets';
+import logoSrc from '../assets/str-logo.png';
 
 export interface Props {
 	title?: string;
@@ -37,6 +39,9 @@ const currentPath = Astro.url.pathname;
 
     <!-- RSS Feed Autodiscovery -->
     <link rel="alternate" type="application/rss+xml" title="Securing the Realm - Blog" href="/blog/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Securing the Realm - Shorts" href="/shorts/rss.xml" />
+
+    <link rel="dns-prefetch" href="https://plausible.io" />
 
     <!-- SEO and Meta Tags -->
     <Seo
@@ -66,11 +71,7 @@ const currentPath = Astro.url.pathname;
             class="logo-link"
             aria-label="Securing the Realm - Home"
           >
-            <img
-              src="/str-logo.png"
-              alt="Securing the Realm logo"
-              class="logo-img"
-            />
+            <Image src={logoSrc} alt="Securing the Realm logo" class="logo-img" width={48} height={48} loading="eager" />
             <span class="logo-text">
               Securing the Realm
             </span>
@@ -104,6 +105,11 @@ const currentPath = Astro.url.pathname;
               <a href="/forge/" class="nav-link" data-castle-name="Forge"
                 aria-current={currentPath.startsWith('/forge') ? 'page' : undefined}
                 >Code</a>
+            </li>
+            <li>
+              <a href="/shorts/" class="nav-link" data-castle-name="Moon"
+                aria-current={currentPath.startsWith('/shorts') ? 'page' : undefined}
+                >Shorts</a>
             </li>
             <li>
               <a

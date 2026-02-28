@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 620" font-family="Arial, Helvetica, sans-serif">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 1 L10 5 L0 9z" fill="#7B9EA8"/>
+    </marker>
+    <marker id="a2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 1 L10 5 L0 9z" fill="#5EEAD4"/>
+    </marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 1 L10 5 L0 9z" fill="#D4A843"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas -->
+  <rect width="1100" height="620" rx="10" fill="#0C2D3A"/>
+
+  <!-- ==================== TITLE ==================== -->
+  <text x="550" y="34" text-anchor="middle" font-size="17" font-weight="bold" fill="#D4A843">APIM AI Gateway - Reference Architecture</text>
+  <text x="550" y="52" text-anchor="middle" font-size="11" fill="#7B9EA8">Agent Frameworks  >  APIM AI Gateway  >  Backend Pool</text>
+
+  <!-- ==================== COL 1: AGENTS ==================== -->
+  <rect x="24" y="68" width="210" height="480" rx="10" fill="#082028" stroke="#1A4A58" stroke-width="1.5"/>
+  <text x="129" y="92" text-anchor="middle" font-size="12" font-weight="bold" fill="#D4A843">Agent Frameworks</text>
+
+  <rect x="40" y="108" width="178" height="44" rx="8" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="129" y="127" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#E2E8F0">Copilot Studio</text>
+  <text x="129" y="142" text-anchor="middle" font-size="9" fill="#7B9EA8">Low-code agents</text>
+
+  <rect x="40" y="160" width="178" height="44" rx="8" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="129" y="179" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#E2E8F0">Foundry Agents</text>
+  <text x="129" y="194" text-anchor="middle" font-size="9" fill="#7B9EA8">Azure AI Foundry</text>
+
+  <rect x="40" y="212" width="178" height="44" rx="8" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="129" y="231" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#E2E8F0">Custom Agents</text>
+  <text x="129" y="246" text-anchor="middle" font-size="9" fill="#7B9EA8">Semantic Kernel, LangChain</text>
+
+  <rect x="40" y="264" width="178" height="44" rx="8" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="129" y="283" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#E2E8F0">A2A Agents</text>
+  <text x="129" y="298" text-anchor="middle" font-size="9" fill="#7B9EA8">Agent-to-agent calls</text>
+
+  <rect x="40" y="316" width="178" height="44" rx="8" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="129" y="335" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#E2E8F0">MCP Clients</text>
+  <text x="129" y="350" text-anchor="middle" font-size="9" fill="#7B9EA8">Tool discovery + invocation</text>
+
+  <rect x="40" y="368" width="178" height="54" rx="8" fill="#082028" stroke="#1A4A58" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="129" y="387" text-anchor="middle" font-size="10" font-weight="bold" fill="#D4A843">Multi-cloud</text>
+  <text x="129" y="402" text-anchor="middle" font-size="9" fill="#7B9EA8">Google Vertex AI, AWS Bedrock</text>
+
+  <!-- ==================== FLOW: AGENTS -> GATEWAY ==================== -->
+  <line x1="218" y1="130" x2="268" y2="172" stroke="#1A4A58" stroke-width="1"/>
+  <line x1="218" y1="182" x2="268" y2="172" stroke="#1A4A58" stroke-width="1"/>
+  <line x1="218" y1="234" x2="268" y2="172" stroke="#1A4A58" stroke-width="1"/>
+  <line x1="218" y1="286" x2="268" y2="172" stroke="#1A4A58" stroke-width="1"/>
+  <line x1="218" y1="338" x2="268" y2="172" stroke="#1A4A58" stroke-width="1"/>
+  <circle cx="268" cy="172" r="4" fill="#5EEAD4"/>
+  <line x1="272" y1="172" x2="306" y2="149" stroke="#7B9EA8" stroke-width="2.5" marker-end="url(#a1)"/>
+
+  <!-- ==================== COL 2: APIM GATEWAY ==================== -->
+  <rect x="310" y="68" width="268" height="540" rx="10" fill="#082028" stroke="#5EEAD4" stroke-width="2"/>
+  <text x="444" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#5EEAD4">APIM AI Gateway</text>
+  <text x="444" y="108" text-anchor="middle" font-size="9" fill="#7B9EA8">Single chokepoint for all agentic traffic</text>
+
+  <!-- Pipeline steps -->
+  <rect x="326" y="122" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="141" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">1. Authentication</text>
+  <line x1="444" y1="150" x2="444" y2="158" stroke="#5EEAD4" stroke-width="1.2" marker-end="url(#a2)"/>
+
+  <rect x="326" y="162" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="181" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">2. Content Safety + Prompt Shield</text>
+  <line x1="444" y1="190" x2="444" y2="198" stroke="#5EEAD4" stroke-width="1.2" marker-end="url(#a2)"/>
+
+  <rect x="326" y="202" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="221" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">3. Semantic Cache Lookup</text>
+  <line x1="444" y1="230" x2="444" y2="238" stroke="#5EEAD4" stroke-width="1.2" marker-end="url(#a2)"/>
+
+  <rect x="326" y="242" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="261" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">4. Token Rate Limiting</text>
+  <line x1="444" y1="270" x2="444" y2="278" stroke="#5EEAD4" stroke-width="1.2" marker-end="url(#a2)"/>
+
+  <rect x="326" y="282" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="301" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">5. Emit Token Metrics</text>
+  <line x1="444" y1="310" x2="444" y2="318" stroke="#5EEAD4" stroke-width="1.2" marker-end="url(#a2)"/>
+
+  <rect x="326" y="322" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="341" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">6. Routing (Backend Pool)</text>
+  <line x1="444" y1="350" x2="444" y2="358" stroke="#5EEAD4" stroke-width="1.2" marker-end="url(#a2)"/>
+
+  <rect x="326" y="362" width="236" height="28" rx="6" fill="#0E3D3A"/>
+  <text x="444" y="381" text-anchor="middle" font-size="10" font-weight="bold" fill="#5EEAD4">7. Backend Auth (Managed Identity)</text>
+
+  <!-- Divider -->
+  <line x1="326" y1="402" x2="562" y2="402" stroke="#1A4A58" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="444" y="418" text-anchor="middle" font-size="9" fill="#7B9EA8">Supporting Services</text>
+
+  <!-- Supporting services -->
+  <rect x="326" y="428" width="113" height="40" rx="6" fill="#0C2D3A" stroke="#D4A843" stroke-width="1"/>
+  <text x="382" y="445" text-anchor="middle" font-size="9" font-weight="bold" fill="#E2E8F0">Entra Agent ID</text>
+  <text x="382" y="459" text-anchor="middle" font-size="8" fill="#7B9EA8">Identity + Sponsors</text>
+
+  <rect x="449" y="428" width="113" height="40" rx="6" fill="#0C2D3A" stroke="#D4A843" stroke-width="1"/>
+  <text x="505" y="445" text-anchor="middle" font-size="9" font-weight="bold" fill="#E2E8F0">Agent Registry</text>
+  <text x="505" y="459" text-anchor="middle" font-size="8" fill="#7B9EA8">Visibility + Audit</text>
+
+  <rect x="326" y="478" width="113" height="40" rx="6" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="382" y="495" text-anchor="middle" font-size="9" font-weight="bold" fill="#E2E8F0">API Center</text>
+  <text x="382" y="509" text-anchor="middle" font-size="8" fill="#7B9EA8">MCP Registry</text>
+
+  <rect x="449" y="478" width="113" height="40" rx="6" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="505" y="495" text-anchor="middle" font-size="9" font-weight="bold" fill="#E2E8F0">App Insights</text>
+  <text x="505" y="509" text-anchor="middle" font-size="8" fill="#7B9EA8">Observability</text>
+
+  <!-- Legend -->
+  <rect x="326" y="532" width="10" height="10" rx="2" fill="#0E3D3A" stroke="#5EEAD4" stroke-width="1"/>
+  <text x="342" y="541" font-size="8.5" fill="#7B9EA8">GA</text>
+
+  <rect x="370" y="532" width="10" height="10" rx="2" fill="#0C2D3A" stroke="#D4A843" stroke-width="1"/>
+  <text x="386" y="541" font-size="8.5" fill="#7B9EA8">Preview</text>
+
+  <rect x="424" y="532" width="10" height="10" rx="2" fill="#082028" stroke="#1A4A58" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="440" y="541" font-size="8.5" fill="#7B9EA8">External</text>
+
+  <!-- ==================== FLOW: GATEWAY -> BACKENDS ==================== -->
+  <line x1="562" y1="376" x2="650" y2="376" stroke="#7B9EA8" stroke-width="2.5" marker-end="url(#a1)"/>
+
+  <!-- ==================== COL 3: BACKENDS ==================== -->
+  <rect x="654" y="68" width="422" height="540" rx="10" fill="#082028" stroke="#1A4A58" stroke-width="1.5"/>
+  <text x="865" y="92" text-anchor="middle" font-size="12" font-weight="bold" fill="#D4A843">Backend Pool</text>
+  <text x="865" y="108" text-anchor="middle" font-size="9" fill="#7B9EA8">Up to 30 backends - priority + weighted routing</text>
+
+  <!-- Priority 1: PTU -->
+  <rect x="670" y="120" width="390" height="114" rx="8" fill="#0C2D3A" stroke="#5EEAD4" stroke-width="1.2"/>
+  <rect x="680" y="126" width="66" height="16" rx="4" fill="#0E3D3A"/>
+  <text x="713" y="138" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#5EEAD4">Priority 1</text>
+  <text x="765" y="138" font-size="9.5" fill="#E2E8F0" font-weight="bold">PTU (Provisioned Throughput)</text>
+
+  <rect x="680" y="150" width="180" height="34" rx="6" fill="#082028" stroke="#1A4A58" stroke-width="1"/>
+  <text x="770" y="165" text-anchor="middle" font-size="10" font-weight="bold" fill="#E2E8F0">GPT-4o (East US)</text>
+  <text x="770" y="178" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Weight: 70</text>
+
+  <rect x="870" y="150" width="180" height="34" rx="6" fill="#082028" stroke="#1A4A58" stroke-width="1"/>
+  <text x="960" y="165" text-anchor="middle" font-size="10" font-weight="bold" fill="#E2E8F0">GPT-4o (West EU)</text>
+  <text x="960" y="178" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Weight: 30</text>
+
+  <rect x="680" y="192" width="370" height="26" rx="4" fill="#082028" stroke="#1A4A58" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <text x="865" y="209" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Circuit breaker with acceptRetryAfter (one rule per backend)</text>
+
+  <!-- Fallback -->
+  <text x="865" y="250" text-anchor="middle" font-size="9" font-weight="bold" fill="#D4A843">Fallback when higher-priority backends unavailable</text>
+  <line x1="865" y1="255" x2="865" y2="270" stroke="#D4A843" stroke-width="1.5" marker-end="url(#a3)"/>
+
+  <!-- Priority 2: Serverless / PAYG -->
+  <rect x="670" y="274" width="390" height="114" rx="8" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1.2"/>
+  <rect x="680" y="280" width="66" height="16" rx="4" fill="#1A4A58"/>
+  <text x="713" y="292" text-anchor="middle" font-size="8.5" font-weight="bold" fill="#E2E8F0">Priority 2</text>
+  <text x="765" y="292" font-size="9.5" fill="#E2E8F0" font-weight="bold">Serverless / Pay-as-you-go</text>
+
+  <rect x="680" y="304" width="120" height="34" rx="6" fill="#082028" stroke="#1A4A58" stroke-width="1"/>
+  <text x="740" y="319" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#E2E8F0">Mistral Large</text>
+  <text x="740" y="332" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Weight: 40</text>
+
+  <rect x="810" y="304" width="120" height="34" rx="6" fill="#082028" stroke="#1A4A58" stroke-width="1"/>
+  <text x="870" y="319" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#E2E8F0">DeepSeek-R1</text>
+  <text x="870" y="332" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Weight: 30</text>
+
+  <rect x="940" y="304" width="110" height="34" rx="6" fill="#082028" stroke="#1A4A58" stroke-width="1"/>
+  <text x="995" y="319" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#E2E8F0">Phi-4</text>
+  <text x="995" y="332" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Weight: 30</text>
+
+  <rect x="680" y="346" width="370" height="26" rx="4" fill="#082028" stroke="#1A4A58" stroke-width="0.8" stroke-dasharray="4,3"/>
+  <text x="865" y="363" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Circuit breaker with acceptRetryAfter (one rule per backend)</text>
+
+  <!-- Additional backend types -->
+  <rect x="670" y="404" width="190" height="42" rx="6" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="765" y="422" text-anchor="middle" font-size="10" font-weight="bold" fill="#E2E8F0">MCP Servers</text>
+  <text x="765" y="436" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Tools + Functions</text>
+
+  <rect x="870" y="404" width="190" height="42" rx="6" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="965" y="422" text-anchor="middle" font-size="10" font-weight="bold" fill="#E2E8F0">Content Safety</text>
+  <text x="965" y="436" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Azure AI Content Safety</text>
+
+  <rect x="670" y="454" width="190" height="42" rx="6" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="765" y="472" text-anchor="middle" font-size="10" font-weight="bold" fill="#E2E8F0">Data + Vector Stores</text>
+  <text x="765" y="486" text-anchor="middle" font-size="8.5" fill="#7B9EA8">RAG sources</text>
+
+  <rect x="870" y="454" width="190" height="42" rx="6" fill="#0C2D3A" stroke="#1A4A58" stroke-width="1"/>
+  <text x="965" y="472" text-anchor="middle" font-size="10" font-weight="bold" fill="#E2E8F0">Managed Redis</text>
+  <text x="965" y="486" text-anchor="middle" font-size="8.5" fill="#7B9EA8">Semantic cache store</text>
+
+  <!-- Session-aware footer -->
+  <rect x="670" y="506" width="390" height="22" rx="4" fill="#0E3D3A" stroke="#5EEAD4" stroke-width="0.8"/>
+  <text x="865" y="521" text-anchor="middle" font-size="9" font-weight="bold" fill="#5EEAD4">Session-aware load balancing for stateful conversations (Preview)</text>
+
+  <!-- Footer note -->
+  <text x="865" y="548" text-anchor="middle" font-size="8" fill="#7B9EA8">Lower-priority backends used only when all higher-priority backends</text>
+  <text x="865" y="560" text-anchor="middle" font-size="8" fill="#7B9EA8">are unavailable because circuit breaker rules are tripped</text>
+
+  <!-- Attribution -->
+  <text x="550" y="608" text-anchor="middle" font-size="8" fill="#1A4A58">securing.quest  |  Source: Microsoft Learn - Azure API Management AI Gateway</text>
+
+</svg>

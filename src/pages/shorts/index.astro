@@ -64,6 +64,11 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
     </div>
 
     <div class="shorts-grid">
+      {sortedShorts.length === 0 && (
+        <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg); grid-column: 1 / -1;">
+          No shorts yet. Quick glimpses into the realm will appear here soon!
+        </p>
+      )}
       {sortedShorts.map((short) => (
         <article class="short-card">
           <a href={short.videoUrl} target="_blank" rel="noopener noreferrer" class="short-thumbnail-link" aria-label={`Watch ${short.title} on YouTube`}>
@@ -97,7 +102,7 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
             {short.tags.length > 0 && (
               <div class="short-tags">
                 {short.tags.map((tag: string) => (
-                  <span class="short-tag">{tag}</span>
+                  <a href={`/tags/${tag}/`} class="short-tag">{tag}</a>
                 ))}
               </div>
             )}
@@ -240,6 +245,7 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
     background: var(--colour-gold);
     color: var(--colour-ink);
     border-radius: var(--radius-full);
+    text-decoration: none;
   }
 
   @media (prefers-reduced-motion: reduce) {

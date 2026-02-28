@@ -1,0 +1,189 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import Base from '../../layouts/Base.astro';
+import { fetchYouTubeShorts, fetchYouTubeTalks } from '../../utils/youtube';
+
+interface TaggedContent {
+	title: string;
+	url: string;
+	date: Date;
+	source: string;
+	icon: string;
+	description: string;
+}
+
+export const getStaticPaths = (async () => {
+	const blogPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {
+		return data.draft !== true;
+	});
+
+	const manualTalks = await getCollection('talks');
+	const youtubeTalks = await fetchYouTubeTalks();
+	const youtubeShorts = await fetchYouTubeShorts();
+
+	const manualOverrides = await getCollection('shorts');
+	const overrideMap = new Map<string, CollectionEntry<'shorts'>>();
+	manualOverrides.forEach((override: CollectionEntry<'shorts'>) => {
+		overrideMap.set(override.data.youtubeId, override);
+	});
+
+	// Collect all tags and their content
+	const tagMap = new Map<string, TaggedContent[]>();
+
+	function addToTag(tag: string, item: TaggedContent): void {
+		if (!tagMap.has(tag)) {
+			tagMap.set(tag, []);
+		}
+		tagMap.get(tag)?.push(item);
+	}
+
+	// Blog posts
+	for (const post of blogPosts) {
+		for (const tag of post.data.tags) {
+			addToTag(tag, {
+				title: post.data.title,
+				url: `/blog/${post.slug}/`,
+				date: post.data.pubDate,
+				source: 'Library',
+				icon: '📚',
+				description: post.data.description,
+			});
+		}
+	}
+
+	// Manual talks
+	for (const talk of manualTalks) {
+		for (const tag of talk.data.tags) {
+			addToTag(tag, {
+				title: talk.data.title,
+				url: `/talks/#${talk.id}`,
+				date: talk.data.date,
+				source: 'Tower',
+				icon: '🏰',
+				description: talk.data.summary,
+			});
+		}
+	}
+
+	// YouTube talks
+	for (const [index, talk] of youtubeTalks.entries()) {
+		for (const tag of talk.tags) {
+			addToTag(tag, {
+				title: talk.title,
+				url: `/talks/#youtube-${index}`,
+				date: talk.date,
+				source: 'Tower',
+				icon: '🏰',
+				description: talk.summary,
+			});
+		}
+	}
+
+	// YouTube shorts (with overrides)
+	for (const short of youtubeShorts) {
+		const override = overrideMap.get(short.id);
+		const tags = override?.data.tags
+			? [...new Set([...short.tags, ...override.data.tags])]
+			: short.tags;
+		for (const tag of tags) {
+			addToTag(tag, {
+				title: override?.data.title || short.title,
+				url: `/shorts/`,
+				date: short.pubDate,
+				source: 'Moon',
+				icon: '🌙',
+				description: short.description || 'A short from the Securing the Realm YouTube channel.',
+			});
+		}
+	}
+
+	return Array.from(tagMap.entries()).map(([tag, items]) => ({
+		params: { tag },
+		props: {
+			tag,
+			items: items.sort(
+				(a: TaggedContent, b: TaggedContent) => b.date.valueOf() - a.date.valueOf()
+			),
+		},
+	}));
+}) satisfies GetStaticPaths;
+
+interface Props {
+	tag: string;
+	items: TaggedContent[];
+}
+
+const { tag, items } = Astro.props as Props;
+---
+
+<Base title={`Tag: ${tag}`} description={`Content tagged with "${tag}" on Securing the Realm.`}>
+  <div class="container" style="padding: var(--space-16) var(--space-4);">
+    <div style="text-align: center; margin-bottom: var(--space-12);">
+      <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-3);">
+        Tag
+      </p>
+      <h1 style="margin-bottom: var(--space-4);">{tag}</h1>
+      <p style="font-size: var(--font-size-lg); color: var(--colour-parchment);">
+        {items.length} {items.length === 1 ? 'item' : 'items'} tagged
+      </p>
+    </div>
+
+    <div style="max-width: var(--max-width-content); margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-4);">
+      {items.map((item: TaggedContent) => (
+        <a
+          href={item.url}
+          style="display: block; padding: var(--space-4); text-decoration: none;"
+          class="feed-item content-card"
+        >
+          <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
+            <div style="flex-shrink: 0; font-size: var(--font-size-2xl);">
+              {item.icon}
+            </div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
+                <h2 style="margin: 0; font-size: var(--font-size-lg); color: var(--colour-gold);">
+                  {item.title}
+                </h2>
+                <span style="font-size: var(--font-size-xs); color: var(--colour-stone-light); white-space: nowrap;">
+                  {item.source}
+                </span>
+              </div>
+              <p style="margin: 0; color: var(--colour-parchment); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed);">
+                {item.description.length > 150
+                  ? `${item.description.substring(0, 147)}...`
+                  : item.description}
+              </p>
+              <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
+                {item.date.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <div style="text-align: center; margin-top: var(--space-12);">
+      <a href="/" class="btn-primary">
+        ← Back to Castle Gate
+      </a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .feed-item:hover {
+    transform: translateX(4px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feed-item:hover {
+      transform: none;
+    }
+  }
+</style>

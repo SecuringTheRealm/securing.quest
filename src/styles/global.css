@@ -187,6 +187,18 @@ img {
   font-weight: var(--font-weight-bold);
 }
 
+.prose figure {
+  margin: var(--space-6) 0;
+}
+
+.prose figcaption {
+  font-size: var(--font-size-sm);
+  color: var(--colour-stone-light);
+  font-style: italic;
+  margin-top: var(--space-2);
+  line-height: var(--line-height-relaxed);
+}
+
 .prose hr {
   border: none;
   border-top: 2px solid var(--colour-stone-dark);
@@ -275,14 +287,10 @@ img {
   }
 }
 
-.fade-in {
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Castle animations - used by castle section icons */
-@keyframes smokeRise {
-  0% { transform: translateY(0); opacity: 0.3; }
-  100% { transform: translateY(-20px); opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
 }
 
 /* Navigation Styles */

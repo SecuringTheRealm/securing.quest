@@ -48,9 +48,10 @@ If you're using Microsoft Foundry, the [AI Gateway integration](https://learn.mi
 
 > **Note** - If you already have a 'traditional' APIM instance, it won't be detected in the Foundry Admin portal. You'll need to create a new one as an AI gateway.
 
+<figure>
 <Image src={fig2ApimArchitecture} alt="Architecture diagram showing agents on the left sending requests through a seven-step APIM AI Gateway policy pipeline, then into a backend pool of up to 30 endpoints organised by priority, with PTU first and serverless fallback." style="max-width: 100%; height: auto; margin: 2rem auto; display: block;" />
-
-*Figure 2: All agentic traffic flows through the APIM AI Gateway's seven-step policy pipeline before reaching a [backend pool](https://learn.microsoft.com/azure/api-management/backends?WT.mc_id=AI-MVP-5004204) of up to 30 endpoints, organised by priority (PTU first, serverless fallback) with circuit breakers, weighted routing, and session-aware load balancing.*
+<figcaption>Figure 2: All agentic traffic flows through the APIM AI Gateway's seven-step policy pipeline before reaching a <a href="https://learn.microsoft.com/azure/api-management/backends?WT.mc_id=AI-MVP-5004204">backend pool</a> of up to 30 endpoints, organised by priority (PTU first, serverless fallback) with circuit breakers, weighted routing, and session-aware load balancing.</figcaption>
+</figure>
 
 ## Token rate limiting and cost governance
 

@@ -1478,7 +1478,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     transform: translateY(-2px);
   }
 
-  .castle-section:focus-visible {
+  .castle-section-link:focus-visible {
     outline: 3px solid var(--colour-gold);
     outline-offset: 4px;
   }
@@ -1834,6 +1834,20 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     }
     75% {
       transform: translateX(2px);
+    }
+  }
+
+  /* Mobile: castle becomes a decorative banner */
+  @media (max-width: 768px) {
+    .castle-scene-retro {
+      max-height: 180px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .castle-section text,
+    .castle-subtitle {
+      display: none;
     }
   }
 

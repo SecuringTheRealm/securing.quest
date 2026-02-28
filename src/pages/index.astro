@@ -38,6 +38,11 @@ const latestBlogPosts: FeedItem[] = blogPosts
 const manualTalks = await getCollection('talks');
 const youtubeTalks = await fetchYouTubeTalks();
 
+// Collect video URLs from manual talks to deduplicate against YouTube feed
+const manualVideoUrls = new Set(
+	manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
+);
+
 const allTalks = [
 	...manualTalks.map((talk: CollectionEntry<'talks'>) => ({
 		title: talk.data.title,
@@ -47,14 +52,16 @@ const allTalks = [
 		icon: '🏰',
 		description: talk.data.summary,
 	})),
-	...youtubeTalks.map((talk, index) => ({
-		title: talk.title,
-		url: `/talks/#youtube-${index}`,
-		date: talk.date,
-		source: 'Tower',
-		icon: '🏰',
-		description: talk.summary,
-	})),
+	...youtubeTalks
+		.filter((talk) => !manualVideoUrls.has(talk.videoUrl))
+		.map((talk, index) => ({
+			title: talk.title,
+			url: `/talks/#youtube-${index}`,
+			date: talk.date,
+			source: 'Tower',
+			icon: '🏰',
+			description: talk.summary,
+		})),
 ];
 
 const latestTalks = allTalks.sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 3);

@@ -622,6 +622,13 @@ button:hover {
   }
 }
 
+/* Wide desktop: show all 5 realm cards in a single row */
+@media (min-width: 1200px) {
+  .realm-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 /* Tablet breakpoint */
 @media (max-width: 1024px) and (min-width: 769px) {
   .container {
@@ -630,6 +637,10 @@ button:hover {
 
   h1 {
     font-size: var(--font-size-3xl);
+  }
+
+  .nav-search {
+    min-width: 120px;
   }
 }
 

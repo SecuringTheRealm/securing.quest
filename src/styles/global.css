@@ -18,7 +18,7 @@
 }
 
 html {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: var(--font-body);
   font-size: 16px;
   line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
@@ -43,7 +43,7 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-display);
   line-height: var(--line-height-tight);
   color: var(--colour-gold);
   margin-bottom: var(--space-4);
@@ -307,7 +307,7 @@ img {
 }
 
 .logo-text {
-  font-family: 'Press Start 2P', monospace;
+  font-family: var(--font-display);
   font-size: var(--font-size-lg);
   line-height: 1.4;
 }

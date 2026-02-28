@@ -42,6 +42,12 @@
   --colour-accent: var(--colour-gold);
   --colour-accent-hover: var(--colour-gold-light);
 
+  /* Alpha variants (for shadows and overlays) */
+  --colour-gold-alpha-20: color-mix(in srgb, var(--colour-gold) 20%, transparent);
+  --colour-gold-alpha-15: color-mix(in srgb, var(--colour-gold) 15%, transparent);
+  --colour-gold-alpha-30: color-mix(in srgb, var(--colour-gold) 30%, transparent);
+  --colour-shadow: color-mix(in srgb, var(--colour-black) 30%, transparent);
+
   /* Status Colors */
   --colour-success-bg: #2d5016;
   --colour-success-border: #4a7c2a;

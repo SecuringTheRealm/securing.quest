@@ -210,7 +210,7 @@ const fuseOptions = getFuseOptions();
 		max-height: 400px;
 		overflow-y: auto;
 		z-index: var(--z-index-dropdown);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 4px 12px var(--colour-shadow);
 	}
 
 	.search-result {
@@ -231,7 +231,7 @@ const fuseOptions = getFuseOptions();
 
 	.search-result a:hover,
 	.search-result[aria-selected='true'] a {
-		background: rgba(212, 175, 55, 0.15);
+		background: var(--colour-gold-alpha-15);
 	}
 
 	.result-type {

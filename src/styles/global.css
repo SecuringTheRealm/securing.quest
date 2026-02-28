@@ -394,7 +394,7 @@ button,
 button:hover,
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(213, 164, 37, 0.3);
+  box-shadow: 0 4px 8px var(--colour-gold-alpha-30);
 }
 
 .btn-outline:hover {
@@ -436,7 +436,7 @@ button:hover,
     top: 0;
     z-index: var(--z-index-sticky);
     background: var(--colour-bg-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px var(--colour-shadow);
     /* Force GPU compositing to prevent iOS scroll repaint artifacts */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);

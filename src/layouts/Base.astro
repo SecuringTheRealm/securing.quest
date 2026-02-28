@@ -60,7 +60,7 @@ const currentPath = Astro.url.pathname;
       plausible.init()
     </script>
   </head>
-  <body>
+  <body data-url={new URL(Astro.url.pathname, Astro.site).href}>
     <a href="#content" class="skip-link">Skip to content</a>
 
     <header>

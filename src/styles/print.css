@@ -521,8 +521,8 @@
     transition: none !important;
   }
 
-  /* Remove any remaining shadows or effects */
-  * {
+  /* Remove any remaining shadows or effects (exclude SVG internals) */
+  *:not(svg *) {
     filter: none !important;
     opacity: 1 !important;
   }

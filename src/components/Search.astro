@@ -189,9 +189,16 @@ const fuseOptions = getFuseOptions();
 	}
 
 	#search-input:focus {
-		outline: none;
+		outline: 3px solid var(--colour-gold);
+		outline-offset: 2px;
 		border-color: var(--colour-gold);
-		box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+	}
+
+	@media (forced-colors: none) {
+		#search-input:focus {
+			outline: none;
+			box-shadow: 0 0 0 3px var(--colour-gold-alpha-20);
+		}
 	}
 
 	#search-input::placeholder {

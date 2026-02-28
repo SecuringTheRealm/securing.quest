@@ -383,22 +383,59 @@ img {
   margin: 0;
 }
 
-/* Button hover states */
-button,
-.realm-card,
-.btn-primary,
-.btn-outline {
+/* Button base styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-6);
+  background: var(--colour-gold);
+  color: var(--colour-ink);
+  border: none;
+  border-radius: var(--radius-outer);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
   transition: all var(--transition-base);
+  cursor: pointer;
 }
 
-button:hover,
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px var(--colour-gold-alpha-30);
+  color: var(--colour-ink);
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-6);
+  background: transparent;
+  color: var(--colour-gold);
+  border: 2px solid var(--colour-gold);
+  border-radius: var(--radius-outer);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  cursor: pointer;
 }
 
 .btn-outline:hover {
   background: var(--colour-teal-light);
+  color: var(--colour-gold);
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+button,
+.realm-card {
+  transition: all var(--transition-base);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--colour-gold-alpha-30);
 }
 
 /* Card focus states */

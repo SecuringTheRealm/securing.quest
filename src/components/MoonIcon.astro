@@ -1,0 +1,51 @@
+---
+/**
+ * MoonIcon.astro
+ * 8-bit pixel art crescent moon icon
+ * Follows 8px grid system for retro aesthetic
+ */
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 96 96"
+  width="96"
+  height="96"
+  role="img"
+  aria-label="Moon icon - quick glimpses and shorts"
+  class="moon-icon"
+>
+  <title>The Moon</title>
+
+  <!-- Crescent moon body -->
+  <circle cx="48" cy="48" r="32" fill="var(--colour-parchment)" stroke="var(--colour-gold)" stroke-width="2"/>
+  <!-- Shadow bite to create crescent -->
+  <circle cx="60" cy="40" r="24" fill="var(--colour-teal-bg)"/>
+
+  <!-- Moon surface details (craters) -->
+  <circle cx="32" cy="40" r="4" fill="var(--colour-parchment-dark)" opacity="0.4"/>
+  <circle cx="40" cy="56" r="3" fill="var(--colour-parchment-dark)" opacity="0.3"/>
+  <circle cx="28" cy="56" r="2" fill="var(--colour-parchment-dark)" opacity="0.3"/>
+
+  <!-- Glow highlight on crescent edge -->
+  <rect x="24" y="28" width="2" height="4" fill="var(--colour-gold-light)" opacity="0.5"/>
+  <rect x="20" y="40" width="2" height="4" fill="var(--colour-gold-light)" opacity="0.4"/>
+  <rect x="24" y="60" width="2" height="4" fill="var(--colour-gold-light)" opacity="0.5"/>
+
+  <!-- Stars around moon -->
+  <rect x="72" y="16" width="4" height="4" fill="var(--colour-gold)" opacity="0.8"/>
+  <rect x="80" y="56" width="4" height="4" fill="var(--colour-gold)" opacity="0.6"/>
+  <rect x="68" y="72" width="4" height="4" fill="var(--colour-gold)" opacity="0.5"/>
+
+  <!-- Twinkle on largest star -->
+  <rect x="74" y="14" width="0" height="0" fill="var(--colour-gold-light)" opacity="0"/>
+  <rect x="70" y="18" width="2" height="0" fill="var(--colour-gold-light)" opacity="0.4"/>
+  <rect x="76" y="18" width="2" height="0" fill="var(--colour-gold-light)" opacity="0.4"/>
+</svg>
+
+<style>
+  .moon-icon {
+    shape-rendering: crispEdges;
+    image-rendering: pixelated;
+  }
+</style>

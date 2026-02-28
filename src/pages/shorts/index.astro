@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
+import MoonIcon from '../../components/MoonIcon.astro';
 import Base from '../../layouts/Base.astro';
 import { fetchYouTubeShorts } from '../../utils/youtube';
 
@@ -55,9 +56,10 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
 <Base title="Moon - Shorts">
   <div class="container" style="padding: var(--space-16) var(--space-4);">
     <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: var(--space-12);">
-      <h1 style="text-align: center; margin-top: var(--space-6); margin-bottom: var(--space-4);">The Moon</h1>
+      <MoonIcon />
+      <h1 style="text-align: center; margin-top: var(--space-6); margin-bottom: var(--space-4);">🌙 The Moon</h1>
       <p style="text-align: center; font-size: var(--font-size-lg); max-width: 700px; margin: 0 auto;">
-        Quick glimpses into the realm — bite-sized adventures in security, AI, and beyond.
+        Quick glimpses into the realm - bite-sized adventures in security, AI, and beyond.
       </p>
     </div>
 

@@ -16,7 +16,7 @@ export async function GET(context: APIContext) {
 	return rss({
 		title: 'Securing the Realm - Shorts',
 		description:
-			'Quick glimpses into the realm — bite-sized adventures in security, AI, and beyond.',
+			'Quick glimpses into the realm - bite-sized adventures in security, AI, and beyond.',
 		site: context.site || 'https://securing.quest',
 		items,
 		customData: `<language>en-us</language>`,

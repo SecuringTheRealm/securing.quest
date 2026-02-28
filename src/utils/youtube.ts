@@ -33,6 +33,7 @@ export interface RelatedContentLink {
 
 interface YouTubeEntry {
 	id: string;
+	'yt:videoId'?: string;
 	title: string;
 	published: string;
 	link: {
@@ -203,13 +204,21 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 			const publishedDate = new Date(entry.published);
 
 			// Extract video ID from URL
+			// Shorts use /shorts/VIDEO_ID, regular videos use ?v=VIDEO_ID
 			let videoId = '';
 			try {
 				const urlObj = new URL(videoUrl);
 				videoId = urlObj.searchParams.get('v') || '';
+				if (!videoId) {
+					const shortsMatch = urlObj.pathname.match(/\/shorts\/([^/]+)/);
+					if (shortsMatch) {
+						videoId = shortsMatch[1];
+					}
+				}
 			} catch {
-				// fallback: try to extract from yt:videoId
-				videoId = entry.id || '';
+				// fallback: extract from yt:video:VIDEO_ID format
+				const ytMatch = (entry.id || '').match(/yt:video:(.+)/);
+				videoId = ytMatch ? ytMatch[1] : entry.id || '';
 			}
 
 			// Extract description

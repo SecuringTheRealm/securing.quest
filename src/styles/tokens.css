@@ -67,7 +67,12 @@
   --space-16: 64px;
   --space-20: 80px;
   --space-24: 96px;
-  
+
+  /* Layout Widths */
+  --max-width-prose: 800px;
+  --max-width-content: 900px;
+  --max-width-narrow: 700px;
+
   /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 6px;

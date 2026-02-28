@@ -29,7 +29,7 @@ const sortedPosts = allBlogPosts.sort(
       </div>
     </div>
 
-    <div style="max-width: 900px; margin: 0 auto;">
+    <div style="max-width: var(--max-width-content); margin: 0 auto;">
       {sortedPosts.map((post: CollectionEntry<'blog'>) => (
         <article style="margin-bottom: var(--space-8); padding: var(--space-6); background: var(--colour-teal-dark); border: 2px solid var(--colour-gold); border-radius: var(--radius-outer);">
           <h2 style="margin-bottom: var(--space-3);">

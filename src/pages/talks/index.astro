@@ -67,7 +67,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
       </p>
     </div>
 
-    <div style="max-width: 900px; margin: 0 auto;">
+    <div style="max-width: var(--max-width-content); margin: 0 auto;">
       {allTalks.map((talk: UnifiedTalk) => (
         <article style="margin-bottom: var(--space-12); padding: var(--space-6); background: var(--colour-teal-dark); border: 2px solid var(--colour-gold); border-radius: var(--radius-outer);">
           <h2 style="margin-bottom: var(--space-3);">{talk.title}</h2>

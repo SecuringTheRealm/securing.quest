@@ -33,7 +33,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site).href;
   publishDate={entry.data.pubDate}
   tags={entry.data.tags}
 >
-  <article class="h-entry container" style="padding: var(--space-16) var(--space-4); max-width: 800px;">
+  <article class="h-entry container" style="padding: var(--space-16) var(--space-4); max-width: var(--max-width-prose);">
     <a class="u-url" href={canonicalURL} style="display: none;">{entry.data.title}</a>
     <header style="margin-bottom: var(--space-8);">
       <h1 class="p-name" style="margin-bottom: var(--space-4);">{entry.data.title}</h1>

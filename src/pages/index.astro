@@ -3,7 +3,7 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import CastleSceneRetro from '../components/CastleSceneRetro.astro';
 import Base from '../layouts/Base.astro';
-import { fetchYouTubeTalks } from '../utils/youtube';
+import { fetchYouTubeShorts, fetchYouTubeTalks } from '../utils/youtube';
 
 // Unified content item for the feed
 interface FeedItem {
@@ -79,8 +79,22 @@ const latestProjects: FeedItem[] = projects
 		description: project.data.description,
 	}));
 
+// Get latest shorts
+const youtubeShorts = await fetchYouTubeShorts();
+const latestShorts: FeedItem[] = youtubeShorts
+	.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf())
+	.slice(0, 3)
+	.map((short) => ({
+		title: short.title,
+		url: short.videoUrl,
+		date: short.pubDate,
+		source: 'Moon',
+		icon: '🌙',
+		description: short.description || 'A short from the Securing the Realm YouTube channel.',
+	}));
+
 // Combine and sort all content by date
-const latestContent = [...latestBlogPosts, ...latestTalks, ...latestProjects]
+const latestContent = [...latestBlogPosts, ...latestTalks, ...latestProjects, ...latestShorts]
 	.sort((a, b) => b.date.valueOf() - a.date.valueOf())
 	.slice(0, 6);
 ---
@@ -159,6 +173,22 @@ const latestContent = [...latestBlogPosts, ...latestTalks, ...latestProjects]
           </p>
         </a>
 
+        <!-- Moon - Shorts -->
+        <a
+          href="/shorts/"
+          class="realm-card glow-on-hover"
+          style="padding: var(--space-6); background: var(--colour-teal-dark); border: 2px solid var(--colour-gold); border-radius: var(--radius-outer); text-align: center; display: block; transition: transform var(--transition-base);"
+        >
+          <h3
+            style="font-size: var(--font-size-xl); margin-bottom: var(--space-4);"
+          >
+            🌙 Moon
+          </h3>
+          <p style="margin: 0; color: var(--colour-parchment);">
+            Quick glimpses — bite-sized adventures in security and AI
+          </p>
+        </a>
+
         <!-- Newsletter - Scrolls -->
         <a
           href="/newsletter/"
@@ -178,7 +208,7 @@ const latestContent = [...latestBlogPosts, ...latestTalks, ...latestProjects]
     </section>
 
     <!-- Latest Content Feed -->
-    <section style="max-width: 900px; margin: 0 auto var(--space-16) auto;">
+    <section style="max-width: var(--max-width-content); margin: 0 auto var(--space-16) auto;">
       <h2 style="text-align: center; margin-bottom: var(--space-8);">
         Latest Adventures
       </h2>
@@ -223,7 +253,7 @@ const latestContent = [...latestBlogPosts, ...latestTalks, ...latestProjects]
       </div>
     </section>
 
-    <section style="max-width: 800px; margin: 0 auto; text-align: center;">
+    <section style="max-width: var(--max-width-prose); margin: 0 auto; text-align: center;">
       <h2 style="margin-bottom: var(--space-6);">Our Quest</h2>
       <p
         style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);"

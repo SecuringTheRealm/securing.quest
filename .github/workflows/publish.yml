@@ -30,35 +30,47 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Cache XML feed
+      - name: Cache XML feeds
         id: xml_cache
         uses: actions/cache@v4
         with:
-          path: .cache/xml-feed.xml
-          key: xml-feed-${{ hashFiles('.cache/xml-feed.xml') }}
-          restore-keys: xml-feed-
+          path: |
+            .cache/xml-feed.xml
+            .cache/xml-shorts-feed.xml
+          key: xml-feeds-${{ hashFiles('.cache/xml-feed.xml', '.cache/xml-shorts-feed.xml') }}
+          restore-keys: xml-feeds-
 
-      - name: Fetch latest XML
+      - name: Fetch latest XML feeds
         run: |
           mkdir -p .cache
           curl -sL 'https://www.youtube.com/feeds/videos.xml?playlist_id=PLo9Ah7HeyG1QVWTBPzOROBQNqinh0ZPWv' -o .cache/current.xml
+          curl -sL 'https://www.youtube.com/feeds/videos.xml?playlist_id=PLo9Ah7HeyG1Rkqq0cc1QJtttkywXKWd9g' -o .cache/current-shorts.xml
 
       - name: Check XML changes
         id: diff
         shell: bash
         run: |
+          CHANGED=false
           if [ -f .cache/xml-feed.xml ]; then
-            if diff -q .cache/xml-feed.xml .cache/current.xml > /dev/null; then
-              echo "changed=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "changed=true" >> "$GITHUB_OUTPUT"
+            if ! diff -q .cache/xml-feed.xml .cache/current.xml > /dev/null; then
+              CHANGED=true
             fi
           else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            CHANGED=true
           fi
+          if [ -f .cache/xml-shorts-feed.xml ]; then
+            if ! diff -q .cache/xml-shorts-feed.xml .cache/current-shorts.xml > /dev/null; then
+              CHANGED=true
+            fi
+          else
+            CHANGED=true
+          fi
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
 
       - name: Update cached XML
-        run: mv .cache/current.xml .cache/xml-feed.xml
+        run: |
+          mv .cache/current.xml .cache/xml-feed.xml
+          mv .cache/current-shorts.xml .cache/xml-shorts-feed.xml
 
       - name: Check content and pages changes
         id: content_diff

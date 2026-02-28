@@ -1,9 +1,9 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
-import { fetchYouTubeTalks } from './youtube';
+import { fetchYouTubeShorts, fetchYouTubeTalks } from './youtube';
 
 export interface SearchItem {
-	type: 'blog' | 'talk' | 'project';
+	type: 'blog' | 'talk' | 'project' | 'short';
 	title: string;
 	description: string;
 	url: string;
@@ -57,6 +57,19 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 			url: `/talks/#youtube-${index}`,
 			date: talk.date,
 			tags: talk.tags,
+		});
+	});
+
+	// Add YouTube Shorts
+	const youtubeShorts = await fetchYouTubeShorts();
+	youtubeShorts.forEach((short) => {
+		items.push({
+			type: 'short',
+			title: short.title,
+			description: short.description || 'A short from the Securing the Realm YouTube channel.',
+			url: short.videoUrl,
+			date: short.pubDate,
+			tags: short.tags,
 		});
 	});
 

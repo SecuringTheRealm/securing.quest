@@ -37,8 +37,27 @@ const projects = defineCollection({
 	}),
 });
 
+const shorts = defineCollection({
+	type: 'data',
+	schema: z.object({
+		youtubeId: z.string(),
+		title: z.string().optional(),
+		relatedContent: z
+			.array(
+				z.object({
+					type: z.enum(['blog', 'talk', 'project', 'external']),
+					slug: z.string(),
+					title: z.string().optional(),
+				})
+			)
+			.optional(),
+		tags: z.array(z.string()).optional(),
+	}),
+});
+
 export const collections = {
 	blog,
 	talks,
 	projects,
+	shorts,
 };

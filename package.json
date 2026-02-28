@@ -29,10 +29,12 @@
 		"fuse.js": "^7.1.0",
 		"remark-breaks": "^4.0.0",
 		"remark-gfm": "^4.0.1",
-		"typescript": "^5.9.3"
+		"typescript": "^5.9.3",
+		"unist-util-visit": "^5.1.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.4",
+		"@types/hast": "^3.0.4",
 		"@types/node": "^24.7.0",
 		"sharp": "^0.34.5",
 		"tsx": "^4.20.6"

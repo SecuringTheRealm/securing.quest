@@ -2,6 +2,7 @@
 import { buildSearchIndex, getFuseOptions } from '../utils/search';
 
 const searchData = await buildSearchIndex();
+const fuseOptions = getFuseOptions();
 ---
 
 <div class="search-container">
@@ -17,152 +18,151 @@ const searchData = await buildSearchIndex();
 			autocomplete="off"
 		/>
 		<div id="search-results" role="listbox" aria-label="Search results" hidden>
-			<!-- Results will be populated by JavaScript -->
 		</div>
 	</div>
 </div>
 
-<script define:vars={{ searchData, fuseOptions: getFuseOptions() }} is:inline>
-	import('https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.mjs').then((module) => {
-		const Fuse = module.default;
+<script id="search-data" type="application/json" set:html={JSON.stringify({ searchData, fuseOptions })} />
 
-		const searchInput = document.getElementById('search-input');
-		const searchResults = document.getElementById('search-results');
+<script>
+	import Fuse from 'fuse.js';
 
-		if (!searchInput || !searchResults) {
-			throw new Error('Search elements not found');
+	const dataEl = document.getElementById('search-data');
+	if (!dataEl?.textContent) throw new Error('Search data not found');
+	const { searchData, fuseOptions } = JSON.parse(dataEl.textContent);
+
+	const searchInput = document.getElementById('search-input') as HTMLInputElement;
+	const searchResultsEl = document.getElementById('search-results') as HTMLElement;
+
+	if (!searchInput || !searchResultsEl) {
+		throw new Error('Search elements not found');
+	}
+
+	const fuse = new Fuse(searchData, fuseOptions);
+
+	let selectedIndex = -1;
+	let searchTrackTimeout: ReturnType<typeof setTimeout> | undefined;
+
+	searchInput.addEventListener('input', (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		const query = target.value.trim();
+
+		if (query.length < 2) {
+			hideResults();
+			return;
 		}
 
-		// Initialize fuse.js
-		const fuse = new Fuse(searchData, fuseOptions);
+		const results = fuse.search(query);
+		displayResults(results.slice(0, 8));
 
-		let selectedIndex = -1;
-
-		// Handle search input
-		searchInput.addEventListener('input', (e) => {
-			const target = e.target;
-			const query = target.value.trim();
-
-			if (query.length < 2) {
-				hideResults();
-				return;
+		clearTimeout(searchTrackTimeout);
+		searchTrackTimeout = setTimeout(() => {
+			if (typeof (window as any).plausible !== 'undefined') {
+				(window as any).plausible('Search', { props: { query: query, resultCount: String(results.length) } });
 			}
+		}, 1000);
+	});
 
-			const results = fuse.search(query);
-			displayResults(results.slice(0, 8)); // Show top 8 results
+	searchInput.addEventListener('keydown', (e: KeyboardEvent) => {
+		const resultItems = searchResultsEl.querySelectorAll('[role="option"]');
 
-			// Track search queries in Plausible (debounced)
-			clearTimeout(window._searchTrackTimeout);
-			window._searchTrackTimeout = setTimeout(function () {
-				if (typeof plausible !== 'undefined') {
-					plausible('Search', { props: { query: query, resultCount: String(results.length) } });
+		switch (e.key) {
+			case 'ArrowDown':
+				e.preventDefault();
+				selectedIndex = Math.min(selectedIndex + 1, resultItems.length - 1);
+				updateSelection(resultItems);
+				break;
+			case 'ArrowUp':
+				e.preventDefault();
+				selectedIndex = Math.max(selectedIndex - 1, -1);
+				updateSelection(resultItems);
+				break;
+			case 'Enter':
+				e.preventDefault();
+				if (selectedIndex >= 0 && resultItems[selectedIndex]) {
+					const link = resultItems[selectedIndex].querySelector('a') as HTMLAnchorElement | null;
+					if (link) link.click();
 				}
-			}, 1000);
-		});
-
-		// Handle keyboard navigation
-		searchInput.addEventListener('keydown', (e) => {
-			const resultItems = searchResults.querySelectorAll('[role="option"]');
-
-			switch (e.key) {
-				case 'ArrowDown':
-					e.preventDefault();
-					selectedIndex = Math.min(selectedIndex + 1, resultItems.length - 1);
-					updateSelection(resultItems);
-					break;
-				case 'ArrowUp':
-					e.preventDefault();
-					selectedIndex = Math.max(selectedIndex - 1, -1);
-					updateSelection(resultItems);
-					break;
-				case 'Enter':
-					e.preventDefault();
-					if (selectedIndex >= 0 && resultItems[selectedIndex]) {
-						const link = resultItems[selectedIndex].querySelector('a');
-						if (link) link.click();
-					}
-					break;
-				case 'Escape':
-					hideResults();
-					searchInput.blur();
-					break;
-			}
-		});
-
-		// Close results when clicking outside
-		document.addEventListener('click', (e) => {
-			const target = e.target;
-			if (!target.closest('.search-container')) {
+				break;
+			case 'Escape':
 				hideResults();
-			}
-		});
-
-		function displayResults(results) {
-			if (results.length === 0) {
-				searchResults.innerHTML =
-					'<div class="no-results" role="option">No results found</div>';
-				showResults();
-				return;
-			}
-
-			searchResults.innerHTML = results
-				.map(
-					(result, index) => `
-				<div class="search-result" role="option" aria-selected="${index === selectedIndex}" data-index="${index}">
-					<a href="${result.item.url}">
-						<div class="result-type">${getTypeIcon(result.item.type)} ${result.item.type}</div>
-						<div class="result-title">${result.item.title}</div>
-						<div class="result-description">${truncate(result.item.description, 100)}</div>
-					</a>
-				</div>
-			`
-				)
-				.join('');
-
-			showResults();
-			selectedIndex = -1;
-		}
-
-		function updateSelection(items) {
-			items.forEach((item, index) => {
-				if (index === selectedIndex) {
-					item.setAttribute('aria-selected', 'true');
-					item.scrollIntoView({ block: 'nearest' });
-				} else {
-					item.setAttribute('aria-selected', 'false');
-				}
-			});
-		}
-
-		function showResults() {
-			searchResults.removeAttribute('hidden');
-			searchInput.setAttribute('aria-expanded', 'true');
-		}
-
-		function hideResults() {
-			searchResults.setAttribute('hidden', '');
-			searchInput.setAttribute('aria-expanded', 'false');
-			selectedIndex = -1;
-		}
-
-		function getTypeIcon(type) {
-			switch (type) {
-				case 'blog':
-					return '📚';
-				case 'talk':
-					return '🏰';
-				case 'project':
-					return '⚒️';
-				default:
-					return '📄';
-			}
-		}
-
-		function truncate(text, length) {
-			if (text.length <= length) return text;
-			return text.slice(0, length) + '...';
+				searchInput.blur();
+				break;
 		}
 	});
+
+	document.addEventListener('click', (e: MouseEvent) => {
+		const target = e.target as HTMLElement;
+		if (!target.closest('.search-container')) {
+			hideResults();
+		}
+	});
+
+	function displayResults(results: any[]) {
+		if (results.length === 0) {
+			searchResultsEl.innerHTML =
+				'<div class="no-results" role="status">No results found</div>';
+			showResults();
+			return;
+		}
+
+		searchResultsEl.innerHTML = results
+			.map(
+				(result: any, index: number) => `
+        <div class="search-result" role="option" aria-selected="${index === selectedIndex}" data-index="${index}">
+          <a href="${result.item.url}">
+            <div class="result-type">${getTypeIcon(result.item.type)} ${result.item.type}</div>
+            <div class="result-title">${result.item.title}</div>
+            <div class="result-description">${truncate(result.item.description, 100)}</div>
+          </a>
+        </div>
+      `
+			)
+			.join('');
+
+		showResults();
+		selectedIndex = -1;
+	}
+
+	function updateSelection(items: NodeListOf<Element>) {
+		items.forEach((item, index) => {
+			if (index === selectedIndex) {
+				item.setAttribute('aria-selected', 'true');
+				item.scrollIntoView({ block: 'nearest' });
+			} else {
+				item.setAttribute('aria-selected', 'false');
+			}
+		});
+	}
+
+	function showResults() {
+		searchResultsEl.removeAttribute('hidden');
+		searchInput.setAttribute('aria-expanded', 'true');
+	}
+
+	function hideResults() {
+		searchResultsEl.setAttribute('hidden', '');
+		searchInput.setAttribute('aria-expanded', 'false');
+		selectedIndex = -1;
+	}
+
+	function getTypeIcon(type: string) {
+		switch (type) {
+			case 'blog':
+				return '\u{1F4DA}';
+			case 'talk':
+				return '\u{1F3F0}';
+			case 'project':
+				return '\u2692\uFE0F';
+			default:
+				return '\u{1F4C4}';
+		}
+	}
+
+	function truncate(text: string, length: number) {
+		if (text.length <= length) return text;
+		return text.slice(0, length) + '...';
+	}
 </script>
 
 <style>

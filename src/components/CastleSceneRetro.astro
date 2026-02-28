@@ -121,7 +121,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
 
   <a href="/shorts/" aria-label="Shorts - Watch short videos" data-castle-nav="Shorts">
     <g class="castle-section">
-      <!-- Moon (SNES style - simple and discrete) -->
+      <!-- Moon (SNES style - simple and discrete, uses circular moon-glow instead of section-glow rect) -->
       <circle
         cx="1080"
         cy="120"
@@ -1843,6 +1843,10 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     }
     .castle-section:hover {
       transform: none;
+    }
+    .section-glow,
+    .castle-subtitle {
+      transition: none;
     }
     .window-flicker,
     .forge-glow-animation,

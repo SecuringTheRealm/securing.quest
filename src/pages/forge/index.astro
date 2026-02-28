@@ -50,7 +50,7 @@ const otherProjects = allProjects
           </h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
             {activeProjects.map((project: CollectionEntry<'projects'>) => (
-              <article style="padding: var(--space-6); background: var(--colour-teal-dark); border: 2px solid var(--colour-gold); border-radius: var(--radius-outer);">
+              <article class="content-card">
                 <h3 style="margin-bottom: var(--space-3); overflow-wrap: break-word; word-break: break-word;">
                   {project.data.name}
                 </h3>
@@ -102,7 +102,7 @@ const otherProjects = allProjects
           </h2>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
             {otherProjects.map((project: CollectionEntry<'projects'>) => (
-              <article style="padding: var(--space-6); background: var(--colour-teal-dark); border: 2px solid var(--colour-stone); border-radius: var(--radius-outer); opacity: 0.8;">
+              <article class="content-card" style="border-color: var(--colour-stone); opacity: 0.8;">
                 <h3 style="margin-bottom: var(--space-3); overflow-wrap: break-word; word-break: break-word;">
                   {project.data.name}
                 </h3>

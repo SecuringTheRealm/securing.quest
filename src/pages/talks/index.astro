@@ -69,7 +69,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
 
     <div style="max-width: var(--max-width-content); margin: 0 auto;">
       {allTalks.map((talk: UnifiedTalk) => (
-        <article style="margin-bottom: var(--space-12); padding: var(--space-6); background: var(--colour-teal-dark); border: 2px solid var(--colour-gold); border-radius: var(--radius-outer);">
+        <article class="content-card" style="margin-bottom: var(--space-12);">
           <h2 style="margin-bottom: var(--space-3);">{talk.title}</h2>
           <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
             {talk.event} • {talk.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}

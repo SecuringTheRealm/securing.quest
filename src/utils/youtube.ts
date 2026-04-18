@@ -50,6 +50,43 @@ const YOUTUBE_FEED_URL = `https://www.youtube.com/feeds/videos.xml?playlist_id=$
 const YOUTUBE_SHORTS_PLAYLIST_ID = 'PLo9Ah7HeyG1Rkqq0cc1QJtttkywXKWd9g';
 const YOUTUBE_SHORTS_FEED_URL = `https://www.youtube.com/feeds/videos.xml?playlist_id=${YOUTUBE_SHORTS_PLAYLIST_ID}`;
 
+const YOUTUBE_CHANNEL_ID = 'UCS4KTDaZTiyiMj2yZztwmlg';
+const YOUTUBE_CHANNEL_FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
+
+async function fetchFeedEntries(feedUrl: string): Promise<YouTubeEntry[]> {
+	const response = await fetch(feedUrl);
+	if (!response.ok) {
+		console.warn(`Failed to fetch YouTube feed ${feedUrl}: ${response.statusText}`);
+		return [];
+	}
+
+	const xmlData = await response.text();
+
+	const parser = new XMLParser({
+		ignoreAttributes: false,
+		attributeNamePrefix: '@_',
+		isArray: (name: string) => ['entry'].includes(name),
+		processEntities: true,
+		parseAttributeValue: true,
+	});
+
+	const parsedXml = parser.parse(xmlData);
+
+	if (!parsedXml.feed || !parsedXml.feed.entry) {
+		return [];
+	}
+
+	return parsedXml.feed.entry as YouTubeEntry[];
+}
+
+function getEntryVideoId(entry: YouTubeEntry): string {
+	if (entry['yt:videoId']) {
+		return entry['yt:videoId'];
+	}
+	const ytMatch = (entry.id || '').match(/yt:video:(.+)/);
+	return ytMatch ? ytMatch[1] : entry.id || '';
+}
+
 // Module-level cache to avoid redundant fetches during a single build.
 // Multiple pages call fetchYouTubeTalks() (directly and via buildSearchIndex),
 // so caching saves N-1 HTTP requests to YouTube during static generation.
@@ -67,30 +104,32 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 	}
 
 	try {
-		const response = await fetch(YOUTUBE_FEED_URL);
-		if (!response.ok) {
-			console.warn(`Failed to fetch YouTube feed: ${response.statusText}`);
-			return [];
-		}
+		// Merge the curated talks playlist with the channel feed (filtered to
+		// non-shorts) so newly published long-form videos appear even if they
+		// haven't been added to the playlist yet.
+		const [playlistEntries, channelEntries] = await Promise.all([
+			fetchFeedEntries(YOUTUBE_FEED_URL),
+			fetchFeedEntries(YOUTUBE_CHANNEL_FEED_URL),
+		]);
 
-		const xmlData = await response.text();
-
-		const parser = new XMLParser({
-			ignoreAttributes: false,
-			attributeNamePrefix: '@_',
-			isArray: (name: string) => ['entry'].includes(name),
-			processEntities: true,
-			parseAttributeValue: true,
+		const channelLongFormEntries = channelEntries.filter((entry: YouTubeEntry) => {
+			const href = entry.link?.['@_href'] || '';
+			return !href.includes('/shorts/');
 		});
 
-		const parsedXml = parser.parse(xmlData);
+		const entryMap = new Map<string, YouTubeEntry>();
+		for (const entry of [...playlistEntries, ...channelLongFormEntries]) {
+			const videoId = getEntryVideoId(entry);
+			if (videoId && !entryMap.has(videoId)) {
+				entryMap.set(videoId, entry);
+			}
+		}
+		const entries = Array.from(entryMap.values());
 
-		if (!parsedXml.feed || !parsedXml.feed.entry) {
+		if (entries.length === 0) {
 			console.warn('No entries found in YouTube feed');
 			return [];
 		}
-
-		const entries = parsedXml.feed.entry as YouTubeEntry[];
 
 		const talks = entries.map((entry: YouTubeEntry) => {
 			const videoUrl = entry.link['@_href'] || '';
@@ -174,30 +213,32 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 	}
 
 	try {
-		const response = await fetch(YOUTUBE_SHORTS_FEED_URL);
-		if (!response.ok) {
-			console.warn(`Failed to fetch YouTube Shorts feed: ${response.statusText}`);
-			return [];
-		}
+		// Merge the curated shorts playlist with the channel feed (filtered to
+		// /shorts/ URLs) so newly published shorts appear even if they haven't
+		// been added to the playlist yet.
+		const [playlistEntries, channelEntries] = await Promise.all([
+			fetchFeedEntries(YOUTUBE_SHORTS_FEED_URL),
+			fetchFeedEntries(YOUTUBE_CHANNEL_FEED_URL),
+		]);
 
-		const xmlData = await response.text();
-
-		const parser = new XMLParser({
-			ignoreAttributes: false,
-			attributeNamePrefix: '@_',
-			isArray: (name: string) => ['entry'].includes(name),
-			processEntities: true,
-			parseAttributeValue: true,
+		const channelShortEntries = channelEntries.filter((entry: YouTubeEntry) => {
+			const href = entry.link?.['@_href'] || '';
+			return href.includes('/shorts/');
 		});
 
-		const parsedXml = parser.parse(xmlData);
+		const entryMap = new Map<string, YouTubeEntry>();
+		for (const entry of [...playlistEntries, ...channelShortEntries]) {
+			const videoId = getEntryVideoId(entry);
+			if (videoId && !entryMap.has(videoId)) {
+				entryMap.set(videoId, entry);
+			}
+		}
+		const entries = Array.from(entryMap.values());
 
-		if (!parsedXml.feed || !parsedXml.feed.entry) {
+		if (entries.length === 0) {
 			console.warn('No entries found in YouTube Shorts feed');
 			return [];
 		}
-
-		const entries = parsedXml.feed.entry as YouTubeEntry[];
 
 		const shorts = entries.map((entry: YouTubeEntry) => {
 			const videoUrl = entry.link['@_href'] || '';

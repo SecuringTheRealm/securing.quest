@@ -44,7 +44,7 @@ export const getStaticPaths = (async () => {
 		for (const tag of post.data.tags) {
 			addToTag(tag, {
 				title: post.data.title,
-				url: `/blog/${post.slug}/`,
+				url: `/blog/${post.id}/`,
 				date: post.data.pubDate,
 				source: 'Library',
 				icon: '📚',

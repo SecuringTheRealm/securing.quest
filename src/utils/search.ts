@@ -28,7 +28,7 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 			type: 'blog',
 			title: post.data.title,
 			description: post.data.description,
-			url: `/blog/${post.slug}/`,
+			url: `/blog/${post.id}/`,
 			date: post.data.pubDate,
 			tags: post.data.tags,
 		});

@@ -1,11 +1,23 @@
 import type { CollectionEntry } from 'astro:content';
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import mdxRenderer from '@astrojs/mdx/server.js';
-import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 
-export async function GET(context: APIContext) {
+const SITE_TITLE = 'Securing the Realm - Blog';
+const SITE_DESCRIPTION =
+	'Epic adventures in cybersecurity, Azure, and AI through the lens of fantasy storytelling.';
+
+function escapeXml(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+}
+
+export async function GET(context: APIContext): Promise<Response> {
 	const blog = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {
 		return data.draft !== true;
 	});
@@ -18,28 +30,48 @@ export async function GET(context: APIContext) {
 	const container = await AstroContainer.create();
 	container.addServerRenderer({ renderer: mdxRenderer, name: '@astrojs/mdx' });
 
-	const items = await Promise.all(
-		sortedPosts.map(async (post: CollectionEntry<'blog'>) => {
-			const { Content } = await post.render();
-			const content = await container.renderToString(Content);
+	const siteUrl = (context.site || new URL('https://securing.quest')).toString().replace(/\/$/, '');
 
-			return {
-				title: post.data.title,
-				description: post.data.description,
-				pubDate: post.data.pubDate,
-				link: `/blog/${post.slug}/`,
-				categories: post.data.tags,
-				content,
-			};
+	const itemsXml = await Promise.all(
+		sortedPosts.map(async (post: CollectionEntry<'blog'>) => {
+			const { Content } = await render(post);
+			const content = await container.renderToString(Content);
+			const link = `${siteUrl}/blog/${post.id}/`;
+			const categories = post.data.tags
+				.map((tag: string) => `    <category>${escapeXml(tag)}</category>`)
+				.join('\n');
+
+			return [
+				'  <item>',
+				`    <title>${escapeXml(post.data.title)}</title>`,
+				`    <description>${escapeXml(post.data.description)}</description>`,
+				`    <pubDate>${post.data.pubDate.toUTCString()}</pubDate>`,
+				`    <link>${escapeXml(link)}</link>`,
+				`    <guid isPermaLink="true">${escapeXml(link)}</guid>`,
+				categories,
+				`    <content:encoded><![CDATA[${content}]]></content:encoded>`,
+				'  </item>',
+			]
+				.filter(Boolean)
+				.join('\n');
 		})
 	);
 
-	return rss({
-		title: 'Securing the Realm - Blog',
-		description:
-			'Epic adventures in cybersecurity, Azure, and AI through the lens of fantasy storytelling.',
-		site: context.site || 'https://securing.quest',
-		items,
-		customData: `<language>en-us</language>`,
+	const rss = [
+		'<?xml version="1.0" encoding="UTF-8"?>',
+		'<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
+		'<channel>',
+		`  <title>${escapeXml(SITE_TITLE)}</title>`,
+		`  <description>${escapeXml(SITE_DESCRIPTION)}</description>`,
+		`  <link>${escapeXml(siteUrl)}</link>`,
+		`  <atom:link href="${escapeXml(`${siteUrl}/blog/rss.xml`)}" rel="self" type="application/rss+xml" />`,
+		'  <language>en-us</language>',
+		itemsXml.join('\n'),
+		'</channel>',
+		'</rss>',
+	].join('\n');
+
+	return new Response(rss, {
+		headers: { 'Content-Type': 'application/xml; charset=utf-8' },
 	});
 }

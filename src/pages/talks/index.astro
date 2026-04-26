@@ -39,17 +39,24 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	embedUrl: getYouTubeEmbedUrl(talk.data.videoUrl),
 }));
 
+// Drop YouTube entries that are already covered by a manual talk (matched by video URL)
+const manualVideoUrls = new Set(
+	manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
+);
+
 // Convert YouTube talks to unified format
-const unifiedYouTubeTalks: UnifiedTalk[] = youtubeTalks.map((talk, index) => ({
-	id: `youtube-${index}`,
-	title: talk.title,
-	date: talk.date,
-	event: talk.event,
-	videoUrl: talk.videoUrl,
-	summary: talk.summary,
-	tags: talk.tags,
-	embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
-}));
+const unifiedYouTubeTalks: UnifiedTalk[] = youtubeTalks
+	.filter((talk) => !manualVideoUrls.has(talk.videoUrl))
+	.map((talk, index) => ({
+		id: `youtube-${index}`,
+		title: talk.title,
+		date: talk.date,
+		event: talk.event,
+		videoUrl: talk.videoUrl,
+		summary: talk.summary,
+		tags: talk.tags,
+		embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+	}));
 
 // Merge and sort all talks by date (newest first)
 const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(

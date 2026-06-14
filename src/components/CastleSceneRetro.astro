@@ -63,8 +63,9 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     Securing the Realm - 8-bit Castle Navigation
   </title>
   <desc id={`${uid}-desc`}>
-    A pixel-art castle with four sections: Tower (talks), Library (blog), Forge
-    (projects), and Newsletter scrolls.
+    A pixel-art castle with five interactive sections: the Tower (talks), the
+    Library (blog), the Forge (code), the Moon (shorts), and the central Keep
+    (about). A scroll on the lawn links to the podcast.
   </desc>
 
   <defs>
@@ -695,8 +696,9 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     </g>
   </a>
 
-  <!-- MAIN KEEP (Center - massive Great Tower like Dover) -->
-  <g>
+  <!-- MAIN KEEP (Center) - About / Enter the Keep -->
+  <a href="/about/" aria-label="Enter the Keep - About" data-castle-nav="Keep">
+    <g class="castle-section">
     <!-- Thicker walls with buttressing -->
     <rect
       x="592"
@@ -931,7 +933,42 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     ></rect>
     <rect x="744" y="384" width="4" height="4" fill="var(--colour-stone-dark)"
     ></rect>
-  </g>
+
+      <!-- Section glow (painted behind the label) -->
+      <rect
+        x="590"
+        y="158"
+        width="260"
+        height="284"
+        fill="var(--colour-gold)"
+        opacity="0"
+        class="section-glow"></rect>
+      <!-- About label + keyboard/hover reveal affordances -->
+      <text
+        x="720"
+        y="404"
+        text-anchor="middle"
+        fill="var(--colour-parchment)"
+        font-family="'Press Start 2P', monospace"
+        font-size="11"
+        letter-spacing="1">ABOUT</text>
+      <text
+        x="720"
+        y="418"
+        text-anchor="middle"
+        fill="var(--colour-parchment)"
+        font-family="'Press Start 2P', monospace"
+        font-size="7"
+        opacity="0"
+        class="castle-subtitle">The Keep</text>
+      <g class="hover-sparkle" opacity="0">
+        <rect x="600" y="152" width="4" height="4" fill="var(--colour-gold)" />
+        <rect x="840" y="152" width="4" height="4" fill="var(--colour-gold)" />
+        <rect x="600" y="432" width="4" height="4" fill="var(--colour-gold)" />
+        <rect x="840" y="432" width="4" height="4" fill="var(--colour-gold)" />
+      </g>
+    </g>
+  </a>
 
   <!-- FORGE SECTION (Right) -->
   <a href="/forge/" aria-label="Projects - Explore code projects" data-castle-nav="Forge">
@@ -1307,7 +1344,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
         font-size="11"
-        letter-spacing="1">PROJECTS</text
+        letter-spacing="1">CODE</text
       >
       <text
         x="960"
@@ -1338,8 +1375,8 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     </g>
   </a>
 
-  <!-- NEWSLETTER SCROLLS (On the Lawn) -->
-  <a href="/newsletter/" aria-label="Newsletter - Subscribe to updates" data-castle-nav="Newsletter">
+  <!-- PODCAST SCROLL (On the Lawn) -->
+  <a href="/#listen" aria-label="Listen - Securing the Realm podcast" data-castle-nav="Podcast">
     <g class="castle-section">
       <!-- Flowers around scroll (8-bit pixel flowers) -->
       <!-- Red flower -->
@@ -1405,7 +1442,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
         font-size="9"
-        letter-spacing="1">NEWSLETTER</text
+        letter-spacing="1">LISTEN</text
       >
       <text
         x="1096"
@@ -1415,7 +1452,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         font-family="'Press Start 2P', monospace"
         font-size="7"
         opacity="0"
-        class="castle-subtitle">Arcane Scrolls</text>
+        class="castle-subtitle">Podcast</text>
 
       <!-- Hover sparkles -->
       <g class="hover-sparkle" opacity="0">
@@ -1458,7 +1495,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   .castle-scene-retro {
     width: 100%;
     height: auto;
-    max-width: 1200px;
+    max-width: var(--max-width-wide);
     display: block;
     shape-rendering: crispEdges;
   }
@@ -1478,9 +1515,32 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     transform: translateY(-2px);
   }
 
-  .castle-section-link:focus-visible {
+  .castle-scene-retro a:focus-visible {
     outline: 3px solid var(--colour-gold);
     outline-offset: 4px;
+  }
+
+  /* Keyboard focus reveals the same affordances as hover */
+  .castle-scene-retro a:focus-visible .castle-section {
+    transform: translateY(-2px);
+  }
+
+  .castle-scene-retro a:focus-visible .section-glow {
+    opacity: 0.25;
+  }
+
+  .castle-scene-retro a:focus-visible .castle-subtitle {
+    opacity: 0.7;
+  }
+
+  .castle-scene-retro a:focus-visible .hover-sparkle {
+    opacity: 1;
+    animation: sparkle-pop 0.6s steps(3, end);
+  }
+
+  /* Pause idle animation when the scene is scrolled off-screen */
+  .castle-scene-retro.is-paused * {
+    animation-play-state: paused !important;
   }
 
   .section-glow {
@@ -1509,6 +1569,8 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
 
   .hover-sparkle {
     transition: opacity 0.2s steps(2, end);
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   .castle-section:hover .hover-sparkle {
@@ -1646,6 +1708,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
 
   .flag-wave {
     animation: flag-wave 2s steps(4, end) infinite;
+    transform-box: fill-box;
     transform-origin: left center;
   }
 
@@ -1785,6 +1848,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
 
   .hammer-strike {
     animation: hammer-strike 1.6s steps(4, end) infinite;
+    transform-box: fill-box;
     transform-origin: bottom right;
   }
 
@@ -1811,10 +1875,6 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     50% {
       opacity: 1;
     }
-  }
-
-  .castle-section-link {
-    cursor: pointer;
   }
 
   .flower-sway {
@@ -1876,8 +1936,12 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     .owl-pupil,
     .hammer-strike,
     .impact-stars,
-    .flower-sway {
+    .flower-sway,
+    .hover-sparkle {
       animation: none !important;
+    }
+    .castle-scene-retro a:focus-visible .castle-section {
+      transform: none;
     }
   }
 </style>
@@ -1890,4 +1954,21 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       }
     });
   });
+</script>
+
+<script is:inline>
+  // Pause the castle's idle animations while it is scrolled off-screen.
+  (function () {
+    var scene = document.querySelector('.castle-scene-retro');
+    if (!scene || !('IntersectionObserver' in window)) return;
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          scene.classList.toggle('is-paused', !entry.isIntersecting);
+        });
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(scene);
+  })();
 </script>

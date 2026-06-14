@@ -2,10 +2,12 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import CastleSceneRetro from '../components/CastleSceneRetro.astro';
+import CredibilityStrip from '../components/CredibilityStrip.astro';
+import ListenHub from '../components/ListenHub.astro';
 import Base from '../layouts/Base.astro';
 import { fetchYouTubeShorts, fetchYouTubeTalks } from '../utils/youtube';
 
-// Unified content item for the feed
+// Unified content item for the Quest Log feed
 interface FeedItem {
 	title: string;
 	url: string;
@@ -13,6 +15,8 @@ interface FeedItem {
 	source: string;
 	icon: string;
 	description: string;
+	realm: 'tower' | 'library' | 'forge' | 'moon';
+	external: boolean;
 }
 
 // Get latest blog posts
@@ -25,14 +29,18 @@ const latestBlogPosts: FeedItem[] = blogPosts
 			b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 	)
 	.slice(0, 3)
-	.map((post: CollectionEntry<'blog'>) => ({
-		title: post.data.title,
-		url: `/blog/${post.id}/`,
-		date: post.data.pubDate,
-		source: 'Library',
-		icon: '📚',
-		description: post.data.description,
-	}));
+	.map(
+		(post: CollectionEntry<'blog'>): FeedItem => ({
+			title: post.data.title,
+			url: `/blog/${post.id}/`,
+			date: post.data.pubDate,
+			source: 'Library · Blog',
+			icon: '📚',
+			description: post.data.description,
+			realm: 'library',
+			external: false,
+		})
+	);
 
 // Get latest talks (manual + YouTube)
 const manualTalks = await getCollection('talks');
@@ -43,25 +51,33 @@ const manualVideoUrls = new Set(
 	manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
 );
 
-const allTalks = [
-	...manualTalks.map((talk: CollectionEntry<'talks'>) => ({
-		title: talk.data.title,
-		url: `/talks/#${talk.id}`,
-		date: talk.data.date,
-		source: 'Tower',
-		icon: '🏰',
-		description: talk.data.summary,
-	})),
+const allTalks: FeedItem[] = [
+	...manualTalks.map(
+		(talk: CollectionEntry<'talks'>): FeedItem => ({
+			title: talk.data.title,
+			url: `/talks/#${talk.id}`,
+			date: talk.data.date,
+			source: 'Tower · Talks',
+			icon: '🏰',
+			description: talk.data.summary,
+			realm: 'tower',
+			external: false,
+		})
+	),
 	...youtubeTalks
 		.filter((talk) => !manualVideoUrls.has(talk.videoUrl))
-		.map((talk, index) => ({
-			title: talk.title,
-			url: `/talks/#youtube-${index}`,
-			date: talk.date,
-			source: 'Tower',
-			icon: '🏰',
-			description: talk.summary,
-		})),
+		.map(
+			(talk, index): FeedItem => ({
+				title: talk.title,
+				url: `/talks/#youtube-${index}`,
+				date: talk.date,
+				source: 'Tower · Talks',
+				icon: '🏰',
+				description: talk.summary,
+				realm: 'tower',
+				external: false,
+			})
+		),
 ];
 
 const latestTalks = allTalks.sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 3);
@@ -77,218 +93,267 @@ const latestProjects: FeedItem[] = projects
 		return b.data.firstPublic.valueOf() - a.data.firstPublic.valueOf();
 	})
 	.slice(0, 2)
-	.map((project: CollectionEntry<'projects'>) => ({
-		title: project.data.name,
-		url: `/forge/#${project.id}`,
-		date: project.data.firstPublic || new Date(),
-		source: 'Forge',
-		icon: '⚒️',
-		description: project.data.description,
-	}));
+	.map(
+		(project: CollectionEntry<'projects'>): FeedItem => ({
+			title: project.data.name,
+			url: `/forge/#${project.id}`,
+			date: project.data.firstPublic || new Date(),
+			source: 'Forge · Code',
+			icon: '⚒️',
+			description: project.data.description,
+			realm: 'forge',
+			external: false,
+		})
+	);
 
 // Get latest shorts
 const youtubeShorts = await fetchYouTubeShorts();
 const latestShorts: FeedItem[] = youtubeShorts
 	.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf())
 	.slice(0, 3)
-	.map((short) => ({
-		title: short.title,
-		url: short.videoUrl,
-		date: short.pubDate,
-		source: 'Moon',
-		icon: '🌙',
-		description: short.description || 'A short from the Securing the Realm YouTube channel.',
-	}));
+	.map(
+		(short): FeedItem => ({
+			title: short.title,
+			url: short.videoUrl,
+			date: short.pubDate,
+			source: 'Moon · Shorts',
+			icon: '🌙',
+			description: short.description || 'A short from the Securing the Realm YouTube channel.',
+			realm: 'moon',
+			external: true,
+		})
+	);
 
 // Combine and sort all content by date
-const latestContent = [...latestBlogPosts, ...latestTalks, ...latestProjects, ...latestShorts]
+const latestContent: FeedItem[] = [
+	...latestBlogPosts,
+	...latestTalks,
+	...latestProjects,
+	...latestShorts,
+]
 	.sort((a, b) => b.date.valueOf() - a.date.valueOf())
 	.slice(0, 6);
 ---
 
 <Base title="Securing the Realm - Castle Gate">
-  <div class="container" style="padding: var(--space-16) var(--space-4);">
-    <section style="text-align: center; margin-bottom: var(--space-16);">
-      <h1 style="margin-bottom: var(--space-8);">Welcome to the Castle</h1>
-      <p
-        style="font-size: var(--font-size-lg); max-width: 800px; margin: 0 auto var(--space-8) auto;"
-      >
-        Embark on a journey where technology meets adventure. Through epic
-        storytelling and engaging demos, we transform complex cybersecurity and
-        AI topics into adventurous quests.
+  <div class="container page-shell">
+    <section class="section-stack" style="text-align: center;">
+      <h1 style="margin-bottom: var(--space-6);">Welcome to the Castle</h1>
+      <p class="hero-lede measure" style="font-size: var(--font-size-lg);">
+        Azure, Microsoft AI, and cybersecurity — explained as a tabletop adventure. The Securing the
+        Realm podcast, talks, and writeups, from two Microsoft MVPs.
       </p>
+      <p class="hero-audience measure">
+        For the builders, architects, and security folk who have to deploy and defend AI in the real
+        world.
+      </p>
+      <ul class="format-chips" aria-label="What you'll find here">
+        <li>Talks</li>
+        <li>Blog</li>
+        <li>Code</li>
+        <li>Shorts</li>
+        <li>Podcast</li>
+      </ul>
+      <p style="margin-top: var(--space-6);">
+        <a href="/#listen" class="btn-primary">Listen to the podcast</a>
+      </p>
+      <div style="margin-top: var(--space-6);">
+        <CredibilityStrip talkCount={allTalks.length} />
+      </div>
     </section>
 
-    <section style="margin-bottom: var(--space-16);">
+    <section class="section-stack">
       <!-- Interactive Castle Scene -->
-      <div style="max-width: 1200px; margin: 0 auto var(--space-12) auto;">
+      <div style="max-width: var(--max-width-wide); margin: 0 auto var(--space-12) auto;">
         <CastleSceneRetro />
       </div>
 
       <!-- Text-based Navigation Fallback -->
-      <h2 style="text-align: center; margin-bottom: var(--space-8);">
-        Explore the Realm
-      </h2>
+      <h2 style="text-align: center; margin-bottom: var(--space-8);">Explore the Realm</h2>
       <div class="realm-grid">
-        <!-- Tower - Talks -->
         <a
           href="/talks/"
           class="realm-card content-card glow-on-hover"
+          data-realm="tower"
           style="text-align: center; display: block;"
         >
-          <h3
-            style="font-size: var(--font-size-xl); margin-bottom: var(--space-4);"
-          >
-            🏰 Tower
-          </h3>
+          <h3 style="margin-bottom: var(--space-4);">Tower · Talks</h3>
           <p style="margin: 0; color: var(--colour-parchment);">
             Watch talks and presentations on Azure, AI, and cybersecurity
           </p>
         </a>
 
-        <!-- Library - Blog -->
         <a
           href="/blog/"
           class="realm-card content-card glow-on-hover"
+          data-realm="library"
           style="text-align: center; display: block;"
         >
-          <h3
-            style="font-size: var(--font-size-xl); margin-bottom: var(--space-4);"
-          >
-            📚 Library
-          </h3>
+          <h3 style="margin-bottom: var(--space-4);">Library · Blog</h3>
           <p style="margin: 0; color: var(--colour-parchment);">
             Read articles and insights on technology and security
           </p>
         </a>
 
-        <!-- Forge - Projects -->
         <a
           href="/forge/"
           class="realm-card content-card glow-on-hover"
+          data-realm="forge"
           style="text-align: center; display: block;"
         >
-          <h3
-            style="font-size: var(--font-size-xl); margin-bottom: var(--space-4);"
-          >
-            ⚒️ Forge
-          </h3>
+          <h3 style="margin-bottom: var(--space-4);">Forge · Code</h3>
           <p style="margin: 0; color: var(--colour-parchment);">
             Explore code projects and open-source contributions
           </p>
         </a>
 
-        <!-- Moon - Shorts -->
         <a
           href="/shorts/"
           class="realm-card content-card glow-on-hover"
+          data-realm="moon"
           style="text-align: center; display: block;"
         >
-          <h3
-            style="font-size: var(--font-size-xl); margin-bottom: var(--space-4);"
-          >
-            🌙 Moon
-          </h3>
+          <h3 style="margin-bottom: var(--space-4);">Moon · Shorts</h3>
           <p style="margin: 0; color: var(--colour-parchment);">
             Quick glimpses - bite-sized adventures in security and AI
-          </p>
-        </a>
-
-        <!-- Newsletter - Scrolls -->
-        <a
-          href="/newsletter/"
-          class="realm-card content-card glow-on-hover"
-          style="text-align: center; display: block;"
-        >
-          <h3
-            style="font-size: var(--font-size-xl); margin-bottom: var(--space-4);"
-          >
-            📜 Arcane Scrolls
-          </h3>
-          <p style="margin: 0; color: var(--colour-parchment);">
-            Subscribe to receive updates and insights
           </p>
         </a>
       </div>
     </section>
 
     <!-- Latest Content Feed -->
-    <section style="max-width: var(--max-width-content); margin: 0 auto var(--space-16) auto;">
-      <h2 style="text-align: center; margin-bottom: var(--space-8);">
-        Latest Adventures
-      </h2>
-      <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+    <section class="section-stack" style="max-width: var(--max-width-content); margin: 0 auto;">
+      <h2 style="text-align: center; margin-bottom: var(--space-8);">Quest Log</h2>
+      <ol class="quest-log">
         {
-          latestContent.map((item) => (
-            <a
-              href={item.url}
-              style="display: block; padding: var(--space-4); text-decoration: none;"
-              class="feed-item content-card"
-            >
-              <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
-                <div style="flex-shrink: 0; font-size: var(--font-size-2xl);">
-                  {item.icon}
-                </div>
-                <div style="flex: 1; min-width: 0;">
-                  <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
-                    <h3 style="margin: 0; font-size: var(--font-size-lg); color: var(--colour-gold);">
-                      {item.title}
-                    </h3>
-                    <span style="font-size: var(--font-size-xs); color: var(--colour-stone-light); white-space: nowrap;">
-                      {item.source}
-                    </span>
+          latestContent.map((item: FeedItem, index: number) => (
+            <li>
+              <a
+                href={item.url}
+                class="feed-item content-card"
+                data-realm={item.realm}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                style="display: block; padding: var(--space-4); text-decoration: none;"
+              >
+                <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
+                  <span class="quest-log__num" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <div aria-hidden="true" style="flex-shrink: 0; font-size: var(--font-size-2xl);">
+                    {item.icon}
                   </div>
-                  <p style="margin: 0; color: var(--colour-parchment); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed);">
-                    {item.description.length > 150
-                      ? `${item.description.substring(0, 147)}...`
-                      : item.description}
-                  </p>
-                  <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
-                    {item.date.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
+                      <h3 style="margin: 0; font-size: var(--font-size-lg);">
+                        {item.title}
+                        {item.external && (
+                          <span class="ext-glyph" aria-hidden="true">
+                            ↗
+                          </span>
+                        )}
+                        {item.external && <span class="sr-only"> (opens in new tab)</span>}
+                      </h3>
+                      <span style="font-size: var(--font-size-xs); color: var(--colour-stone-light); white-space: nowrap;">
+                        {item.source}
+                      </span>
+                    </div>
+                    <p style="margin: 0; color: var(--colour-parchment); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed);">
+                      {item.description.length > 150
+                        ? `${item.description.substring(0, 147)}...`
+                        : item.description}
+                    </p>
+                    <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
+                      {item.date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </a>
+              </a>
+            </li>
           ))
         }
-      </div>
+      </ol>
     </section>
 
-    <section style="max-width: var(--max-width-prose); margin: 0 auto; text-align: center;">
+    <ListenHub band={true} />
+
+    <section
+      class="section-stack"
+      style="max-width: var(--max-width-prose); margin: var(--space-16) auto 0 auto; text-align: center;"
+    >
       <h2 style="margin-bottom: var(--space-6);">Our Quest</h2>
-      <p
-        style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);"
-      >
-        Through epic storytelling and engaging demos, we transform complex
-        topics like deploying Large-Language Models (LLMs), Small-Language
-        Models (SLMs), and Agentic AI into adventurous quests. Whether you're a
-        seasoned tech adventurer or a curious newcomer, you'll gain insights
-        into Azure's cutting-edge capabilities, responsible AI practices, and
-        open-source projects—all while battling kobolds, training AI elves, and
-        unlocking the secrets of the Crystal Keep.
+      <p class="measure" style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);">
+        Through epic storytelling and engaging demos, we transform complex topics like deploying
+        Large-Language Models (LLMs), Small-Language Models (SLMs), and Agentic AI into adventurous
+        quests. Whether you're a seasoned tech adventurer or a curious newcomer, you'll gain insights
+        into Azure's cutting-edge capabilities, responsible AI practices, and open-source projects—all
+        while battling kobolds, training AI elves, and unlocking the secrets of the Crystal Keep.
       </p>
       <a
-        href="/about/"
+        href="https://www.youtube.com/@SecuringTheRealm"
         class="btn-primary"
+        target="_blank"
+        rel="noopener noreferrer"
+        data-social="YouTube"
+        aria-label="Subscribe on YouTube (opens in new tab)"
         style="margin-top: var(--space-6);"
       >
-        Learn More About Our Mission
+        Subscribe on YouTube
       </a>
     </section>
   </div>
 </Base>
 
 <style>
-  .realm-card:hover {
-    transform: translateY(-4px);
+  .format-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    list-style: none;
+    margin: var(--space-6) 0 0;
+    padding: 0;
   }
 
+  .format-chips li {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xs);
+    color: var(--colour-gold);
+    border: 2px solid var(--colour-gold);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .quest-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .quest-log__num {
+    flex-shrink: 0;
+    min-width: var(--space-8);
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    color: var(--colour-gold);
+  }
+
+  .ext-glyph {
+    margin-left: var(--space-1);
+    color: var(--colour-gold);
+  }
+
+  .realm-card:hover,
   .feed-item:hover {
-    transform: translateX(4px);
+    transform: translate(2px, 2px);
+    box-shadow: var(--card-chrome-pressed);
   }
 
   @media (prefers-reduced-motion: reduce) {

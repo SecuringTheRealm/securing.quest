@@ -1,0 +1,41 @@
+---
+export interface Props {
+	talkCount: number;
+}
+
+const { talkCount } = Astro.props;
+const items = [
+	'Hosted by two Microsoft MVPs',
+	`${talkCount}+ talks & videos`,
+	'Listen on Spotify, Apple & YouTube',
+];
+---
+
+<p class="cred-strip">
+	{items.map((item: string) => <span class="cred-strip__item">{item}</span>)}
+</p>
+
+<style>
+	.cred-strip {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-2) var(--space-3);
+		width: fit-content;
+		max-width: 100%;
+		margin-inline: auto;
+		padding: var(--space-2) var(--space-4);
+		border: 2px solid var(--colour-gold);
+		border-radius: var(--radius-sm);
+		color: var(--colour-gold);
+		font-size: var(--font-size-sm);
+		font-family: var(--font-body);
+	}
+
+	.cred-strip__item:not(:first-child)::before {
+		content: '·';
+		margin-right: var(--space-3);
+		color: var(--colour-gold);
+	}
+</style>

@@ -1,0 +1,30 @@
+---
+import { AUTHORS } from '../utils/authors';
+
+export interface Props {
+	authorId?: 'chris' | 'josh';
+}
+
+const { authorId } = Astro.props;
+const name = authorId ? AUTHORS[authorId].name : 'Chris Lloyd-Jones & Josh McDonald';
+const credential = authorId ? 'Microsoft MVP' : 'Microsoft MVPs';
+---
+
+<p class="author-byline">
+	By <a href="/about/">{name}</a> · {credential}
+</p>
+
+<style>
+	.author-byline {
+		font-size: var(--font-size-sm);
+		color: var(--colour-stone-light);
+		margin-bottom: var(--space-3);
+	}
+
+	.author-byline a {
+		text-decoration: underline;
+		text-decoration-color: var(--colour-gold);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 2px;
+	}
+</style>

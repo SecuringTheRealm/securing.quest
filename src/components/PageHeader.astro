@@ -1,0 +1,79 @@
+---
+export interface Props {
+	title: string;
+	eyebrow?: string;
+	realm?: 'tower' | 'library' | 'forge' | 'moon' | 'keep';
+	align?: 'center' | 'left';
+}
+
+const { title, eyebrow, realm, align = 'center' } = Astro.props;
+---
+
+<header class="page-header" data-realm={realm} data-align={align}>
+	{
+		Astro.slots.has('icon') && (
+			<div class="page-header__icon">
+				<slot name="icon" />
+			</div>
+		)
+	}
+	{eyebrow && <p class="page-header__eyebrow">{eyebrow}</p>}
+	<h1 class="page-header__title">{title}</h1>
+	{
+		Astro.slots.has('default') && (
+			<div class="page-header__intro">
+				<slot />
+			</div>
+		)
+	}
+	{
+		Astro.slots.has('actions') && (
+			<div class="page-header__actions">
+				<slot name="actions" />
+			</div>
+		)
+	}
+</header>
+
+<style>
+	.page-header {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-4);
+		margin-bottom: var(--space-12);
+		text-align: center;
+	}
+
+	.page-header[data-align='left'] {
+		align-items: flex-start;
+		text-align: left;
+	}
+
+	.page-header__eyebrow {
+		margin: 0;
+		padding-bottom: var(--space-1);
+		border-bottom: 2px solid var(--realm-accent);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xs);
+		letter-spacing: var(--tracking-display);
+		text-transform: uppercase;
+		color: var(--colour-gold);
+	}
+
+	.page-header__title {
+		margin: 0;
+	}
+
+	.page-header__intro {
+		max-width: var(--max-width-narrow);
+		font-size: var(--font-size-lg);
+	}
+
+	.page-header__actions {
+		display: flex;
+		gap: var(--space-3);
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+</style>

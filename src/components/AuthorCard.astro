@@ -1,0 +1,56 @@
+---
+import type { Author, AuthorLink } from '../utils/authors';
+
+export interface Props {
+	author: Author;
+}
+
+const { author } = Astro.props;
+---
+
+<article class="content-card author-card">
+	<h3 class="author-card__name">{author.name}</h3>
+	<p class="author-card__role">{author.role}</p>
+	<p class="author-card__bio">{author.bio}</p>
+	<ul class="author-card__links">
+		{
+			author.links.map((link: AuthorLink) => (
+				<li>
+					<a
+						href={link.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label={`${link.label} (opens in new tab)`}
+					>
+						{link.label}
+					</a>
+				</li>
+			))
+		}
+	</ul>
+</article>
+
+<style>
+	.author-card__name {
+		margin-bottom: var(--space-1);
+	}
+
+	.author-card__role {
+		margin-bottom: var(--space-3);
+		font-size: var(--font-size-sm);
+		color: var(--colour-stone-light);
+	}
+
+	.author-card__bio {
+		color: var(--colour-parchment);
+		line-height: var(--line-height-relaxed);
+	}
+
+	.author-card__links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
+		list-style: none;
+		margin: var(--space-2) 0 0;
+	}
+</style>

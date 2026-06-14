@@ -1,33 +1,36 @@
 ---
 import { Image } from 'astro:assets';
 import logoSrc from '../assets/str-logo.png';
+import AuthorCard from '../components/AuthorCard.astro';
+import ListenHub from '../components/ListenHub.astro';
 import Base from '../layouts/Base.astro';
+import { AUTHORS } from '../utils/authors';
 ---
 
 <Base title="About - Our Mission">
-  <div class="container" style="padding: var(--space-16) var(--space-4); max-width: var(--max-width-prose);">
+  <div class="container page-shell" style="max-width: var(--max-width-prose);">
     <h1 style="text-align: center; margin-bottom: var(--space-8);">About Our Quest</h1>
-    
-    <div style="text-align: center; margin-bottom: var(--space-12);">
+
+    <div style="text-align: center; margin-bottom: var(--space-6);">
       <Image src={logoSrc} alt="Securing the Realm - Shield and Hammer Logo" width={200} height={200} />
     </div>
 
     <section style="margin-bottom: var(--space-8);">
       <h2>Our Mission</h2>
       <p style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);">
-        Through epic storytelling and engaging demos, we transform complex topics like deploying 
-        Large-Language Models (LLMs), Small-Language Models (SLMs), and Agentic AI into adventurous quests. 
-        Dive into technical architectures that showcase secure and scalable AI solutions, learn how to 
-        build robust systems for modern applications, and explore the practical challenges of security, 
-        performance, and collaboration—wrapped in the magic of role-playing games.
+        Through epic storytelling and engaging demos, we transform complex topics like deploying
+        Large-Language Models (LLMs), Small-Language Models (SLMs), and Agentic AI into adventurous
+        quests. Dive into technical architectures that showcase secure and scalable AI solutions, learn
+        how to build robust systems for modern applications, and explore the practical challenges of
+        security, performance, and collaboration—wrapped in the magic of role-playing games.
       </p>
     </section>
 
     <section style="margin-bottom: var(--space-8);">
       <h2>Who This Is For</h2>
       <p style="line-height: var(--line-height-relaxed);">
-        Whether you're a seasoned tech adventurer or a curious newcomer, you'll gain insights into 
-        Azure's cutting-edge capabilities, responsible AI practices, and open-source projects—all 
+        Whether you're a seasoned tech adventurer or a curious newcomer, you'll gain insights into
+        Azure's cutting-edge capabilities, responsible AI practices, and open-source projects—all
         while battling kobolds, training AI elves, and unlocking the secrets of the Crystal Keep.
       </p>
     </section>
@@ -43,19 +46,36 @@ import Base from '../layouts/Base.astro';
       </ul>
     </section>
 
-    <section style="text-align: center; background: var(--colour-teal-dark); padding: var(--space-8); border-radius: var(--radius-outer); border: 2px solid var(--colour-gold);">
+    <section style="margin-bottom: var(--space-12);">
+      <h2 style="text-align: center; margin-bottom: var(--space-6);">Meet the Hosts</h2>
+      <div class="host-grid">
+        <AuthorCard author={AUTHORS.chris} />
+        <AuthorCard author={AUTHORS.josh} />
+      </div>
+    </section>
+
+    <ListenHub />
+
+    <section
+      style="text-align: center; background: var(--colour-teal-dark); padding: var(--space-8); border-radius: var(--radius-pixel); border: 2px solid var(--colour-gold); margin-top: var(--space-12);"
+    >
       <h2>Join the Adventure</h2>
       <p style="margin-bottom: var(--space-6);">
-        Ready to embark on this quest? Explore our content, join the community, and together we'll secure the realm!
+        Ready to embark on this quest? Explore our content, join the community, and together we'll
+        secure the realm!
       </p>
       <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-        <a href="/newsletter/" class="btn-primary">
-          Subscribe to Newsletter
-        </a>
-        <a href="/talks/" class="btn-outline">
-          Watch Talks
-        </a>
+        <a href="#listen" class="btn-primary">Listen to the Podcast</a>
+        <a href="/talks/" class="btn-outline">Watch Talks</a>
       </div>
     </section>
   </div>
 </Base>
+
+<style>
+  .host-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-6);
+  }
+</style>

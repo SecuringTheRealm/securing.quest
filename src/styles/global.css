@@ -45,9 +45,29 @@ body {
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  line-height: var(--line-height-tight);
+  line-height: var(--line-height-display);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
   color: var(--colour-gold);
   margin-bottom: var(--space-4);
+}
+
+/* Readable display tier — sentence-shaped headings and card/feed/listing
+   titles use bold Georgia (no third font file) so long strings stay legible */
+.prose h2,
+.prose h3,
+.prose h4,
+.content-card h2,
+.content-card h3,
+.feed-item h3,
+.short-title {
+  font-family: var(--font-display-readable);
+  font-weight: var(--font-weight-bold);
+  font-variant-caps: small-caps;
+  letter-spacing: var(--tracking-display-readable);
+  line-height: var(--line-height-snug);
+  color: var(--colour-gold);
+  text-wrap: balance;
 }
 
 h1 {
@@ -205,6 +225,25 @@ img {
   margin: var(--space-8) 0;
 }
 
+/* Inline prose links: distinguished beyond hue (WCAG 1.4.1) */
+.prose a {
+  text-decoration: underline;
+  text-decoration-color: var(--colour-gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover,
+.prose a:focus-visible {
+  text-decoration-color: var(--colour-gold-light);
+  text-decoration-thickness: 3px;
+}
+
+.prose p,
+.prose li {
+  text-wrap: pretty;
+}
+
 /* Skip Link */
 .skip-link {
   position: absolute;
@@ -239,13 +278,27 @@ img {
 /* Utility Classes */
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--max-width-wide);
   margin: 0 auto;
   padding: 0 var(--space-4);
 }
 
 .text-center {
   text-align: center;
+}
+
+.measure {
+  max-width: var(--measure);
+  margin-inline: auto;
+  text-align: left;
+}
+
+.page-shell {
+  padding-block: var(--space-16);
+}
+
+.section-stack {
+  margin-bottom: var(--space-16);
 }
 
 .mb-0 { margin-bottom: 0; }
@@ -261,35 +314,20 @@ img {
 .mt-8 { margin-top: var(--space-8); }
 
 /* Animations */
-@keyframes glow {
+/* Stepped, hard-edged halo (no filter blur — AGENTS Pitfall #12) in the
+   element's house colour via --realm-accent (defaults to gold) */
+@keyframes halo-pulse {
   0%, 100% {
-    filter: drop-shadow(0 0 5px var(--colour-gold));
+    box-shadow: 0 0 0 2px var(--realm-accent), var(--shadow-stepped);
   }
   50% {
-    filter: drop-shadow(0 0 15px var(--colour-gold-light));
+    box-shadow: 0 0 0 4px var(--realm-accent), var(--shadow-stepped);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .glow-on-hover:hover {
-    animation: glow 2s ease-in-out infinite;
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .fade-in {
-    animation: fadeIn 0.5s ease-out;
+    animation: halo-pulse 2s steps(2, end) infinite;
   }
 }
 
@@ -404,7 +442,8 @@ img {
   background: var(--colour-gold);
   color: var(--colour-ink);
   border: none;
-  border-radius: var(--radius-outer);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-stepped);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
   transition: all var(--transition-base);
@@ -412,8 +451,8 @@ img {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--colour-gold-alpha-30);
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-stepped-hover);
   color: var(--colour-ink);
 }
 
@@ -424,7 +463,8 @@ img {
   background: transparent;
   color: var(--colour-gold);
   border: 2px solid var(--colour-gold);
-  border-radius: var(--radius-outer);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--shadow-stepped);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
   transition: all var(--transition-base);
@@ -434,6 +474,8 @@ img {
 .btn-outline:hover {
   background: var(--colour-teal-light);
   color: var(--colour-gold);
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-stepped-hover);
 }
 
 .btn-sm {
@@ -441,12 +483,23 @@ img {
   font-size: var(--font-size-sm);
 }
 
-/* Card styles */
+/* Card styles — carved-stone surface echoing the castle's depth bands */
+.stone-card,
 .content-card {
   padding: var(--space-6);
   background: var(--colour-teal-dark);
   border: 2px solid var(--colour-gold);
-  border-radius: var(--radius-outer);
+  border-radius: var(--radius-pixel);
+  box-shadow: var(--card-chrome);
+}
+
+/* Aged-parchment panel for long-form prose */
+.parchment-panel {
+  padding: var(--space-8);
+  background: var(--colour-parchment);
+  color: var(--colour-ink);
+  border: 2px solid var(--colour-parchment-dark);
+  border-radius: var(--radius-pixel);
 }
 
 /* Navigation card grid */
@@ -462,8 +515,8 @@ button,
 }
 
 button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--colour-gold-alpha-30);
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-stepped-hover);
 }
 
 /* Card focus states */
@@ -479,6 +532,43 @@ button:hover {
   color: var(--colour-gold-light);
   border-bottom: 2px solid var(--colour-gold);
   padding-bottom: var(--space-1);
+}
+
+/* Full-bleed banded section for homepage rhythm/depth */
+.section--band {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  padding-block: var(--space-16);
+  background: var(--colour-teal-dark);
+  border-top: 2px solid var(--colour-gold);
+  border-bottom: 2px solid var(--colour-gold);
+}
+
+.section--band > .band-inner {
+  max-width: var(--max-width-content);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+/* Per-realm house colours — accent applied to borders only to preserve AA */
+[data-realm="forge"] { --realm-accent: var(--colour-forge-orange); }
+[data-realm="moon"] { --realm-accent: var(--colour-parchment-light); }
+[data-realm="tower"] { --realm-accent: var(--colour-stone-light); }
+[data-realm="library"] { --realm-accent: var(--colour-gold); }
+
+.realm-card[data-realm] {
+  border-top: 4px solid var(--realm-accent);
+}
+
+/* Tag/source chip: gold fill + ink text (AA), house colour on the border */
+.tag-chip {
+  font-size: var(--font-size-sm);
+  padding: var(--space-1) var(--space-3);
+  background: var(--colour-gold);
+  color: var(--colour-ink);
+  border: 2px solid var(--realm-accent);
+  border-radius: var(--radius-full);
+  text-decoration: none;
 }
 
 /* Responsive utilities */
@@ -510,7 +600,7 @@ button:hover {
     backface-visibility: hidden;
   }
 
-  /* Fade effect at bottom of header — use will-change to reduce repaint */
+  /* Fade effect at bottom of header */
   header::after {
     content: '';
     position: absolute;
@@ -521,7 +611,6 @@ button:hover {
     background: linear-gradient(to bottom, var(--colour-bg-primary), transparent);
     pointer-events: none;
     z-index: var(--z-index-sticky);
-    will-change: transform;
   }
 
   /* Add padding to main content so it doesn't hide under sticky header */
@@ -641,17 +730,17 @@ button:hover {
   }
 }
 
-/* Wide desktop: show all 5 realm cards in a single row */
+/* Wide desktop: show all 4 realm cards in a single row */
 @media (min-width: 1200px) {
   .realm-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
 /* Tablet breakpoint */
 @media (max-width: 1024px) and (min-width: 769px) {
   .container {
-    max-width: 900px;
+    max-width: var(--max-width-content);
   }
 
   h1 {

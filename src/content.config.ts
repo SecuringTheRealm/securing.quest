@@ -1,6 +1,17 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+// Shared cross-format "go deeper" links (short → talk → writeup → repo)
+const relatedContent = z
+	.array(
+		z.object({
+			type: z.enum(['blog', 'talk', 'project', 'external']),
+			slug: z.string(),
+			title: z.string().optional(),
+		})
+	)
+	.optional();
+
 const blog = defineCollection({
 	loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
 	schema: z.object({
@@ -9,6 +20,8 @@ const blog = defineCollection({
 		pubDate: z.coerce.date(),
 		tags: z.array(z.string()).default([]),
 		draft: z.boolean().default(false),
+		author: z.enum(['chris', 'josh']).optional(),
+		relatedContent,
 	}),
 });
 
@@ -23,6 +36,7 @@ const talks = defineCollection({
 		eventUrl: z.string().url().optional(),
 		summary: z.string(),
 		tags: z.array(z.string()).default([]),
+		relatedContent,
 	}),
 });
 
@@ -35,6 +49,7 @@ const projects = defineCollection({
 		tech: z.array(z.string()).default([]),
 		status: z.enum(['active', 'archived', 'experimental']).default('active'),
 		firstPublic: z.coerce.date().optional(),
+		relatedContent,
 	}),
 });
 
@@ -43,15 +58,7 @@ const shorts = defineCollection({
 	schema: z.object({
 		youtubeId: z.string(),
 		title: z.string().optional(),
-		relatedContent: z
-			.array(
-				z.object({
-					type: z.enum(['blog', 'talk', 'project', 'external']),
-					slug: z.string(),
-					title: z.string().optional(),
-				})
-			)
-			.optional(),
+		relatedContent,
 		tags: z.array(z.string()).optional(),
 	}),
 });

@@ -1,9 +1,11 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
+import PageHeader from '../../components/PageHeader.astro';
+import SubscribeChip from '../../components/SubscribeChip.astro';
 import TowerIcon from '../../components/TowerIcon.astro';
 import Base from '../../layouts/Base.astro';
-import { fetchYouTubeTalks, getYouTubeEmbedUrl } from '../../utils/youtube';
+import { fetchYouTubeTalks, getYouTubeEmbedUrl, getYouTubeThumbnailUrl } from '../../utils/youtube';
 
 // Unified talk type for rendering
 interface UnifiedTalk {
@@ -17,6 +19,7 @@ interface UnifiedTalk {
 	summary: string;
 	tags: string[];
 	embedUrl: string | null;
+	thumbnailUrl: string | null;
 }
 
 // Get manual talks from content collection
@@ -37,6 +40,7 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	summary: talk.data.summary,
 	tags: talk.data.tags,
 	embedUrl: getYouTubeEmbedUrl(talk.data.videoUrl),
+	thumbnailUrl: getYouTubeThumbnailUrl(talk.data.videoUrl),
 }));
 
 // Drop YouTube entries that are already covered by a manual talk (matched by video URL)
@@ -56,6 +60,7 @@ const unifiedYouTubeTalks: UnifiedTalk[] = youtubeTalks
 		summary: talk.summary,
 		tags: talk.tags,
 		embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+		thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
 	}));
 
 // Merge and sort all talks by date (newest first)
@@ -65,16 +70,19 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
 ---
 
 <Base title="Tower - Talks & Presentations">
-  <div class="container" style="padding: var(--space-16) var(--space-4);">
-    <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: var(--space-12);">
-      <TowerIcon />
-      <h1 style="text-align: center; margin-top: var(--space-6); margin-bottom: var(--space-4);">🏰 The Tower</h1>
-      <p style="text-align: center; font-size: var(--font-size-lg); max-width: 700px; margin: 0 auto;">
-        Watch talks, presentations, and video content from conferences and events.
-      </p>
-    </div>
+  <div class="container page-shell">
+    <PageHeader title="The Tower · Talks" eyebrow="The Tower" realm="tower">
+      <TowerIcon slot="icon" />
+      Watch talks, presentations, and video content from conferences and events.
+      <SubscribeChip
+        slot="actions"
+        href="https://www.youtube.com/@SecuringTheRealm"
+        label="Subscribe on YouTube"
+        platform="YouTube"
+      />
+    </PageHeader>
 
-    <div style="max-width: var(--max-width-content); margin: 0 auto;">
+    <div style="max-width: var(--max-width-content); margin: 0 auto;" data-realm="tower">
       {allTalks.length === 0 && (
         <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg);">
           No talks yet. Check back soon for upcoming presentations!
@@ -89,34 +97,39 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
           <p style="margin-bottom: var(--space-4);">{talk.summary}</p>
 
           {talk.embedUrl && (
-            <div style="margin-bottom: var(--space-4); aspect-ratio: 16/9; background: var(--colour-black); border-radius: var(--radius-md); overflow: hidden;">
-              <iframe
-                width="100%"
-                height="100%"
-                src={talk.embedUrl}
-                title={talk.title}
-                loading="lazy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
-              ></iframe>
+            <div class="video-frame">
+              <a
+                class="video-facade"
+                href={talk.videoUrl}
+                data-embed={talk.embedUrl}
+                data-title={talk.title}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-action="video"
+                aria-label={`Play video: ${talk.title} (opens YouTube)`}
+              >
+                {talk.thumbnailUrl && (
+                  <img src={talk.thumbnailUrl} alt="" loading="lazy" width="480" height="270" />
+                )}
+                <span class="video-facade__play" aria-hidden="true" />
+              </a>
             </div>
           )}
 
           <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
             {talk.videoUrl && !talk.embedUrl && (
-              <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm" style="border-radius: var(--radius-md);">
-                🎥 Watch Video
+              <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">
+                Watch Video
               </a>
             )}
             {talk.slidesUrl && (
-              <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" style="border-radius: var(--radius-md);">
-                📊 View Slides
+              <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
+                View Slides
               </a>
             )}
             {talk.eventUrl && (
-              <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" style="border-radius: var(--radius-md);">
-                📅 Event Details
+              <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
+                Event Details
               </a>
             )}
           </div>
@@ -124,7 +137,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
           {talk.tags.length > 0 && (
             <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4);">
               {talk.tags.map((tag: string) => (
-                <a href={`/tags/${tag}/`} style="font-size: var(--font-size-sm); padding: var(--space-1) var(--space-3); background: var(--colour-gold); color: var(--colour-ink); border-radius: var(--radius-full); text-decoration: none;">
+                <a href={`/tags/${tag}/`} class="tag-chip">
                   {tag}
                 </a>
               ))}
@@ -135,17 +148,108 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
     </div>
   </div>
 
+  <style>
+    .video-frame {
+      position: relative;
+      margin-bottom: var(--space-4);
+      aspect-ratio: 16 / 9;
+      background: var(--colour-black);
+      border: 2px solid var(--colour-gold);
+      border-radius: var(--radius-pixel);
+      overflow: hidden;
+    }
+
+    .video-facade {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    /* Inset ring so it isn't clipped by the frame's overflow:hidden */
+    .video-facade:focus-visible {
+      outline: 3px solid var(--colour-gold);
+      outline-offset: calc(-1 * var(--space-1));
+    }
+
+    .video-facade img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-facade__play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 64px;
+      height: 64px;
+      background: var(--colour-gold);
+      border: 2px solid var(--colour-ink);
+      border-radius: var(--radius-pixel);
+      display: grid;
+      place-items: center;
+      transition: background var(--transition-fast);
+    }
+
+    .video-facade:hover .video-facade__play,
+    .video-facade:focus-visible .video-facade__play {
+      background: var(--colour-gold-light);
+    }
+
+    .video-facade__play::after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 16px 0 16px 24px;
+      border-color: transparent transparent transparent var(--colour-ink);
+      margin-left: 4px;
+    }
+
+    .video-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  </style>
+
+  <script is:inline>
+    // Click-to-load YouTube facade: defer the heavy player until intent.
+    document.querySelectorAll('.video-facade').forEach(function (facade) {
+      facade.addEventListener('click', function (event) {
+        var embed = facade.getAttribute('data-embed');
+        if (!embed) return; // without JS the link just opens YouTube
+        event.preventDefault();
+        var frame = facade.parentNode;
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('src', embed + '?autoplay=1');
+        iframe.setAttribute('title', facade.getAttribute('data-title') || 'Video');
+        iframe.setAttribute(
+          'allow',
+          'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+        );
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
+        frame.replaceChild(iframe, facade);
+      });
+    });
+  </script>
+
   <script is:inline>
     document.querySelectorAll('article').forEach(function (article) {
       var title = (article.querySelector('h2') || {}).textContent || 'Unknown';
       article.querySelectorAll('a[target="_blank"]').forEach(function (link) {
         link.addEventListener('click', function () {
           if (typeof plausible === 'undefined') return;
-          var text = (link.textContent || '').trim().toLowerCase();
-          var action = 'other';
-          if (text.indexOf('watch') !== -1 || text.indexOf('video') !== -1) action = 'video';
-          else if (text.indexOf('slides') !== -1) action = 'slides';
-          else if (text.indexOf('event') !== -1) action = 'event';
+          var action = link.getAttribute('data-action') || 'other';
+          if (action === 'other') {
+            var text = (link.textContent || '').trim().toLowerCase();
+            if (text.indexOf('watch') !== -1 || text.indexOf('video') !== -1) action = 'video';
+            else if (text.indexOf('slides') !== -1) action = 'slides';
+            else if (text.indexOf('event') !== -1) action = 'event';
+          }
           plausible('Talk Engagement', { props: { talk: title.trim(), action: action } });
         });
       });

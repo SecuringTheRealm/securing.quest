@@ -347,3 +347,42 @@ export function getYouTubeEmbedUrl(url: string | undefined): string | null {
 		return null;
 	}
 }
+
+/**
+ * Extracts the YouTube video ID from any common URL form.
+ * @param url - YouTube URL (watch?v=, youtu.be/<id>, /embed/<id>, /shorts/<id>)
+ * @returns The video ID, or null if it can't be determined
+ */
+export function getYouTubeVideoId(url: string | undefined): string | null {
+	if (!url) return null;
+
+	try {
+		const urlObj = new URL(url);
+
+		if (urlObj.hostname === 'youtu.be') {
+			return urlObj.pathname.slice(1) || null;
+		}
+
+		if (urlObj.hostname.includes('youtube.com')) {
+			const fromQuery = urlObj.searchParams.get('v');
+			if (fromQuery) return fromQuery;
+
+			const match = urlObj.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/);
+			if (match) return match[1];
+		}
+
+		return null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Builds the standard YouTube thumbnail URL for a video URL.
+ * @param url - YouTube video URL
+ * @returns Thumbnail URL (hqdefault.jpg) or null if the ID can't be determined
+ */
+export function getYouTubeThumbnailUrl(url: string | undefined): string | null {
+	const videoId = getYouTubeVideoId(url);
+	return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+}

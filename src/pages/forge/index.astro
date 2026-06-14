@@ -2,6 +2,8 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import ForgeIcon from '../../components/ForgeIcon.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import SubscribeChip from '../../components/SubscribeChip.astro';
 import Base from '../../layouts/Base.astro';
 
 const allProjects = await getCollection('projects');
@@ -24,23 +26,17 @@ const otherProjects = allProjects
 ---
 
 <Base title="Forge - Projects & Code">
-  <div class="container" style="padding: var(--space-16) var(--space-4);">
-    <div
-      style="display: flex; flex-direction: column; align-items: center; margin-bottom: var(--space-12);"
-    >
-      <ForgeIcon />
-      <h1
-        style="text-align: center; margin-top: var(--space-6); margin-bottom: var(--space-4);"
-      >
-        ⚒️ The Forge
-      </h1>
-      <p
-        style="text-align: center; font-size: var(--font-size-lg); max-width: 700px; margin: 0 auto;"
-      >
-        Explore open-source projects, code repositories, and tools crafted in
-        the forge.
-      </p>
-    </div>
+  <div class="container page-shell">
+    <PageHeader title="The Forge · Code" eyebrow="The Forge" realm="forge">
+      <ForgeIcon slot="icon" />
+      Explore open-source projects, code repositories, and tools crafted in the forge.
+      <SubscribeChip
+        slot="actions"
+        href="https://github.com/SecuringTheRealm"
+        label="Follow on GitHub"
+        platform="GitHub"
+      />
+    </PageHeader>
 
     {allProjects.length === 0 && (
       <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg); max-width: var(--max-width-content); margin: 0 auto;">

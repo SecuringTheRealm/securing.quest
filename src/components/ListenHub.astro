@@ -1,0 +1,51 @@
+---
+import { PODCAST_PLATFORMS, type PodcastPlatform } from '../utils/podcast';
+import SubscribeChip from './SubscribeChip.astro';
+
+export interface Props {
+	heading?: string;
+	band?: boolean;
+}
+
+const { heading = 'Listen to the Podcast', band = false } = Astro.props;
+---
+
+<section
+	id="listen"
+	class:list={['listen-hub', { 'section--band': band }]}
+	aria-labelledby="listen-heading"
+>
+	<div class:list={[{ 'band-inner': band }]}>
+		<h2 id="listen-heading">{heading}</h2>
+		<p class="listen-hub__blurb">
+			Two Microsoft MVPs turn cloud security, Azure, and AI into tabletop adventures. Subscribe
+			wherever you listen.
+		</p>
+		<div class="listen-hub__chips">
+			{
+				PODCAST_PLATFORMS.map((platform: PodcastPlatform) => (
+					<SubscribeChip href={platform.href} label={platform.label} platform={platform.label} />
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<style>
+	.listen-hub {
+		text-align: center;
+	}
+
+	.listen-hub__blurb {
+		max-width: var(--max-width-narrow);
+		margin-inline: auto;
+		margin-bottom: var(--space-6);
+	}
+
+	.listen-hub__chips {
+		display: flex;
+		gap: var(--space-3);
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+</style>

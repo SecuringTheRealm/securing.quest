@@ -2,7 +2,10 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import MoonIcon from '../../components/MoonIcon.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import SubscribeChip from '../../components/SubscribeChip.astro';
 import Base from '../../layouts/Base.astro';
+import { resolveRelated } from '../../utils/relatedContent';
 import { fetchYouTubeShorts } from '../../utils/youtube';
 
 // Fetch shorts from YouTube at build time
@@ -26,23 +29,7 @@ const mergedShorts = youtubeShorts.map((short) => {
 			title: override.data.title || short.title,
 			tags: override.data.tags ? [...new Set([...short.tags, ...override.data.tags])] : short.tags,
 			relatedContent: override.data.relatedContent
-				? [
-						...short.relatedContent,
-						...override.data.relatedContent.map(
-							(rc: {
-								type: 'blog' | 'talk' | 'project' | 'external';
-								slug: string;
-								title?: string;
-							}) => ({
-								type: rc.type,
-								url:
-									rc.type === 'external'
-										? rc.slug
-										: `/${rc.type === 'talk' ? 'talks' : rc.type === 'project' ? 'forge' : rc.type}/${rc.slug}/`,
-								title: rc.title || `Related ${rc.type}`,
-							})
-						),
-					]
+				? [...short.relatedContent, ...resolveRelated(override.data.relatedContent)]
 				: short.relatedContent,
 		};
 	}
@@ -54,16 +41,19 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
 ---
 
 <Base title="Moon - Shorts">
-  <div class="container" style="padding: var(--space-16) var(--space-4);">
-    <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: var(--space-12);">
-      <MoonIcon />
-      <h1 style="text-align: center; margin-top: var(--space-6); margin-bottom: var(--space-4);">🌙 The Moon</h1>
-      <p style="text-align: center; font-size: var(--font-size-lg); max-width: 700px; margin: 0 auto;">
-        Quick glimpses into the realm - bite-sized adventures in security, AI, and beyond.
-      </p>
-    </div>
+  <div class="container page-shell">
+    <PageHeader title="The Moon · Shorts" eyebrow="The Moon" realm="moon">
+      <MoonIcon slot="icon" />
+      Quick glimpses into the realm - bite-sized adventures in security, AI, and beyond.
+      <SubscribeChip
+        slot="actions"
+        href="https://www.youtube.com/@SecuringTheRealm"
+        label="Subscribe on YouTube"
+        platform="YouTube"
+      />
+    </PageHeader>
 
-    <div class="shorts-grid">
+    <div class="shorts-grid" data-realm="moon">
       {sortedShorts.length === 0 && (
         <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg); grid-column: 1 / -1;">
           No shorts yet. Quick glimpses into the realm will appear here soon!
@@ -130,20 +120,22 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: var(--space-6);
-    max-width: 1200px;
+    max-width: var(--max-width-wide);
     margin: 0 auto;
   }
 
   .short-card {
     background: var(--colour-teal-dark);
     border: 2px solid var(--colour-gold);
-    border-radius: var(--radius-outer);
+    border-radius: var(--radius-pixel);
+    box-shadow: var(--card-chrome);
     overflow: hidden;
     transition: transform var(--transition-base);
   }
 
   .short-card:hover {
-    transform: translateY(-4px);
+    transform: translate(2px, 2px);
+    box-shadow: var(--card-chrome-pressed);
   }
 
   .short-thumbnail-link {

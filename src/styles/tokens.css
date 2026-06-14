@@ -1,6 +1,9 @@
 /* Design Tokens - Securing the Realm Brand */
 
 :root {
+  /* Enable native dark form controls, scrollbars and search chrome */
+  color-scheme: dark;
+
   /* Brand Colors */
   --colour-teal-bg: #0f3c46;
   --colour-teal-dark: #0a2730;
@@ -47,6 +50,11 @@
   --colour-gold-alpha-15: color-mix(in srgb, var(--colour-gold) 15%, transparent);
   --colour-gold-alpha-30: color-mix(in srgb, var(--colour-gold) 30%, transparent);
   --colour-shadow: color-mix(in srgb, var(--colour-black) 30%, transparent);
+  --colour-rim-light: color-mix(in srgb, var(--colour-white) 12%, transparent);
+  --colour-shadow-band: color-mix(in srgb, var(--colour-black) 15%, transparent);
+
+  /* Per-realm accent (overridden per [data-realm]) */
+  --realm-accent: var(--colour-gold);
 
   /* Status Colors */
   --colour-success-bg: #2d5016;
@@ -71,9 +79,12 @@
   --max-width-prose: 800px;
   --max-width-content: 900px;
   --max-width-narrow: 700px;
+  --max-width-wide: 1200px;
+  --measure: 66ch;
 
   /* Border Radius */
   --radius-sm: 4px;
+  --radius-pixel: 2px; /* hard-edged retro corners; mirrors the 2px stroke standard */
   --radius-md: 6px;
   --radius-outer: 8px;
   --radius-lg: 12px;
@@ -90,6 +101,12 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  /* Stepped pixel shadows (no blur) + carved-stone card chrome */
+  --shadow-stepped: 4px 4px 0 var(--colour-gold-dark);
+  --shadow-stepped-hover: 2px 2px 0 var(--colour-gold-dark);
+  --card-chrome: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band), var(--shadow-stepped);
+  --card-chrome-pressed: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band), var(--shadow-stepped-hover);
   
   /* Typography Scale */
   --font-size-xs: 0.75rem;    /* 12px */
@@ -108,10 +125,14 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
   --line-height-loose: 2;
+  --line-height-display: 1.6; /* leading for wrapping pixel-font headings */
+  --tracking-display: 0.02em;
+  --tracking-display-readable: 0.04em;
   
   /* Font Families */
   --font-display: 'Press Start 2P', monospace;
   --font-body: 'Georgia', 'Times New Roman', serif;
+  --font-display-readable: var(--font-body); /* readable heading tier: bold Georgia, no third font file */
 
   /* Font Weights */
   --font-weight-normal: 400;

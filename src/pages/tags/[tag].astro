@@ -23,6 +23,13 @@ export const getStaticPaths = (async () => {
 	const youtubeTalks = await fetchYouTubeTalks();
 	const youtubeShorts = await fetchYouTubeShorts();
 
+	// Match the /talks id space: drop feed videos already covered by a manual
+	// talk, then re-index from 0 so #youtube-N anchors line up with /talks.
+	const manualVideoUrls = new Set(
+		manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
+	);
+	const dedupedYouTubeTalks = youtubeTalks.filter((talk) => !manualVideoUrls.has(talk.videoUrl));
+
 	const manualOverrides = await getCollection('shorts');
 	const overrideMap = new Map<string, CollectionEntry<'shorts'>>();
 	manualOverrides.forEach((override: CollectionEntry<'shorts'>) => {
@@ -46,7 +53,7 @@ export const getStaticPaths = (async () => {
 				title: post.data.title,
 				url: `/blog/${post.id}/`,
 				date: post.data.pubDate,
-				source: 'Library',
+				source: 'Library · Blog',
 				icon: '📚',
 				description: post.data.description,
 			});
@@ -60,7 +67,7 @@ export const getStaticPaths = (async () => {
 				title: talk.data.title,
 				url: `/talks/#${talk.id}`,
 				date: talk.data.date,
-				source: 'Tower',
+				source: 'Tower · Talks',
 				icon: '🏰',
 				description: talk.data.summary,
 			});
@@ -68,13 +75,13 @@ export const getStaticPaths = (async () => {
 	}
 
 	// YouTube talks
-	for (const [index, talk] of youtubeTalks.entries()) {
+	for (const [index, talk] of dedupedYouTubeTalks.entries()) {
 		for (const tag of talk.tags) {
 			addToTag(tag, {
 				title: talk.title,
 				url: `/talks/#youtube-${index}`,
 				date: talk.date,
-				source: 'Tower',
+				source: 'Tower · Talks',
 				icon: '🏰',
 				description: talk.summary,
 			});
@@ -92,7 +99,7 @@ export const getStaticPaths = (async () => {
 				title: override?.data.title || short.title,
 				url: `/shorts/`,
 				date: short.pubDate,
-				source: 'Moon',
+				source: 'Moon · Shorts',
 				icon: '🌙',
 				description: short.description || 'A short from the Securing the Realm YouTube channel.',
 			});
@@ -119,7 +126,7 @@ const { tag, items } = Astro.props as Props;
 ---
 
 <Base title={`Tag: ${tag}`} description={`Content tagged with "${tag}" on Securing the Realm.`}>
-  <div class="container" style="padding: var(--space-16) var(--space-4);">
+  <div class="container page-shell">
     <div style="text-align: center; margin-bottom: var(--space-12);">
       <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-3);">
         Tag
@@ -138,7 +145,7 @@ const { tag, items } = Astro.props as Props;
           class="feed-item content-card"
         >
           <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
-            <div style="flex-shrink: 0; font-size: var(--font-size-2xl);">
+            <div aria-hidden="true" style="flex-shrink: 0; font-size: var(--font-size-2xl);">
               {item.icon}
             </div>
             <div style="flex: 1; min-width: 0;">
@@ -178,7 +185,8 @@ const { tag, items } = Astro.props as Props;
 
 <style>
   .feed-item:hover {
-    transform: translateX(4px);
+    transform: translate(2px, 2px);
+    box-shadow: var(--card-chrome-pressed);
   }
 
   @media (prefers-reduced-motion: reduce) {

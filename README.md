@@ -40,18 +40,7 @@ Build the static site for production:
 bun run build
 ```
 
-This will:
-1. Sync YouTube videos from the Securing the Realm channel to the talks collection
-2. Run TypeScript type checking
-3. Build the static site
-
-The built site will be in the `dist/` directory.
-
-**Note**: To build without syncing YouTube videos (faster for testing), use:
-
-```bash
-bun run build:fast
-```
+This runs `astro check` (TypeScript type checking) followed by `astro build`. The built site will be in the `dist/` directory.
 
 ### Linting and Formatting
 
@@ -75,17 +64,29 @@ Format code only:
 bun run format
 ```
 
-### Syncing YouTube Videos
+### Tests
 
-The site automatically syncs videos from the [Securing the Realm YouTube channel](https://www.youtube.com/@SecuringTheRealm) into the talks collection. Videos are only added if they don't already exist (checked by videoUrl).
-
-To manually sync YouTube videos:
+Run the test suite (lint plus type checking):
 
 ```bash
-bun run sync:youtube
+bun run test
 ```
 
-This creates JSON files in `src/content/talks/` for each new video.
+### Webmentions
+
+Received webmentions are synced from [webmention.io](https://webmention.io) into `src/data/webmentions.json`:
+
+```bash
+bun run sync:webmentions
+```
+
+This runs automatically every Monday via the `sync-webmentions` GitHub Actions workflow, which commits any changes back to `main`.
+
+To send outgoing webmentions for published content:
+
+```bash
+bun run send:webmentions
+```
 
 ### Preview
 
@@ -145,11 +146,7 @@ draft: false
 
 ### Talks
 
-Talks are stored in `src/content/talks/` as JSON files. You can add talks manually or sync them from YouTube.
-
-**Manual Entry:**
-
-Create a JSON file in `src/content/talks/`:
+Talks are stored in `src/content/talks/` as JSON files, added manually:
 
 ```json
 {
@@ -161,16 +158,6 @@ Create a JSON file in `src/content/talks/`:
   "summary": "Talk description",
   "tags": ["Azure", "AI"]
 }
-```
-
-**YouTube Sync:**
-
-The build process automatically syncs videos from the [Securing the Realm YouTube channel](https://www.youtube.com/@SecuringTheRealm). Videos are only added if they don't already exist (checked by `videoUrl`), so manually created talk entries won't be overwritten.
-
-To manually trigger a sync:
-
-```bash
-bun run sync:youtube
 ```
 
 ### Projects

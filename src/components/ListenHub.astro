@@ -3,11 +3,10 @@ import { PODCAST_PLATFORMS, type PodcastPlatform } from '../utils/podcast';
 import SubscribeChip from './SubscribeChip.astro';
 
 export interface Props {
-	heading?: string;
 	band?: boolean;
 }
 
-const { heading = 'Listen to the Podcast', band = false } = Astro.props;
+const { band = false } = Astro.props;
 ---
 
 <section
@@ -16,7 +15,7 @@ const { heading = 'Listen to the Podcast', band = false } = Astro.props;
 	aria-labelledby="listen-heading"
 >
 	<div class:list={[{ 'band-inner': band }]}>
-		<h2 id="listen-heading">{heading}</h2>
+		<h2 id="listen-heading">Listen to the Podcast</h2>
 		<p class="listen-hub__blurb">
 			Two Microsoft MVPs turn cloud security, Azure, and AI into tabletop adventures. Subscribe
 			wherever you listen.

@@ -2,14 +2,13 @@
 export interface Props {
 	title: string;
 	eyebrow?: string;
-	realm?: 'tower' | 'library' | 'forge' | 'moon' | 'keep';
-	align?: 'center' | 'left';
+	realm?: 'tower' | 'library' | 'forge' | 'moon';
 }
 
-const { title, eyebrow, realm, align = 'center' } = Astro.props;
+const { title, eyebrow, realm } = Astro.props;
 ---
 
-<header class="page-header" data-realm={realm} data-align={align}>
+<header class="page-header" data-realm={realm}>
 	{
 		Astro.slots.has('icon') && (
 			<div class="page-header__icon">
@@ -43,11 +42,6 @@ const { title, eyebrow, realm, align = 'center' } = Astro.props;
 		gap: var(--space-4);
 		margin-bottom: var(--space-12);
 		text-align: center;
-	}
-
-	.page-header[data-align='left'] {
-		align-items: flex-start;
-		text-align: left;
 	}
 
 	.page-header__eyebrow {

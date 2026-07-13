@@ -89,18 +89,16 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 }
 
 /**
- * Get fuse.js configuration for search
+ * fuse.js configuration for search
  */
-export function getFuseOptions() {
-	return {
-		keys: [
-			{ name: 'title', weight: 3 },
-			{ name: 'description', weight: 2 },
-			{ name: 'tags', weight: 1 },
-		],
-		threshold: 0.4,
-		includeScore: true,
-		minMatchCharLength: 2,
-		ignoreLocation: true,
-	};
-}
+export const FUSE_OPTIONS = {
+	keys: [
+		{ name: 'title', weight: 3 },
+		{ name: 'description', weight: 2 },
+		{ name: 'tags', weight: 1 },
+	],
+	threshold: 0.4,
+	includeScore: true,
+	minMatchCharLength: 2,
+	ignoreLocation: true,
+} as const;

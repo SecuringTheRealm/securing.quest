@@ -1,8 +1,7 @@
 ---
-import { buildSearchIndex, getFuseOptions } from '../utils/search';
+import { buildSearchIndex, FUSE_OPTIONS as fuseOptions } from '../utils/search';
 
 const searchData = await buildSearchIndex();
-const fuseOptions = getFuseOptions();
 ---
 
 <div class="search-container">

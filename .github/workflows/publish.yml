@@ -7,9 +7,16 @@ on:
       - main
     paths:
       - "src/**"
+      - "public/**"
+      - "scripts/**"
+      - "astro.config.mjs"
+      - "package.json"
+      - "bun.lock"
+      - "biome.json"
+      - "tsconfig.json"
       - ".github/workflows/publish.yml"
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 5 * * 1,4"
 
 permissions:
   contents: write
@@ -72,29 +79,13 @@ jobs:
           mv .cache/current.xml .cache/xml-feed.xml
           mv .cache/current-shorts.xml .cache/xml-shorts-feed.xml
 
-      - name: Check content and pages changes
-        id: content_diff
-        shell: bash
-        run: |
-          # Check if content or pages changed
-          # For scheduled/manual runs, always check (no before commit available)
-          if [ -z "${{ github.event.before }}" ] || [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "content_changed=true" >> "$GITHUB_OUTPUT"
-          else
-            # For push events, check what actually changed
-            git fetch origin ${{ github.event.before }}
-            if git diff --quiet ${{ github.event.before }} HEAD -- src/; then
-              echo "content_changed=false" >> "$GITHUB_OUTPUT"
-            else
-              echo "content_changed=true" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-
       - name: Determine if deployment needed
         id: deploy_check
         shell: bash
         run: |
-          if [ "${{ steps.diff.outputs.changed }}" = "true" ] || [ "${{ steps.content_diff.outputs.content_changed }}" = "true" ]; then
+          # Push/dispatch: the paths filter already proved something deploy-worthy
+          # changed. Schedule: deploy only if the YouTube feeds changed.
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "${{ steps.diff.outputs.changed }}" = "true" ]; then
             echo "result=true" >> "$GITHUB_OUTPUT"
           else
             echo "result=false" >> "$GITHUB_OUTPUT"
@@ -119,6 +110,10 @@ jobs:
       - name: Install dependencies 🔧
         if: steps.deploy_check.outputs.result == 'true'
         run: bun install --frozen-lockfile
+
+      - name: Lint and unit tests 🔍
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: bun run lint && bun test
 
       - name: Setup Pages ⚙️
         if: steps.deploy_check.outputs.result == 'true'

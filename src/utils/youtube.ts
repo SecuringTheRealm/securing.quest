@@ -87,6 +87,30 @@ function getEntryVideoId(entry: YouTubeEntry): string {
 	return ytMatch ? ytMatch[1] : entry.id || '';
 }
 
+function dedupeByVideoId(entries: YouTubeEntry[]): YouTubeEntry[] {
+	const entryMap = new Map<string, YouTubeEntry>();
+	for (const entry of entries) {
+		const videoId = getEntryVideoId(entry);
+		if (videoId && !entryMap.has(videoId)) {
+			entryMap.set(videoId, entry);
+		}
+	}
+	return Array.from(entryMap.values());
+}
+
+// Hashtags become Title Case tags: #agentic-ai -> "Agentic Ai"
+function extractHashtagTags(description: string): string[] {
+	const hashtags = description.match(/#[\w-]+/g) || [];
+	return hashtags.map((tag) =>
+		tag
+			.substring(1)
+			.replace(/-/g, ' ')
+			.split(' ')
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ')
+	);
+}
+
 // Module-level cache to avoid redundant fetches during a single build.
 // Multiple pages call fetchYouTubeTalks() (directly and via buildSearchIndex),
 // so caching saves N-1 HTTP requests to YouTube during static generation.
@@ -117,14 +141,7 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 			return !href.includes('/shorts/');
 		});
 
-		const entryMap = new Map<string, YouTubeEntry>();
-		for (const entry of [...playlistEntries, ...channelLongFormEntries]) {
-			const videoId = getEntryVideoId(entry);
-			if (videoId && !entryMap.has(videoId)) {
-				entryMap.set(videoId, entry);
-			}
-		}
-		const entries = Array.from(entryMap.values());
+		const entries = dedupeByVideoId([...playlistEntries, ...channelLongFormEntries]);
 
 		if (entries.length === 0) {
 			console.warn('No entries found in YouTube feed');
@@ -135,24 +152,8 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 			const videoUrl = entry.link['@_href'] || '';
 			const publishedDate = new Date(entry.published);
 
-			// Extract description
-			let description = '';
-			if (entry['media:group']?.['media:description']) {
-				description = entry['media:group']['media:description'];
-			}
-
-			// Extract hashtags from description
-			const hashtagRegex = /#[\w-]+/g;
-			const hashtags = description.match(hashtagRegex) || [];
-			const extractedTags = hashtags.map((tag) => {
-				// Remove # and replace hyphens with spaces
-				return tag
-					.substring(1)
-					.replace(/-/g, ' ')
-					.split(' ')
-					.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-					.join(' ');
-			});
+			const description = entry['media:group']?.['media:description'] ?? '';
+			const extractedTags = extractHashtagTags(description);
 
 			// Default tags for all YouTube talks
 			const defaultTags = ['AI', 'GenAI', 'Agentic Systems', 'Security', 'YouTube', 'Video'];
@@ -226,14 +227,7 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 			return href.includes('/shorts/');
 		});
 
-		const entryMap = new Map<string, YouTubeEntry>();
-		for (const entry of [...playlistEntries, ...channelShortEntries]) {
-			const videoId = getEntryVideoId(entry);
-			if (videoId && !entryMap.has(videoId)) {
-				entryMap.set(videoId, entry);
-			}
-		}
-		const entries = Array.from(entryMap.values());
+		const entries = dedupeByVideoId([...playlistEntries, ...channelShortEntries]);
 
 		if (entries.length === 0) {
 			console.warn('No entries found in YouTube Shorts feed');
@@ -244,41 +238,9 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 			const videoUrl = entry.link['@_href'] || '';
 			const publishedDate = new Date(entry.published);
 
-			// Extract video ID from URL
-			// Shorts use /shorts/VIDEO_ID, regular videos use ?v=VIDEO_ID
-			let videoId = '';
-			try {
-				const urlObj = new URL(videoUrl);
-				videoId = urlObj.searchParams.get('v') || '';
-				if (!videoId) {
-					const shortsMatch = urlObj.pathname.match(/\/shorts\/([^/]+)/);
-					if (shortsMatch) {
-						videoId = shortsMatch[1];
-					}
-				}
-			} catch {
-				// fallback: extract from yt:video:VIDEO_ID format
-				const ytMatch = (entry.id || '').match(/yt:video:(.+)/);
-				videoId = ytMatch ? ytMatch[1] : entry.id || '';
-			}
-
-			// Extract description
-			let description = '';
-			if (entry['media:group']?.['media:description']) {
-				description = entry['media:group']['media:description'];
-			}
-
-			// Extract hashtags from description
-			const hashtagRegex = /#[\w-]+/g;
-			const hashtags = description.match(hashtagRegex) || [];
-			const extractedTags = hashtags.map((tag) => {
-				return tag
-					.substring(1)
-					.replace(/-/g, ' ')
-					.split(' ')
-					.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-					.join(' ');
-			});
+			const videoId = getYouTubeVideoId(videoUrl) ?? getEntryVideoId(entry);
+			const description = entry['media:group']?.['media:description'] ?? '';
+			const extractedTags = extractHashtagTags(description);
 
 			// Default tags for Shorts
 			const defaultTags = ['YouTube', 'Shorts', 'Security'];
@@ -323,29 +285,8 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
  * @returns Embed URL (e.g., https://www.youtube-nocookie.com/embed/...) or null if invalid
  */
 export function getYouTubeEmbedUrl(url: string | undefined): string | null {
-	if (!url) return null;
-
-	try {
-		const urlObj = new URL(url);
-
-		// Handle youtu.be short links
-		if (urlObj.hostname === 'youtu.be') {
-			const videoId = urlObj.pathname.slice(1);
-			return `https://www.youtube-nocookie.com/embed/${videoId}`;
-		}
-
-		// Handle youtube.com URLs
-		if (urlObj.hostname.includes('youtube.com')) {
-			const videoId = urlObj.searchParams.get('v');
-			if (videoId) {
-				return `https://www.youtube-nocookie.com/embed/${videoId}`;
-			}
-		}
-
-		return null;
-	} catch {
-		return null;
-	}
+	const videoId = getYouTubeVideoId(url);
+	return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
 }
 
 /**

@@ -3,10 +3,9 @@ export interface Props {
 	href: string;
 	label: string;
 	platform: string;
-	external?: boolean;
 }
 
-const { href, label, platform, external = true } = Astro.props;
+const { href, label, platform } = Astro.props;
 ---
 
 <a
@@ -14,9 +13,9 @@ const { href, label, platform, external = true } = Astro.props;
 	class="btn-primary btn-sm"
 	style="border-radius: var(--radius-full);"
 	data-social={platform}
-	target={external ? '_blank' : undefined}
-	rel={external ? 'noopener noreferrer' : undefined}
-	aria-label={external ? `${label} (opens in new tab)` : undefined}
+	target="_blank"
+	rel="noopener noreferrer"
+	aria-label={`${label} (opens in new tab)`}
 >
 	{label}
 </a>

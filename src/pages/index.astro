@@ -318,7 +318,7 @@ const DATE_LOCALE = 'en-GB';
 
     <section
       class="section-stack"
-      style="max-width: var(--max-width-prose); margin: var(--space-16) auto 0 auto; text-align: center;"
+      style="max-width: var(--max-width-prose); margin-inline: auto; text-align: center;"
     >
       <h2 class="section-heading">The Party</h2>
       <p class="measure" style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed); text-align: center;">
@@ -446,7 +446,7 @@ const DATE_LOCALE = 'en-GB';
 
   /* Realm cards: the accent is a committed material cue, not a hairline */
   .map-subhead {
-    margin: calc(-1 * var(--space-4)) 0 var(--space-8);
+    margin: 0 0 var(--space-heading);
     text-align: center;
     color: var(--colour-stone-light);
   }
@@ -470,12 +470,6 @@ const DATE_LOCALE = 'en-GB';
     color: var(--colour-parchment);
   }
 
-  @media (max-width: 768px) {
-    .newsletter-band {
-      padding-block: var(--space-12);
-    }
-  }
-
   /* The facade is a flex child; without a width its aspect-ratio resolves to zero */
   /* Compact rows */
   .quest-log {
@@ -486,10 +480,6 @@ const DATE_LOCALE = 'en-GB';
     flex-direction: column;
     /* Wide enough that the per-row accent bars read as five marks, not one spine */
     gap: var(--space-4);
-  }
-
-  .section-heading {
-    margin-bottom: var(--space-8);
   }
 
   .quest-log__more {

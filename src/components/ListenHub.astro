@@ -59,17 +59,25 @@ const secondary = PODCAST_PLATFORMS.filter((p: PodcastPlatform) => !p.filled);
 	.listen-hub__blurb {
 		max-width: var(--max-width-narrow);
 		margin-inline: auto;
-		margin-bottom: var(--space-6);
+		/* 40px down to the first cartridge row — the same step the heading takes
+		   down to this blurb, so the band reads as one ladder. */
+		margin-bottom: var(--space-heading);
 	}
 
+	/* 16px on both axes, so chips that wrap within a row sit the same distance
+	   apart as the two rows do. Matches the button-row gap used site-wide. */
 	.listen-hub__chips {
 		display: flex;
-		gap: var(--space-3);
+		gap: var(--space-4);
 		flex-wrap: wrap;
 		justify-content: center;
 	}
 
 	.listen-hub__chips--secondary {
 		margin-top: var(--space-4);
+		/* The cartridge paints a 4px drop-shadow below its border box, which ate
+		   4px of the band's bottom padding and made it read tighter than the top.
+		   Collapses through .band-inner and stops at the band's padding edge. */
+		margin-bottom: var(--space-1);
 	}
 </style>

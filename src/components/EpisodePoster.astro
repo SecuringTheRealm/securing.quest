@@ -5,6 +5,11 @@
  * text (line-clamp), and container query units already scale type to the
  * card's own width, so there is no line-breaking maths to write or test.
  */
+import ForgeIcon from './ForgeIcon.astro';
+import LibraryIcon from './LibraryIcon.astro';
+import MoonIcon from './MoonIcon.astro';
+import TowerIcon from './TowerIcon.astro';
+
 export interface Props {
 	/** Episode title. Wraps to at most 3 lines, then truncates with an ellipsis. */
 	title: string;
@@ -31,28 +36,14 @@ const a11y: Record<string, string> = decorative
 	{variant === 'poster' && <p class="pixel-eyebrow poster__source">{source}</p>}
 	{variant === 'poster' && <p class="poster__title">{title}</p>}
 	<div class="poster__foot">
-		<svg
-			class="poster__mark"
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 48 48"
-			shape-rendering="crispEdges"
-		>
-			<!-- Crenellated shield: castle silhouette reduced to a show mark -->
-			<path
-				d="M8 8H16V12H20V8H28V12H32V8H40V32H36V36H32V40H28V44H20V40H16V36H12V32H8Z"
-				fill="var(--colour-teal-bg)"
-				stroke="var(--colour-gold)"
-				stroke-width="2"></path>
-			<rect x="20" y="12" width="8" height="4" fill="var(--realm-accent)"></rect>
-			<rect
-				x="20"
-				y="20"
-				width="8"
-				height="8"
-				fill="var(--colour-teal-light)"
-				stroke="var(--colour-gold)"
-				stroke-width="2"></rect>
-		</svg>
+		{/* Category glyph, not the show shield: the shield is already in the header,
+		    and the thumbnail should say what the episode is. */}
+		<span class="poster__mark">
+			{realm === 'tower' && <TowerIcon />}
+			{realm === 'library' && <LibraryIcon />}
+			{realm === 'forge' && <ForgeIcon />}
+			{realm === 'moon' && <MoonIcon />}
+		</span>
 	</div>
 </div>
 
@@ -109,6 +100,11 @@ const a11y: Record<string, string> = decorative
 		overflow: hidden;
 	}
 
+	.poster__mark :global(svg) {
+		width: 100%;
+		height: auto;
+	}
+
 	.poster__foot {
 		display: flex;
 		align-items: flex-end;
@@ -123,6 +119,7 @@ const a11y: Record<string, string> = decorative
 	}
 
 	.poster__mark {
+		display: block;
 		width: clamp(var(--space-8), 10cqi, var(--space-16));
 		height: auto;
 		margin-inline-start: auto;

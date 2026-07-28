@@ -49,6 +49,8 @@
   --colour-shadow: color-mix(in srgb, var(--colour-black) 30%, transparent);
   --colour-rim-light: color-mix(in srgb, var(--colour-white) 12%, transparent);
   --colour-shadow-band: color-mix(in srgb, var(--colour-black) 15%, transparent);
+  /* Hero starfield: texture only, must never read as content */
+  --colour-star: color-mix(in srgb, var(--colour-parchment) 3%, transparent);
 
   /* Per-realm accent (overridden per [data-realm]) */
   --realm-accent: var(--colour-gold);
@@ -56,24 +58,40 @@
      everything else keeps the literal gold-dark. */
   --realm-shadow: var(--colour-gold-dark);
 
-  /* Spacing Scale */
+  /* Spacing Scale — 8px grid, name is px/4 */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
+  --space-14: 56px;
   --space-16: 64px;
   --space-20: 80px;
   --space-24: 96px;
 
+  /* Semantic rhythm. Three values carry the whole vertical page; any gap that
+     is none of these is an ad-hoc value and should be replaced by one. */
+  --space-section: var(--space-24); /* seam between bands (see breakpoint below) */
+  --space-heading: var(--space-10); /* heading to its subhead or content */
+  --space-inner: var(--space-6);    /* card and panel padding */
+
   /* Layout Widths */
   --max-width-prose: 800px;
   --max-width-content: 900px;
-  --max-width-narrow: 700px;
   --max-width-wide: 1200px;
-  --measure: 66ch;
+  /* The one page width. Bands, rows and the footer columns all read this, so a
+     full-bleed panel can align its content to the shell without duplicating the
+     breakpoint. Stepped down at tablet (see breakpoint below). */
+  --container: var(--max-width-wide);
+  /* Fixed px, not ch: ch resolves against each element's own font-size, so the
+     same token gave the Listen subhead and the Party paragraph different widths. */
+  --measure: 720px;
+  /* Deprecated alias — prose measure is --measure. Delete once .listen-hub__blurb,
+     .newsletter-band__blurb and .page-header__intro reference --measure directly. */
+  --max-width-narrow: var(--measure);
 
   /* Border Radius */
   --radius-sm: 4px;
@@ -138,6 +156,22 @@
   --z-index-dropdown: 1000;
   --z-index-sticky: 1020;
   --z-index-modal: 1050;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  :root {
+    --container: var(--max-width-content);
+  }
+}
+
+/* One breakpoint, not a clamp(): a clamp gives the seam a different value at every
+   viewport width, which is the exact fault this token exists to remove — the seam
+   has to be provably identical everywhere. 768px is where the root font-size
+   already steps, so the page changes gear once. */
+@media (max-width: 768px) {
+  :root {
+    --space-section: var(--space-14);
+  }
 }
 
 /* Reduced Motion Support */

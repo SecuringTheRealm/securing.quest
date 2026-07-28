@@ -182,9 +182,8 @@ const currentPath = Astro.url.pathname;
     </main>
 
     <footer class="container site-footer">
-      <hr class="pixel-rule" />
       <div class="site-footer__cols">
-        <div>
+        <div class="site-footer__identity">
           <Image
             src={logoSrc}
             alt="Securing the Realm logo"
@@ -212,8 +211,8 @@ const currentPath = Astro.url.pathname;
           </ul>
         </nav>
 
-        <nav class="site-footer__col" aria-labelledby="footer-elsewhere">
-          <h2 id="footer-elsewhere" class="pixel-eyebrow">Elsewhere</h2>
+        <nav class="site-footer__col" aria-labelledby="footer-follow">
+          <h2 id="footer-follow" class="pixel-eyebrow">Follow</h2>
           <ul>
             <li>
               <a
@@ -260,10 +259,14 @@ const currentPath = Astro.url.pathname;
                 data-social="Apple Podcasts">Apple Podcasts</a
               >
             </li>
+          </ul>
+        </nav>
+
+        <nav class="site-footer__col" aria-labelledby="footer-feeds">
+          <h2 id="footer-feeds" class="pixel-eyebrow">Feeds &amp; more</h2>
+          <ul>
             <li><a href="/blog/rss.xml">Blog RSS</a></li>
             <li><a href="/shorts/rss.xml">Shorts RSS</a></li>
-            <li><a href="/contact/">Contact</a></li>
-            <li><a href="/privacy/">Privacy</a></li>
             <li>
               <a
                 href="https://str.riverside.com/newsletter"
@@ -273,29 +276,63 @@ const currentPath = Astro.url.pathname;
                 data-social="Newsletter">Newsletter</a
               >
             </li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/privacy/">Privacy</a></li>
           </ul>
         </nav>
       </div>
     </footer>
 
     <style>
-      .site-footer {
-        margin-top: var(--space-16);
-        padding-bottom: var(--space-8);
+      /* global.css spreads .nav-wrapper with space-between, which parks the
+         links mid-bar and leaves a dead zone either side. The wordmark takes
+         all the slack instead, so links and search read as one right-hand
+         group. Desktop only — the mobile block owns the wrapped layout. */
+      @media (min-width: 769px) {
+        header .nav-wrapper {
+          justify-content: flex-end;
+          gap: var(--space-6);
+        }
+
+        header .logo-link {
+          margin-right: auto;
+        }
+
+        /* The search glyph is 20px inside a 44px tap target, so its optical
+           edge sat 12px in from the container's 24px inline padding. Pulling
+           the box back by that 12px makes both ends of the header line up,
+           and leaves the links a true 24px off the icon. */
+        header .nav-search {
+          margin-left: 0;
+          margin-right: calc(var(--space-3) * -1);
+        }
       }
 
-      .site-footer .pixel-rule {
-        margin-bottom: var(--space-8);
-      }
-
+      /* The panel's own background, block padding and width cap live in
+         global.css, so this block only lays the columns out.
+         Identity is wide because it carries prose; the three link columns are
+         even. align-items:start puts the shield on the same line as the
+         headings. */
       .site-footer__cols {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
         align-items: start;
         gap: var(--space-8);
       }
 
-      @media (max-width: 767px) {
+      /* Two up, identity across the top: three link columns at tablet width
+         squeeze "Apple Podcasts" onto two lines. */
+      @media (max-width: 768px) {
+        .site-footer__cols {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .site-footer__identity {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 480px) {
         .site-footer__cols {
           grid-template-columns: 1fr;
         }
@@ -310,10 +347,6 @@ const currentPath = Astro.url.pathname;
         font-size: var(--font-size-sm);
         color: var(--colour-stone-light);
         margin-bottom: 0;
-      }
-
-      .site-footer__col h2 {
-        margin-bottom: var(--space-4);
       }
 
       .site-footer__col ul {

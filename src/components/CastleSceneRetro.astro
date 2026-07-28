@@ -40,26 +40,28 @@ const Merlon = (x: number, y: number) => ({
 // plaque and its half-width on the 8px grid. Height 32 puts the baseline 8px up
 // from the lower edge.
 const SIGN_GAP = 16;
-const Sign = (cx: number, structureTop: number, chars: number) => ({
+const Sign = (cx: number, roofline: number, chars: number) => ({
 	plate: {
 		x: cx - (chars * 16 + 32) / 2,
-		y: structureTop - SIGN_GAP - 32,
+		y: roofline - SIGN_GAP - 32,
 		width: chars * 16 + 32,
 		height: 32,
 	},
-	text: { x: cx, y: structureTop - SIGN_GAP - 8 },
+	text: { x: cx, y: roofline - SIGN_GAP - 8 },
 });
 
-// One placement rule for all six: the plaque's bottom edge hangs SIGN_GAP above
-// the top of the silhouette it labels. Silhouette means masonry and flag pole -
-// animated FX (smoke, moon glow) pass behind the sign rather than pushing it up.
+// One rule for all six: the plaque's bottom edge sits exactly SIGN_GAP above the
+// roofline of the thing it labels. Roofline means topmost masonry, measured off
+// the art below - not the flagpole above it, which is why the three flags were
+// raised to fly clear of their signs. Animated FX (chimney smoke, moon glow) pass
+// behind the plaque rather than pushing it up.
 const SIGNS = {
-	talks: Sign(240, 72, 5), // tower flag pole
-	blog: Sign(460, 132, 4), // library flag pole
-	about: Sign(720, 88, 5), // keep flag pole
-	code: Sign(960, 200, 4), // forge chimney
-	shorts: Sign(1080, 80, 6), // moon disc
-	listen: Sign(1096, 520, 6), // podcast scroll
+	talks: Sign(240, 96, 5), // tower battlements, Merlon y 96
+	blog: Sign(460, 180, 4), // library dome apex, y 180
+	about: Sign(720, 136, 5), // keep crenellations, Merlon y 136
+	code: Sign(960, 200, 4), // forge chimney housing, y 200
+	shorts: Sign(1080, 80, 6), // moon disc top, cy 120 - r 40
+	listen: Sign(1096, 520, 6), // podcast scroll, y 520
 };
 
 // Mobile navigation chips - same six destinations as the drawn buildings.
@@ -388,17 +390,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         ))
       }
 
-      <!-- Tower flag (animated) -->
-      <rect x="236" y="72" width="8" height="48" fill="var(--colour-stone-dark)"
+      <!-- Tower flag (animated). Pole lengthened so the pennant flies 12 above the
+           signboard; the plaque occludes the stretch it crosses. -->
+      <rect x="236" y="16" width="8" height="104" fill="var(--colour-stone-dark)"
       ></rect>
       <path
-        d="M 244 76 L 268 84 L 244 92 Z"
+        d="M 244 20 L 268 28 L 244 36 Z"
         fill="var(--colour-gold)"
         stroke="var(--colour-gold-dark)"
         stroke-width="1"
         class="flag-wave"></path>
       <path
-        d="M 244 76 L 268 84 L 244 92 Z"
+        d="M 244 20 L 268 28 L 244 36 Z"
         fill="var(--colour-gold-dark)"
         opacity="0.3"
         transform="translate(2, 2)"></path>
@@ -521,22 +524,22 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         ))
       }
 
-      <!-- Library flag -->
+      <!-- Library flag. Pole lengthened to clear the signboard by 12. -->
       <rect
         x="456"
-        y="132"
+        y="100"
         width="8"
-        height="48"
+        height="80"
         fill="var(--colour-stone-dark)"></rect>
       <path
-        d="M 464 136 L 488 144 L 464 152 Z"
+        d="M 464 104 L 488 112 L 464 120 Z"
         fill="var(--colour-gold)"
         stroke="var(--colour-gold-dark)"
         stroke-width="1"
         class="flag-wave"
         style="animation-delay: 0.5s"></path>
       <path
-        d="M 464 136 L 488 144 L 464 152 Z"
+        d="M 464 104 L 488 112 L 464 120 Z"
         fill="var(--colour-gold-dark)"
         opacity="0.3"
         transform="translate(2, 2)"></path>
@@ -774,18 +777,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       ))
     }
 
-    <!-- Keep flag (tallest) -->
-    <rect x="716" y="88" width="8" height="72" fill="var(--colour-stone-dark)"
+    <!-- Keep flag (tallest). Pole lengthened to clear the signboard by 12. -->
+    <rect x="716" y="48" width="8" height="112" fill="var(--colour-stone-dark)"
     ></rect>
     <path
-      d="M 724 92 L 756 104 L 724 116 Z"
+      d="M 724 52 L 756 64 L 724 76 Z"
       fill="var(--colour-gold)"
       stroke="var(--colour-gold-dark)"
       stroke-width="1"
       class="flag-wave"
       style="animation-delay: 0.3s"></path>
     <path
-      d="M 724 92 L 756 104 L 724 116 Z"
+      d="M 724 52 L 756 64 L 724 76 Z"
       fill="var(--colour-gold-dark)"
       opacity="0.3"
       transform="translate(2, 2)"></path>

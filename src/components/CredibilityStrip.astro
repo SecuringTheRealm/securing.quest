@@ -7,7 +7,7 @@ export interface Props {
 const { itemCount } = Astro.props;
 ---
 
-<p class="cred-strip">
+<p class="cred-strip pixel-diamond">
 	<span class="cred-strip__item">
 		<a href="/about/">Chris Lloyd-Jones &amp; Josh McDonald</a>
 	</span>
@@ -42,9 +42,10 @@ const { itemCount } = Astro.props;
 		color: var(--colour-gold-light);
 	}
 
-	.cred-strip__item:not(:last-child)::after {
-		content: '·';
-		margin-left: var(--space-3);
-		color: var(--colour-stone-dark);
+	/* Separator comes from the .pixel-diamond utility; the gap is even either
+	   side because the flex gap supplies the leading space and the glyph's own
+	   margin supplies the trailing one. */
+	.cred-strip {
+		gap: var(--space-3);
 	}
 </style>

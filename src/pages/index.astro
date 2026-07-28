@@ -301,6 +301,7 @@ const DATE_LOCALE = 'en-GB';
     {/* Signup is a hosted Riverside page, so this links out. Swapping the button for
         an inline field is a small diff once there is an endpoint to POST to. */}
     <section class="section-stack newsletter-band" aria-labelledby="scrolls-heading">
+      <div class="newsletter-band__panel notched">
       <h2 id="scrolls-heading" class="section-heading">Arcane Scrolls</h2>
       <p class="newsletter-band__blurb">
         The newsletter. Episodes and writeups, in your inbox. We send one when there is one.
@@ -312,6 +313,7 @@ const DATE_LOCALE = 'en-GB';
         rel="noopener noreferrer"
         aria-label="Subscribe to Arcane Scrolls (opens in new tab)">Subscribe</a
       >
+      </div>
     </section>
 
     <section
@@ -319,7 +321,7 @@ const DATE_LOCALE = 'en-GB';
       style="max-width: var(--max-width-prose); margin: var(--space-16) auto 0 auto; text-align: center;"
     >
       <h2 class="section-heading">The Party</h2>
-      <p class="measure" style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);">
+      <p class="measure" style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed); text-align: center;">
         We run large language models, small language models and agentic systems on Azure as a
         campaign: architecture and live demos on one side of the screen, kobolds at the gate and AI
         elves in training on the other. The Crystal Keep still refuses to give up its secrets.
@@ -351,6 +353,15 @@ const DATE_LOCALE = 'en-GB';
     grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
     column-gap: var(--space-12);
     align-items: start;
+    /* Starfield: the castle band follows immediately, so the hero's empty
+       bottom-left reads as the sky above the castle rather than as absence.
+       Kept at 3% so it is texture, never content. No animation. */
+    background-image:
+      radial-gradient(var(--colour-star) 1px, transparent 1px),
+      radial-gradient(var(--colour-star) 2px, transparent 2px);
+    background-size: var(--space-24) 140px, 200px 220px;
+    background-position: 0 0, 72px 88px;
+    padding-bottom: var(--space-section);
   }
 
   .hero__eyebrow,
@@ -359,7 +370,7 @@ const DATE_LOCALE = 'en-GB';
   }
 
   .hero__title {
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-heading);
     text-wrap: balance;
   }
 
@@ -442,7 +453,15 @@ const DATE_LOCALE = 'en-GB';
 
   .newsletter-band {
     text-align: center;
-    padding-block: var(--space-16);
+  }
+
+  /* A notched panel gives the section edges; without them it floated */
+  .newsletter-band__panel {
+    max-width: var(--max-width-content);
+    margin-inline: auto;
+    padding: var(--space-12) var(--space-6);
+    background: var(--colour-teal-dark);
+    border: 2px solid var(--colour-gold);
   }
 
   .newsletter-band__blurb {
@@ -465,7 +484,8 @@ const DATE_LOCALE = 'en-GB';
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    /* Wide enough that the per-row accent bars read as five marks, not one spine */
+    gap: var(--space-4);
   }
 
   .section-heading {
@@ -473,7 +493,9 @@ const DATE_LOCALE = 'en-GB';
   }
 
   .quest-log__more {
+    /* Indented to the row titles' x-position, not the container edge */
     margin: var(--space-6) 0 0;
+    padding-left: calc(var(--space-20) + var(--space-4) + var(--space-4));
   }
 
   .quest-row {
@@ -482,7 +504,7 @@ const DATE_LOCALE = 'en-GB';
     gap: var(--space-4);
     align-items: start;
     padding: var(--space-3) var(--space-4);
-    border-left: 3px solid var(--realm-accent);
+    border-left: 4px solid var(--realm-accent);
     text-decoration: none;
     color: inherit;
     transition: background var(--transition-fast);

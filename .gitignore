@@ -1169,3 +1169,4 @@ web-bundles/
 docs/architecture/
 docs/prd/
 .claude/settings.local.json
+qa/screenshots/

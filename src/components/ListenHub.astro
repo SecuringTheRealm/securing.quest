@@ -75,9 +75,5 @@ const secondary = PODCAST_PLATFORMS.filter((p: PodcastPlatform) => !p.filled);
 
 	.listen-hub__chips--secondary {
 		margin-top: var(--space-4);
-		/* The cartridge paints a 4px drop-shadow below its border box, which ate
-		   4px of the band's bottom padding and made it read tighter than the top.
-		   Collapses through .band-inner and stops at the band's padding edge. */
-		margin-bottom: var(--space-1);
 	}
 </style>

@@ -334,13 +334,17 @@ img {
   padding-block: var(--space-section);
 }
 
-.section-stack {
-  padding-block-end: var(--space-section);
+/* Where the page is built from sections, they own every seam themselves, so the
+   shell must not add a second helping at the top and bottom of the page. */
+.page-shell:has(> .section-stack) {
+  padding-block: 0;
 }
 
-/* The shell already pads the gap before the footer; two would double it. */
-.section-stack:last-child {
-  padding-block-end: 0;
+/* Symmetric, so every background edge sits exactly halfway through its seam.
+   Asymmetric padding put the whole gap on one side of the edge, which is what
+   made the band seams read as uneven. */
+.section-stack {
+  padding-block: var(--space-section);
 }
 
 /* Ornaments — the 8-bit chrome. Replaces gold hairlines and middot separators. */
@@ -653,10 +657,6 @@ button:hover {
 /* A band's two colour edges need the same air. The section above supplies the gap
    over the top edge with its padding-block-end; nothing supplies the one under the
    bottom edge, because a band may not carry a margin. This does. */
-.section--band + .section-stack {
-  padding-block-start: var(--space-section);
-}
-
 .section--band > .band-inner {
   max-width: var(--max-width-content);
   margin-inline: auto;

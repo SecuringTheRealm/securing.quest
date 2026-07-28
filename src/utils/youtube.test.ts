@@ -137,12 +137,14 @@ describe('toSummary sentence truncation', () => {
 	});
 
 	test('falls back to a word boundary when one sentence overruns the budget', () => {
+		// No sentence break and no clause punctuation anywhere in the budget, so
+		// the word boundary is all that is left. The dangling "and" still goes.
 		expect(
 			toSummary(
 				'A single unbroken clause about agentic identity and governance that simply refuses to stop for breath anywhere at all',
 				60
 			)
-		).toBe('A single unbroken clause about agentic identity and…');
+		).toBe('A single unbroken clause about agentic identity…');
 	});
 
 	test('does not split on "vs." in a chapter list', () => {
@@ -222,6 +224,136 @@ describe('toSummary sentence truncation', () => {
 	test('leaves a description that fits the budget completely alone', () => {
 		// No ellipsis, and the closing full stop survives.
 		expect(toSummary('A short from the channel.', 200)).toBe('A short from the channel.');
+	});
+});
+
+describe('toSummary clause-boundary fallback', () => {
+	// Every fixture in this block is the exact feed text behind an excerpt that
+	// shipped dangling mid-clause. ROUNDUP and ARCHITECTURE are the two /talks/
+	// excerpts ("...and the nature of…", "...Alice Choe and Fergus…"); the rest
+	// reach the search index, which composes "<event>: <summary>" and so has
+	// roughly 30 characters less room than the page it came from.
+	const ROUNDUP =
+		'The conversation delves into the evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification, and the nature of observability. Each chapter explores these themes in depth, providing valuable insights into the current state of AI technology and its impact on various industries.';
+
+	const ARCHITECTURE =
+		'Diana Wolfe joins Chris and Josh to discuss the new paper "The Architecture of AI Transformation: Four Strategic Patterns and an Emerging Frontier" co-authored by Diana Wolfe, Alice Choe and Fergus Kidd; and discussing the transformative potential of AI in organizations, exploring the concept of agentic AI and its implications for leadership and collaboration.';
+
+	const VIBE_CODING =
+		'In this conversation, Chris and Josh explore the latest features of GitHub Copilot, particularly focusing on agentic AI and its implications for software development. They discuss the concept of vibe engineering versus vibe coding, emphasizing the need for subject matter expertise when utilizing AI tools.';
+
+	const PURVIEW =
+		'In this conversation, Josh McDonald and Chris Lloyd-Jones discuss the importance of securing communications in the realm of agentic AI. They explore the CIA triangle of security—confidentiality, integrity, and availability—and how Microsoft Purview serves as a data security solution.';
+
+	const DEEPFAKES =
+		'In this episode of "Securing the Realm," we discuss the mystifying world of deepfakes and shallow fakes and their implications for security and media trust. Hosts Josh McDonald and Chris Lloyd-Jones - with special guest Fergus Kidd - guide you through real examples of deepfakes.';
+
+	test('cuts the list at a comma instead of dangling on "and the nature of"', () => {
+		// The first sentence runs to 240 characters, so no sentence break fits a
+		// 200 budget at all. The comma after "commodification" sits at 93% of the
+		// budget, so almost nothing is given up to land on it.
+		expect(toSummary(ROUNDUP, 200)).toBe(
+			'The evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification…'
+		);
+	});
+
+	test('does not cut a co-author list in the middle of a name', () => {
+		// Shipped as "...Alice Choe and Fergus…", chopping Fergus Kidd in half.
+		expect(toSummary(ARCHITECTURE, 200)).toBe(
+			'Diana Wolfe joins Chris and Josh to discuss the new paper "The Architecture of AI Transformation: Four Strategic Patterns and an Emerging Frontier" co-authored by Diana Wolfe…'
+		);
+	});
+
+	test('keeps the quoted paper title whole rather than cutting at its colon', () => {
+		// The title carries its own colon a third of the way into a 150 budget.
+		// Taking it would cost half the excerpt, which the clause floor forbids.
+		expect(toSummary(ARCHITECTURE, 150)).toBe(
+			'Diana Wolfe joins Chris and Josh to discuss the new paper "The Architecture of AI Transformation: Four Strategic Patterns and an Emerging Frontier"…'
+		);
+	});
+
+	test('does not cut at the "<event>:" colon the search index prepends', () => {
+		// That colon is only 28 characters in, so honouring it would leave the
+		// search result showing nothing but the show name.
+		expect(toSummary(`YouTube - Securing the Realm: ${toSummary(VIBE_CODING)}`, 120)).toBe(
+			'YouTube - Securing the Realm: Chris and Josh explore the latest features of GitHub Copilot…'
+		);
+	});
+
+	test('trims a dangling preposition when only a word boundary is available', () => {
+		// No clause punctuation in the budget at all, so this is the word-boundary
+		// path. Shipped as "...securing communications in…".
+		expect(toSummary(`YouTube - Securing the Realm: ${toSummary(PURVIEW)}`, 120)).toBe(
+			'YouTube - Securing the Realm: Josh McDonald and Chris Lloyd-Jones discuss the importance of securing communications…'
+		);
+	});
+
+	test('trims a dangling "for" rather than pointing at nothing', () => {
+		// Shipped as "...and their implications for…".
+		expect(toSummary(`YouTube - Securing the Realm: ${toSummary(DEEPFAKES)}`, 120)).toBe(
+			'YouTube - Securing the Realm: We discuss the mystifying world of deepfakes and shallow fakes and their implications…'
+		);
+	});
+
+	test('trims a whole dangling "and the" run, not just the last word', () => {
+		expect(
+			toSummary(
+				'YouTube - Securing the Realm: The future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI…',
+				120
+			)
+		).toBe(
+			'YouTube - Securing the Realm: The future of AI, discussing its accessibility, the concept of ambient computing…'
+		);
+	});
+
+	test('re-truncating an already-summarised excerpt stays clean', () => {
+		// The homepage and the search index both feed toSummary its own output,
+		// and the "…" it appended is not a sentence break, so the second pass has
+		// to find its own resting place.
+		const once = toSummary(ROUNDUP, 200);
+		const twice = toSummary(once, 150);
+		expect(twice).toBe(
+			'The evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges…'
+		);
+		expect(twice).not.toContain('…,');
+		expect(twice.split('…')).toHaveLength(2);
+	});
+
+	test('prefers a real sentence break over any clause boundary', () => {
+		// The clause floor must not outrank a whole sentence that fits, even when
+		// the sentence uses less than half the budget.
+		expect(
+			toSummary(
+				"Most people think Microsoft Foundry is just about OpenAI models. It's not. If you're building on Azure and only looking at OpenAI endpoints, you're leaving options on the table.",
+				150
+			)
+		).toBe("Most people think Microsoft Foundry is just about OpenAI models. It's not…");
+	});
+
+	test('ignores a clause boundary too early in the budget to be worth taking', () => {
+		// "Well," is 5 characters into a 120 budget. Cutting there would throw the
+		// excerpt away to buy a comma, so the word boundary wins instead.
+		expect(
+			toSummary(
+				'Well, the whole point of an agent identity perimeter is that every single call carries a verifiable claim about who is asking and why they want it',
+				120
+			)
+		).toBe(
+			'Well, the whole point of an agent identity perimeter is that every single call carries a verifiable claim about who is…'
+		);
+	});
+
+	test('does not read a chapter timestamp as a clause boundary', () => {
+		// "23:52" would otherwise offer a colon; the lookahead needs whitespace
+		// straight after it, and a timestamp has a digit there.
+		expect(
+			toSummary(
+				'Deepfakes are cheaper to create than ever before and detection lags well behind 23:52 Optimism and Pessimism in Technology Adoption 27:07 Conclusion',
+				120
+			)
+		).toBe(
+			'Deepfakes are cheaper to create than ever before and detection lags well behind 23:52 Optimism and Pessimism…'
+		);
 	});
 });
 

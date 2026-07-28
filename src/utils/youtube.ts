@@ -193,6 +193,27 @@ const ABBREVIATION = /(?:\b(?:vs|etc|eg|ie|al|approx|Dr|Mr|Mrs|Ms|Prof)|\b[A-Za-
 // "AI.…" or "agents,…".
 const TRAILING_PUNCTUATION = /[\s.,:;!?-]+$/;
 
+// Clause-level punctuation, used as the second-choice cut when the budget holds
+// no sentence break. Same trailing-whitespace lookahead as SENTENCE_END, so a
+// timestamp ("23:52 Optimism"), a ratio and a thousands separator are not
+// mistaken for clause ends.
+const CLAUSE_END = /[,;:]["'”’)\]]*(?=\s)/g;
+
+// A clause cut is only worth taking near the end of the budget. Two real cases
+// argue for a high bar: the search index composes "<event>: <summary>", putting
+// a colon about a quarter of the way in, and a quoted paper title carries its
+// own colon ('"The Architecture of AI Transformation: Four Strategic..."').
+// Cutting at either throws away most of the excerpt to buy a tidier edge.
+const CLAUSE_FLOOR = 0.75;
+
+// Function words that must not be the last word of a word-boundary cut. Without
+// this the fallback dangles on the preposition it stopped in front of:
+// "...their implications for…", "...securing communications in…", "...the
+// concept of agents in AI and…". Content words are never listed, so the trim
+// can only ever drop grammatical scaffolding, never a fact.
+const TRAILING_FUNCTION_WORD =
+	/\s+(?:a|an|and|as|at|but|by|for|from|in|into|its|of|on|or|the|their|to|with)$/i;
+
 // The house style is a spaced hyphen and the site ships no em dashes, but the
 // descriptions are YouTube's copy, not ours. Every em dash in the corpus is an
 // appositive, spaced or not ("the CIA triangle of security—confidentiality,
@@ -205,26 +226,44 @@ const TRAILING_PUNCTUATION = /[\s.,:;!?-]+$/;
 // one ever shows up.
 const EM_DASH = /\s*[—–]\s*/g;
 
-// Index of the last sentence break inside `text`, or -1 when there is none to
-// trust. Abbreviations are re-tested against the text up to and including the
-// dot, so the check sees the word the dot is attached to.
-function lastSentenceBreak(text: string): number {
+// Index of the last `breakPattern` match inside `text`, or -1 when there is
+// none to trust. `reject` is re-tested against the text up to and including the
+// matched character, so an abbreviation check sees the word its dot is attached
+// to.
+function lastBreak(text: string, breakPattern: RegExp, reject?: RegExp): number {
 	let breakAt = -1;
-	for (const match of text.matchAll(SENTENCE_END)) {
+	for (const match of text.matchAll(breakPattern)) {
 		const index = match.index ?? 0;
-		if (ABBREVIATION.test(text.slice(0, index + 1))) continue;
+		if (reject?.test(text.slice(0, index + 1))) continue;
 		breakAt = index;
 	}
 	return breakAt;
+}
+
+// Tidies the ragged edge of a word-boundary cut: drop trailing punctuation, then
+// any function word now left stranded, and repeat, so "computing, and the" comes
+// back as "computing" rather than "computing, and".
+function trimDangling(fragment: string): string {
+	let trimmed = fragment.replace(TRAILING_PUNCTUATION, '');
+	let previous = '';
+	while (previous !== trimmed) {
+		previous = trimmed;
+		trimmed = trimmed.replace(TRAILING_FUNCTION_WORD, '').replace(TRAILING_PUNCTUATION, '');
+	}
+	return trimmed;
 }
 
 /**
  * Turns a raw YouTube description into display copy: the URLs and hashtags are
  * already harvested into relatedContent and tags, so on the page they are noise.
  * Drops promo lines and filler openers, normalises em dashes to the house
- * spaced hyphen, then truncates at the last complete
- * sentence that fits, falling back to a word boundary when the budget holds no
- * sentence break at all (a single very long sentence still has to render).
+ * spaced hyphen, then truncates at the last complete sentence that fits.
+ *
+ * A single very long sentence still has to render, so when the budget holds no
+ * sentence break the cut falls back, in order, to the last clause boundary in
+ * the final quarter of the budget, then to the last word boundary with any
+ * stranded function word trimmed off. Both fallbacks end the excerpt somewhere
+ * a reader would pause, rather than wherever the character count ran out.
  */
 export function toSummary(description: string, maxLength = 200): string {
 	const cleaned = stripOpener(
@@ -240,11 +279,19 @@ export function toSummary(description: string, maxLength = 200): string {
 	if (cleaned.length <= maxLength) return cleaned;
 
 	const budget = cleaned.slice(0, maxLength);
-	const sentenceBreak = lastSentenceBreak(budget);
-	const wordBreak = budget.lastIndexOf(' ');
-	const cut = sentenceBreak > 0 ? sentenceBreak : wordBreak > 0 ? wordBreak : budget.length;
 
-	return `${budget.slice(0, cut).replace(TRAILING_PUNCTUATION, '')}…`;
+	const sentenceBreak = lastBreak(budget, SENTENCE_END, ABBREVIATION);
+	if (sentenceBreak > 0) {
+		return `${budget.slice(0, sentenceBreak).replace(TRAILING_PUNCTUATION, '')}…`;
+	}
+
+	const clauseBreak = lastBreak(budget, CLAUSE_END);
+	if (clauseBreak >= maxLength * CLAUSE_FLOOR) {
+		return `${budget.slice(0, clauseBreak).replace(TRAILING_PUNCTUATION, '')}…`;
+	}
+
+	const wordBreak = budget.lastIndexOf(' ');
+	return `${trimDangling(budget.slice(0, wordBreak > 0 ? wordBreak : budget.length))}…`;
 }
 
 // Module-level cache to avoid redundant fetches during a single build.

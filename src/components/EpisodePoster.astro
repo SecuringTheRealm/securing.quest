@@ -35,21 +35,21 @@ const a11y: Record<string, string> = decorative
 <div class:list={['poster', `poster--${variant}`]} data-realm={realm} {...a11y}>
 	{variant === 'poster' && <p class="pixel-eyebrow poster__source">{source}</p>}
 	{variant === 'poster' && <p class="poster__title">{title}</p>}
-	<div class="poster__foot">
-		{/* Category glyph, not the show shield: the shield is already in the header,
-		    and the thumbnail should say what the episode is. */}
-		<span class="poster__mark">
-			{realm === 'tower' && <TowerIcon />}
-			{realm === 'library' && <LibraryIcon />}
-			{realm === 'forge' && <ForgeIcon />}
-			{realm === 'moon' && <MoonIcon />}
-		</span>
-	</div>
+	{/* Category glyph, not the show shield: the shield is already in the header,
+	    and the thumbnail should say what the episode is. */}
+	<span class="poster__mark">
+		{realm === 'tower' && <TowerIcon />}
+		{realm === 'library' && <LibraryIcon />}
+		{realm === 'forge' && <ForgeIcon />}
+		{realm === 'moon' && <MoonIcon />}
+	</span>
 </div>
 
 <style>
 	.poster {
 		container-type: inline-size;
+		/* Containing block for the centred card glyph */
+		position: relative;
 		/* inline-size containment makes the intrinsic width 0, so a flex parent
 		   would shrink this to nothing and aspect-ratio would give it 0 height */
 		width: 100%;
@@ -100,29 +100,33 @@ const a11y: Record<string, string> = decorative
 		overflow: hidden;
 	}
 
+	/* Block, so no baseline gap pads the box below the glyph and shifts its
+	   optical centre off the tile's centre */
 	.poster__mark :global(svg) {
+		display: block;
 		width: 100%;
 		height: auto;
 	}
 
-	.poster__foot {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: var(--space-3);
-	}
-
-	.poster__date {
-		font-family: var(--font-body);
-		font-size: min(var(--font-size-sm), 3.5cqi);
-		color: var(--colour-parchment);
-	}
-
 	.poster__mark {
 		display: block;
-		width: clamp(var(--space-8), 10cqi, var(--space-16));
-		height: auto;
-		margin-inline-start: auto;
+		/* Floor and ceiling are the 48-64px target band, so the glyph stays in
+		   it at any card width the container query units would otherwise miss */
+		width: clamp(var(--space-12), 13cqi, var(--space-16));
+		/* Poster variant only: the baked title owns the middle, so the glyph
+		   sits bottom-right of it (last grid row) */
+		justify-self: end;
 		image-rendering: pixelated;
+	}
+
+	/* Card variant bakes in no text, so the glyph takes the centre of the tile.
+	   Positioned rather than laid out: VideoFacade forces display:block on the
+	   slotted poster, so the grid above does not apply inside the hero. The
+	   square ratio gives the auto margins a definite height to centre. */
+	.poster--card .poster__mark {
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		aspect-ratio: 1;
 	}
 </style>

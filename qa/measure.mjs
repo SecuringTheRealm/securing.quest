@@ -61,13 +61,15 @@ for (const [w, h] of [
   [1440, 900],
   [390, 844],
 ]) {
-  const page = await browser.newPage({ viewportSize: { width: w, height: h } });
+  // `viewport`, not `viewportSize` — the latter is silently ignored by newPage
+  // and every shot comes out at Chrome's default 1280.
+  const page = await browser.newPage({ viewport: { width: w, height: h } });
   await page.goto(url, { waitUntil: 'networkidle' });
   if (debugOutline) {
     await page.addStyleTag({ content: '* { outline: 1px solid rgba(255,0,0,.4) !important; }' });
   }
   await page.screenshot({ path: `qa/screenshots/${label}-${w}.png`, fullPage: true });
-  if (w === 1440) rows.push(...(await page.evaluate(COLLECT)));
+  rows.push([w, await page.evaluate(COLLECT)]);
   await page.close();
 }
 
@@ -76,29 +78,30 @@ await browser.close();
 // The colour edge between two blocks is the top of the lower one: adjacent
 // siblings share it, and where a wrapper sits between them (header/main) the
 // lower block's own top is still where its background starts.
-console.log(`\n${label} @1440 — seam bisection (target 96 / 96)\n`);
-console.log('seam                       above  below  total  bisected');
-for (let i = 0; i < rows.length - 1; i++) {
-  const a = rows[i];
-  const b = rows[i + 1];
-  const edge = b.top;
-  const above = edge - a.contentBottom;
-  const below = b.contentTop - edge;
-  const ok = above === 96 && below === 96;
-  console.log(
-    `${`${a.name} -> ${b.name}`.padEnd(26)} ${String(above).padStart(5)}  ${String(below).padStart(5)}  ${String(above + below).padStart(5)}  ${ok ? 'yes' : 'NO'}`,
-  );
-}
+// --space-section steps down at 768px, so the target does too.
+for (const [w, blocks] of rows) {
+  const target = w <= 768 ? 56 : 96;
+  console.log(`\n${label} @${w} — seam bisection (target ${target} / ${target})\n`);
+  console.log('seam                       above  below  total  bisected');
+  for (let i = 0; i < blocks.length - 1; i++) {
+    const a = blocks[i];
+    const b = blocks[i + 1];
+    const edge = b.top;
+    const above = edge - a.contentBottom;
+    const below = b.contentTop - edge;
+    const ok = above === target && below === target;
+    console.log(
+      `${`${a.name} -> ${b.name}`.padEnd(26)} ${String(above).padStart(5)}  ${String(below).padStart(5)}  ${String(above + below).padStart(5)}  ${ok ? 'yes' : 'NO'}`,
+    );
+  }
 
-// Content escaping its own block means a child margin or overflow is driving the
-// seam, not the section padding — the seam numbers above cannot be trusted until
-// it is gone.
-const overflow = rows.filter((r) => r.contentBottom > r.bottom || r.contentTop < r.top);
-if (overflow.length) {
-  console.log('\noverflowing blocks (content outside the block box):');
+  // Content escaping its own block means a child margin or overflow is driving
+  // the seam, not the section padding — the numbers above cannot be trusted
+  // until it is gone.
+  const overflow = blocks.filter((r) => r.contentBottom > r.bottom || r.contentTop < r.top);
   for (const r of overflow) {
     console.log(
-      `  ${r.name.padEnd(10)} box ${r.top}..${r.bottom}   content ${r.contentTop}..${r.contentBottom}`,
+      `  overflow: ${r.name} box ${r.top}..${r.bottom}, content ${r.contentTop}..${r.contentBottom}`,
     );
   }
 }

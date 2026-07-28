@@ -334,15 +334,6 @@ const DATE_LOCALE = 'en-GB';
 </Base>
 
 <style>
-  .quest-log {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
   .ext-glyph {
     margin-left: var(--space-1);
     color: var(--colour-gold);
@@ -355,11 +346,13 @@ const DATE_LOCALE = 'en-GB';
     align-items: start;
     /* Starfield: the castle band follows immediately, so the hero's empty
        bottom-left reads as the sky above the castle rather than as absence.
-       Kept at 3% so it is texture, never content. No animation. */
+       Same colour as the castle's stars, so the two bands share one sky; the
+       tiles are sparse (~20 dots) to keep the total star weight near the
+       castle's eight, which is what stops it competing with the H1. Static. */
     background-image:
       radial-gradient(var(--colour-star) 1px, transparent 1px),
       radial-gradient(var(--colour-star) 2px, transparent 2px);
-    background-size: var(--space-24) 140px, 200px 220px;
+    background-size: 200px 240px, 360px 320px;
     background-position: 0 0, 72px 88px;
     padding-bottom: var(--space-section);
   }
@@ -446,7 +439,7 @@ const DATE_LOCALE = 'en-GB';
 
   /* Realm cards: the accent is a committed material cue, not a hairline */
   .map-subhead {
-    margin: 0 0 var(--space-heading);
+    margin: 0 0 var(--space-subhead);
     text-align: center;
     color: var(--colour-stone-light);
   }
@@ -457,15 +450,15 @@ const DATE_LOCALE = 'en-GB';
 
   /* A notched panel gives the section edges; without them it floated */
   .newsletter-band__panel {
-    max-width: var(--max-width-content);
+    max-width: var(--measure);
     margin-inline: auto;
-    padding: var(--space-12) var(--space-6);
+    padding: var(--space-12);
     background: var(--colour-teal-dark);
     border: 2px solid var(--colour-gold);
   }
 
+  /* The 720px panel is already the measure, so the blurb needs no width of its own */
   .newsletter-band__blurb {
-    max-width: var(--max-width-narrow);
     margin: 0 auto var(--space-6);
     color: var(--colour-parchment);
   }
@@ -483,9 +476,11 @@ const DATE_LOCALE = 'en-GB';
   }
 
   .quest-log__more {
-    /* Indented to the row titles' x-position, not the container edge */
-    margin: var(--space-6) 0 0;
-    padding-left: calc(var(--space-20) + var(--space-4) + var(--space-4));
+    /* Indented to the row titles' x-position, not the container edge. The inset is
+       the row's own structure — accent bar, row padding, thumb column, grid gap —
+       read from the same tokens the row uses, so it tracks any change to them. */
+    margin: var(--space-heading) 0 0;
+    padding-left: calc(var(--space-1) + var(--space-4) + var(--space-20) + var(--space-4));
   }
 
   .quest-row {
@@ -494,7 +489,7 @@ const DATE_LOCALE = 'en-GB';
     gap: var(--space-4);
     align-items: start;
     padding: var(--space-3) var(--space-4);
-    border-left: 4px solid var(--realm-accent);
+    border-left: var(--space-1) solid var(--realm-accent);
     text-decoration: none;
     color: inherit;
     transition: background var(--transition-fast);
@@ -573,6 +568,11 @@ const DATE_LOCALE = 'en-GB';
 
     .quest-row__thumb {
       max-width: var(--space-24);
+    }
+
+    /* Single column, so the title starts right after the bar and row padding */
+    .quest-log__more {
+      padding-left: calc(var(--space-1) + var(--space-4));
     }
   }
 

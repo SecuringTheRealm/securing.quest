@@ -194,9 +194,15 @@ const currentPath = Astro.url.pathname;
             loading="lazy"
           />
           <p>Cloud security and Microsoft AI, run as a tabletop campaign.</p>
+          {/* "4.0" was orphaning onto its own line. Non-breaking spaces alone
+              don't fix it — the browser then breaks at the hyphen inside
+              "BY-SA" — so the identifier is held by nowrap instead, which
+              covers both the spaces and the hyphen. Same for the symbol and
+              its year. */}
           <p class="site-footer__licence">
-            © {new Date().getFullYear()} Securing the Realm. Site text is licensed
-            under CC BY-SA 4.0. The code is MIT.
+            <span class="site-footer__nowrap">© {new Date().getFullYear()}</span> Securing the Realm.
+            Site text is licensed under <span class="site-footer__nowrap">CC BY-SA 4.0</span>. The
+            code is MIT.
           </p>
         </div>
 
@@ -347,6 +353,10 @@ const currentPath = Astro.url.pathname;
         font-size: var(--font-size-sm);
         color: var(--colour-stone-light);
         margin-bottom: 0;
+      }
+
+      .site-footer__nowrap {
+        white-space: nowrap;
       }
 
       .site-footer__col ul {

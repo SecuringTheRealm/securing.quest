@@ -49,8 +49,11 @@
   --colour-shadow: color-mix(in srgb, var(--colour-black) 30%, transparent);
   --colour-rim-light: color-mix(in srgb, var(--colour-white) 12%, transparent);
   --colour-shadow-band: color-mix(in srgb, var(--colour-black) 15%, transparent);
-  /* Hero starfield: texture only, must never read as content */
-  --colour-star: color-mix(in srgb, var(--colour-parchment) 3%, transparent);
+  /* Hero starfield. The castle band's stars are flat --colour-parchment (its
+     twinkle floor is 0.6), so the hero matches that colour at the floor value:
+     the same sky, one band up. Density carries the restraint instead of alpha —
+     see .hero's background-size. */
+  --colour-star: color-mix(in srgb, var(--colour-parchment) 60%, transparent);
 
   /* Per-realm accent (overridden per [data-realm]) */
   --realm-accent: var(--colour-gold);
@@ -72,10 +75,11 @@
   --space-20: 80px;
   --space-24: 96px;
 
-  /* Semantic rhythm. Three values carry the whole vertical page; any gap that
+  /* Semantic rhythm. These values carry the whole vertical page; any gap that
      is none of these is an ad-hoc value and should be replaced by one. */
   --space-section: var(--space-24); /* seam between bands (see breakpoint below) */
   --space-heading: var(--space-10); /* heading to its subhead or content */
+  --space-subhead: var(--space-12); /* subhead line to the section's major content */
   --space-inner: var(--space-6);    /* card and panel padding */
 
   /* Layout Widths */

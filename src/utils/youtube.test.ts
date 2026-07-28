@@ -105,35 +105,75 @@ describe('toSummary', () => {
 	});
 });
 
-describe('toSummary sentence truncation', () => {
-	// Both descriptions are the real feed text behind excerpts that shipped
-	// dangling mid-clause ("He explores the definition of...", "Kevin McDonnell
-	// shares his...") on the homepage.
-	const NEMA =
-		'Nema Sobhani, a data scientist at Avanade, discusses the concept of agents in AI and their impact on human activities. He explores the definition of agents, their role in the enterprise, and the ethical and social implications of their use. The conversation delves into the evaluation and governance of AI models, as well as the philosophical and practical considerations of human-AI interaction.';
+// The raw YouTube descriptions behind three of the five Quest Log rows on the
+// homepage, copied verbatim from the feed. NEMA and ROUNDUP carry the Takeaways
+// and Chapters sections that the whitespace collapse folds into one line.
+const NEMA =
+	'Nema Sobhani, a data scientist at Avanade, discusses the concept of agents in AI and their impact on human activities. He explores the definition of agents, their role in the enterprise, and the ethical and social implications of their use. The conversation delves into the evaluation and governance of AI models, as well as the philosophical and practical considerations of human-AI interaction.\n\nTakeaways\n\n* Agents as AI entities are empowered to perform tasks autonomously, and they will increasingly become integral to various business functions, disrupting the org-chart.\n* The evaluation and governance of AI models are crucial in ensuring their ethical, and responsible use in enterprise settings and as a key part of AI governance.\n\nChapters\n\n* 00:00 Introduction to Agents in AI\n* 07:58 Ethical and Social Implications of Agents\n* 16:24 Evaluation and Governance of AI Models\n* 26:20 Human Activities and the Role of AI';
 
-	const KEVIN =
-		'The conversation delves into the future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI. Kevin McDonnell shares his insights and a one of his own take aways from the app that started the series!';
+const ROUNDUP =
+	'The conversation delves into the evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification, and the nature of observability. Each chapter explores these themes in depth, providing valuable insights into the current state of AI technology and its impact on various industries.\n\n\n\nTakeaways\n\n* Regulatory and legal drivers to Agentic Security\n* Are models being commoditised?\n* Security and governance challenges\n* Open Source\n* Observability and security';
 
-	test('cuts at the last whole sentence instead of dangling on "the definition of"', () => {
-		expect(toSummary(NEMA, 150)).toBe(
-			'Nema Sobhani, a data scientist at Avanade, discusses the concept of agents in AI and their impact on human activities…'
-		);
-	});
+const KEVIN =
+	'The conversation delves into the future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI. Kevin McDonnell shares his insights and a one of his own take aways from the app that started the series!';
 
-	test('cuts at the last whole sentence instead of dangling on "shares his"', () => {
-		expect(toSummary(KEVIN, 220)).toBe(
-			'The future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI…'
-		);
-	});
+describe('Quest Log homepage rows', () => {
+	// The homepage does not call toSummary on the raw feed text: fetchYouTubeTalks
+	// and fetchYouTubeShorts summarise at the default 200 first, and index.astro
+	// re-summarises that at 150. All three of these shipped cut mid-clause with a
+	// trailing "…"; a row now always ends on the sentence's own punctuation.
+	const row = (description: string): string => toSummary(toSummary(description), 150);
 
-	test('ends with one ellipsis, not "of AI...." — no doubled punctuation', () => {
-		// The old word-boundary cut landed just past "governance of AI." and
-		// appended "...", giving four dots.
-		const summary = toSummary(KEVIN, 120);
-		expect(summary.endsWith('governance of AI…')).toBe(true);
+	test.each([
+		['NEMA', NEMA],
+		['ROUNDUP', ROUNDUP],
+		['KEVIN', KEVIN],
+	])('%s ends on a full stop with no ellipsis', (_name: string, description: string) => {
+		const summary = row(description);
+		expect(summary.endsWith('.')).toBe(true);
+		expect(summary).not.toContain('…');
 		expect(summary).not.toContain('...');
-		expect(summary).not.toContain('.…');
+	});
+
+	test('keeps the whole opening sentence of the Nema row', () => {
+		expect(row(NEMA)).toBe(
+			'Nema Sobhani, a data scientist at Avanade, discusses the concept of agents in AI and their impact on human activities.'
+		);
+	});
+
+	test('keeps the whole roundup sentence rather than cutting its list short', () => {
+		// 214 characters against a 150 budget: the sentence has no earlier break,
+		// and running over is the lesser evil next to "...governance challenges…".
+		expect(row(ROUNDUP)).toBe(
+			'The evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification, and the nature of observability.'
+		);
+	});
+
+	test('keeps the whole opening sentence of the Kevin row', () => {
+		expect(row(KEVIN)).toBe(
+			'The future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI.'
+		);
+	});
+});
+
+describe('toSummary sentence truncation', () => {
+	test('stops after the first whole sentence rather than starting a second', () => {
+		expect(toSummary(NEMA, 150)).toBe(
+			'Nema Sobhani, a data scientist at Avanade, discusses the concept of agents in AI and their impact on human activities.'
+		);
+	});
+
+	test('keeps the sentence-ending full stop, with no ellipsis after it', () => {
+		expect(toSummary(KEVIN, 220)).toBe(
+			'The future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI.'
+		);
+	});
+
+	test('ends with one full stop, not "of AI…." — no doubled punctuation', () => {
+		const summary = toSummary(KEVIN, 120);
+		expect(summary.endsWith('governance of AI.')).toBe(true);
+		expect(summary).not.toContain('...');
+		expect(summary).not.toContain('…');
 	});
 
 	test('falls back to a word boundary when one sentence overruns the budget', () => {
@@ -149,22 +189,27 @@ describe('toSummary sentence truncation', () => {
 
 	test('does not split on "vs." in a chapter list', () => {
 		// The only real abbreviation in the YouTube corpus. "Pessimism" is
-		// capitalised, so nothing but the word list distinguishes it.
+		// capitalised, so nothing but the word list distinguishes it. Reading it as
+		// a sentence end would take the excerpt to "...Optimism vs.", which fits.
 		expect(
 			toSummary(
 				'Deepfakes are cheaper to create than ever before, and detection lags behind them. 23:52 Optimism vs. Pessimism in Technology Adoption 27:07 Conclusion and final thoughts from the hosts.',
 				150
 			)
-		).toBe('Deepfakes are cheaper to create than ever before, and detection lags behind them…');
+		).toBe('Deepfakes are cheaper to create than ever before, and detection lags behind them.');
 	});
 
 	test('does not split on a decimal version number', () => {
+		// If "9.0" read as a sentence end the excerpt would stop at "version 9.",
+		// well inside the budget. It runs to the real full stop instead.
 		expect(
 			toSummary(
 				'Foundry Local shipped version 9.0 to general availability last week and it changes things.',
 				60
 			)
-		).toBe('Foundry Local shipped version 9.0 to general availability…');
+		).toBe(
+			'Foundry Local shipped version 9.0 to general availability last week and it changes things.'
+		);
 	});
 
 	test('does not split on initials in a citation', () => {
@@ -173,7 +218,9 @@ describe('toSummary sentence truncation', () => {
 				'The paper by J. McDonald and A. Choe argues that agent identity is the new perimeter of the enterprise.',
 				60
 			)
-		).toBe('The paper by J. McDonald and A. Choe argues that agent…');
+		).toBe(
+			'The paper by J. McDonald and A. Choe argues that agent identity is the new perimeter of the enterprise.'
+		);
 	});
 
 	test('does not split inside an acronym run like "U.S."', () => {
@@ -182,18 +229,21 @@ describe('toSummary sentence truncation', () => {
 				'The U.S. regulator published guidance that reshapes how enterprises govern their agent fleets today.',
 				60
 			)
-		).toBe('The U.S. regulator published guidance that reshapes how…');
+		).toBe(
+			'The U.S. regulator published guidance that reshapes how enterprises govern their agent fleets today.'
+		);
 	});
 
 	test('still treats a two-letter acronym like "AI." as a real sentence end', () => {
 		// The initials guard must not swallow this: "I" has no word boundary in
-		// front of it, so "AI." stays a sentence end.
+		// front of it, so "AI." stays a sentence end and the second sentence is
+		// dropped rather than joined on.
 		expect(
 			toSummary(
 				'Everything here is about the commoditization of AI. Kevin then explains what that means for teams.',
 				60
 			)
-		).toBe('Everything here is about the commoditization of AI…');
+		).toBe('Everything here is about the commoditization of AI.');
 	});
 
 	test('ends a sentence on "?" and on "!"', () => {
@@ -202,14 +252,14 @@ describe('toSummary sentence truncation', () => {
 				'Who controls access when AI agents handle data and tasks? We explain how Foundry uses Entra ID for this.',
 				70
 			)
-		).toBe('Who controls access when AI agents handle data and tasks…');
+		).toBe('Who controls access when AI agents handle data and tasks?');
 
 		expect(
 			toSummary(
 				'What happens when AI deletes your codebase? Whoops! We walk through the whole postmortem in detail.',
 				70
 			)
-		).toBe('What happens when AI deletes your codebase? Whoops…');
+		).toBe('What happens when AI deletes your codebase? Whoops!');
 	});
 
 	test('keeps a closing quote that belongs to the sentence it ends', () => {
@@ -218,7 +268,7 @@ describe('toSummary sentence truncation', () => {
 				'Welcome to a festive "Securing the Realm"! Josh and Chris are joined by Diana Wolfe and Fergus Kidd.',
 				70
 			)
-		).toBe('Welcome to a festive "Securing the Realm"…');
+		).toBe('Welcome to a festive "Securing the Realm"!');
 	});
 
 	test('leaves a description that fits the budget completely alone', () => {
@@ -227,15 +277,14 @@ describe('toSummary sentence truncation', () => {
 	});
 });
 
-describe('toSummary clause-boundary fallback', () => {
+describe('toSummary sentences that overrun the budget', () => {
 	// Every fixture in this block is the exact feed text behind an excerpt that
-	// shipped dangling mid-clause. ROUNDUP and ARCHITECTURE are the two /talks/
-	// excerpts ("...and the nature of…", "...Alice Choe and Fergus…"); the rest
-	// reach the search index, which composes "<event>: <summary>" and so has
-	// roughly 30 characters less room than the page it came from.
-	const ROUNDUP =
-		'The conversation delves into the evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification, and the nature of observability. Each chapter explores these themes in depth, providing valuable insights into the current state of AI technology and its impact on various industries.';
-
+	// shipped dangling mid-clause. ARCHITECTURE is a /talks/ excerpt
+	// ("...Alice Choe and Fergus…"); the rest reach the search index, which
+	// composes "<event>: <summary>" and so has roughly 30 characters less room
+	// than the page it came from. A whole sentence is now returned even when it
+	// overruns; the clause and word fallbacks survive only for a sentence past
+	// double the budget, and for text carrying no sentence punctuation at all.
 	const ARCHITECTURE =
 		'Diana Wolfe joins Chris and Josh to discuss the new paper "The Architecture of AI Transformation: Four Strategic Patterns and an Emerging Frontier" co-authored by Diana Wolfe, Alice Choe and Fergus Kidd; and discussing the transformative potential of AI in organizations, exploring the concept of agentic AI and its implications for leadership and collaboration.';
 
@@ -248,25 +297,25 @@ describe('toSummary clause-boundary fallback', () => {
 	const DEEPFAKES =
 		'In this episode of "Securing the Realm," we discuss the mystifying world of deepfakes and shallow fakes and their implications for security and media trust. Hosts Josh McDonald and Chris Lloyd-Jones - with special guest Fergus Kidd - guide you through real examples of deepfakes.';
 
-	test('cuts the list at a comma instead of dangling on "and the nature of"', () => {
-		// The first sentence runs to 240 characters, so no sentence break fits a
-		// 200 budget at all. The comma after "commodification" sits at 93% of the
-		// budget, so almost nothing is given up to land on it.
+	test('keeps the whole list sentence instead of dangling on "and the nature of"', () => {
+		// The first sentence runs to 214 characters, so nothing fits a 200 budget.
+		// Cutting at the comma after "commodification" would drop two list items
+		// and still read as an interrupted sentence.
 		expect(toSummary(ROUNDUP, 200)).toBe(
-			'The evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification…'
+			'The evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges, open source and commodification, and the nature of observability.'
 		);
 	});
 
 	test('does not cut a co-author list in the middle of a name', () => {
-		// Shipped as "...Alice Choe and Fergus…", chopping Fergus Kidd in half.
-		expect(toSummary(ARCHITECTURE, 200)).toBe(
-			'Diana Wolfe joins Chris and Josh to discuss the new paper "The Architecture of AI Transformation: Four Strategic Patterns and an Emerging Frontier" co-authored by Diana Wolfe…'
-		);
+		// Shipped as "...Alice Choe and Fergus…", chopping Fergus Kidd in half. One
+		// sentence of 359 characters, inside the 400 an overrun allows here.
+		expect(toSummary(ARCHITECTURE, 200)).toBe(ARCHITECTURE);
 	});
 
 	test('keeps the quoted paper title whole rather than cutting at its colon', () => {
-		// The title carries its own colon a third of the way into a 150 budget.
-		// Taking it would cost half the excerpt, which the clause floor forbids.
+		// 359 characters against a 150 budget is past double, so the sentence is
+		// cut after all. The title carries its own colon a third of the way in;
+		// taking it would cost half the excerpt, which the clause floor forbids.
 		expect(toSummary(ARCHITECTURE, 150)).toBe(
 			'Diana Wolfe joins Chris and Josh to discuss the new paper "The Architecture of AI Transformation: Four Strategic Patterns and an Emerging Frontier"…'
 		);
@@ -276,26 +325,27 @@ describe('toSummary clause-boundary fallback', () => {
 		// That colon is only 28 characters in, so honouring it would leave the
 		// search result showing nothing but the show name.
 		expect(toSummary(`YouTube - Securing the Realm: ${toSummary(VIBE_CODING)}`, 120)).toBe(
-			'YouTube - Securing the Realm: Chris and Josh explore the latest features of GitHub Copilot…'
+			'YouTube - Securing the Realm: Chris and Josh explore the latest features of GitHub Copilot, particularly focusing on agentic AI and its implications for software development.'
 		);
 	});
 
-	test('trims a dangling preposition when only a word boundary is available', () => {
-		// No clause punctuation in the budget at all, so this is the word-boundary
-		// path. Shipped as "...securing communications in…".
+	test('does not strand a preposition in a search index entry', () => {
+		// Shipped as "...securing communications in…".
 		expect(toSummary(`YouTube - Securing the Realm: ${toSummary(PURVIEW)}`, 120)).toBe(
-			'YouTube - Securing the Realm: Josh McDonald and Chris Lloyd-Jones discuss the importance of securing communications…'
+			'YouTube - Securing the Realm: Josh McDonald and Chris Lloyd-Jones discuss the importance of securing communications in the realm of agentic AI.'
 		);
 	});
 
-	test('trims a dangling "for" rather than pointing at nothing', () => {
-		// Shipped as "...and their implications for…".
+	test('keeps "their implications for security and media trust" whole', () => {
+		// Shipped as "...and their implications for…", pointing at nothing.
 		expect(toSummary(`YouTube - Securing the Realm: ${toSummary(DEEPFAKES)}`, 120)).toBe(
-			'YouTube - Securing the Realm: We discuss the mystifying world of deepfakes and shallow fakes and their implications…'
+			'YouTube - Securing the Realm: We discuss the mystifying world of deepfakes and shallow fakes and their implications for security and media trust.'
 		);
 	});
 
 	test('trims a whole dangling "and the" run, not just the last word', () => {
+		// An excerpt that already ends in "…" carries no sentence punctuation at
+		// all, so the word-boundary path is the only one left.
 		expect(
 			toSummary(
 				'YouTube - Securing the Realm: The future of AI, discussing its accessibility, the concept of ambient computing, and the ethical governance of AI…',
@@ -306,17 +356,13 @@ describe('toSummary clause-boundary fallback', () => {
 		);
 	});
 
-	test('re-truncating an already-summarised excerpt stays clean', () => {
-		// The homepage and the search index both feed toSummary its own output,
-		// and the "…" it appended is not a sentence break, so the second pass has
-		// to find its own resting place.
+	test('re-truncating an already-summarised excerpt is a no-op', () => {
+		// The homepage and the search index both feed toSummary its own output.
+		// Because the first pass ends on a full stop, the second pass sees a whole
+		// sentence and has nothing left to do.
 		const once = toSummary(ROUNDUP, 200);
-		const twice = toSummary(once, 150);
-		expect(twice).toBe(
-			'The evolving landscape of AI and securing it, focusing on regulatory and legal drivers, the commoditization of AI, security & governance challenges…'
-		);
-		expect(twice).not.toContain('…,');
-		expect(twice.split('…')).toHaveLength(2);
+		expect(toSummary(once, 150)).toBe(once);
+		expect(once).not.toContain('…');
 	});
 
 	test('prefers a real sentence break over any clause boundary', () => {
@@ -327,7 +373,7 @@ describe('toSummary clause-boundary fallback', () => {
 				"Most people think Microsoft Foundry is just about OpenAI models. It's not. If you're building on Azure and only looking at OpenAI endpoints, you're leaving options on the table.",
 				150
 			)
-		).toBe("Most people think Microsoft Foundry is just about OpenAI models. It's not…");
+		).toBe("Most people think Microsoft Foundry is just about OpenAI models. It's not.");
 	});
 
 	test('ignores a clause boundary too early in the budget to be worth taking', () => {
@@ -390,8 +436,9 @@ describe('toSummary em dash normalisation', () => {
 	});
 
 	test('leaves no dangling hyphen when the budget cuts at a normalised dash', () => {
+		// 72 characters against a 30 budget: past double, so this one is cut.
 		expect(
-			toSummary('Securing the realm of agents — confidentiality and integrity matter here.', 40)
+			toSummary('Securing the realm of agents — confidentiality and integrity matter here.', 30)
 		).toBe('Securing the realm of agents…');
 	});
 });

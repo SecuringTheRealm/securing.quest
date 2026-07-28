@@ -226,18 +226,33 @@ const TRAILING_FUNCTION_WORD =
 // one ever shows up.
 const EM_DASH = /\s*[—–]\s*/g;
 
+// A first sentence may run over budget rather than be clipped, but only so far:
+// past double the budget it has stopped being an excerpt, and a tidy cut beats
+// pasting a paragraph into a one-line row.
+const OVERRUN_LIMIT = 2;
+
 // Index of the last `breakPattern` match inside `text`, or -1 when there is
-// none to trust. `reject` is re-tested against the text up to and including the
-// matched character, so an abbreviation check sees the word its dot is attached
-// to.
-function lastBreak(text: string, breakPattern: RegExp, reject?: RegExp): number {
+// none.
+function lastBreak(text: string, breakPattern: RegExp): number {
 	let breakAt = -1;
 	for (const match of text.matchAll(breakPattern)) {
-		const index = match.index ?? 0;
-		if (reject?.test(text.slice(0, index + 1))) continue;
-		breakAt = index;
+		breakAt = match.index ?? 0;
 	}
 	return breakAt;
+}
+
+// End offsets (exclusive, so the full stop and any closing quote are included)
+// of every sentence in `text`, in order. ABBREVIATION is re-tested against the
+// text up to and including the matched dot, so the check sees the word the dot
+// is attached to.
+function sentenceEnds(text: string): number[] {
+	const ends: number[] = [];
+	for (const match of text.matchAll(SENTENCE_END)) {
+		const index = match.index ?? 0;
+		if (ABBREVIATION.test(text.slice(0, index + 1))) continue;
+		ends.push(index + match[0].length);
+	}
+	return ends;
 }
 
 // Tidies the ragged edge of a word-boundary cut: drop trailing punctuation, then
@@ -257,13 +272,17 @@ function trimDangling(fragment: string): string {
  * Turns a raw YouTube description into display copy: the URLs and hashtags are
  * already harvested into relatedContent and tags, so on the page they are noise.
  * Drops promo lines and filler openers, normalises em dashes to the house
- * spaced hyphen, then truncates at the last complete sentence that fits.
+ * spaced hyphen, then keeps as many whole sentences as fit the budget. The
+ * excerpt ends on the sentence's own punctuation, never on an ellipsis: a cut
+ * in the middle of a clause reads as broken copy even when the sentence it
+ * came from was complete.
  *
- * A single very long sentence still has to render, so when the budget holds no
- * sentence break the cut falls back, in order, to the last clause boundary in
- * the final quarter of the budget, then to the last word boundary with any
- * stranded function word trimmed off. Both fallbacks end the excerpt somewhere
- * a reader would pause, rather than wherever the character count ran out.
+ * When not even the first sentence fits, that whole sentence is returned
+ * anyway - a few characters over budget is cheaper than a clause dangling in
+ * mid-air, and the row's line height absorbs it. Only a sentence past
+ * OVERRUN_LIMIT times the budget is clipped, falling back to the last clause
+ * boundary in the final quarter of the budget, then to the last word boundary
+ * with any stranded function word trimmed off.
  */
 export function toSummary(description: string, maxLength = 200): string {
 	const cleaned = stripOpener(
@@ -278,12 +297,16 @@ export function toSummary(description: string, maxLength = 200): string {
 
 	if (cleaned.length <= maxLength) return cleaned;
 
-	const budget = cleaned.slice(0, maxLength);
-
-	const sentenceBreak = lastBreak(budget, SENTENCE_END, ABBREVIATION);
-	if (sentenceBreak > 0) {
-		return `${budget.slice(0, sentenceBreak).replace(TRAILING_PUNCTUATION, '')}…`;
+	const ends = sentenceEnds(cleaned);
+	const fitting = ends.filter((end: number) => end <= maxLength);
+	if (fitting.length > 0) {
+		return cleaned.slice(0, fitting[fitting.length - 1]);
 	}
+	if (ends.length > 0 && ends[0] <= maxLength * OVERRUN_LIMIT) {
+		return cleaned.slice(0, ends[0]);
+	}
+
+	const budget = cleaned.slice(0, maxLength);
 
 	const clauseBreak = lastBreak(budget, CLAUSE_END);
 	if (clauseBreak >= maxLength * CLAUSE_FLOOR) {

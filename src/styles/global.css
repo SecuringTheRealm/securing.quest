@@ -106,6 +106,13 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--pixel-dash);
 }
 
+/* Inside a notched panel the box is already the frame, so the flanking rules
+   would be a second border 48px in from the first. */
+.notched > .section-heading::before,
+.notched > .section-heading::after {
+  display: none;
+}
+
 /* Fluid so long headings shrink instead of wrapping brutally on mobile */
 h1 {
   font-size: clamp(var(--font-size-2xl), 5vw, var(--font-size-5xl));

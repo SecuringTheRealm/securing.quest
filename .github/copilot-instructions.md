@@ -134,8 +134,7 @@ bun run preview
 │   │   │   ├── [slug].astro    # Blog post template
 │   │   │   └── rss.xml.ts      # RSS feed generator
 │   │   ├── talks/index.astro   # Talks list
-│   │   ├── forge/index.astro   # Projects list
-│   │   └── newsletter/index.astro  # Newsletter signup
+│   │   └── forge/index.astro   # Projects list
 │   └── styles/
 │       ├── tokens.css     # Design tokens (colors, spacing, typography)
 │       └── global.css     # Global styles, animations
@@ -178,7 +177,7 @@ bun run preview
 - Tower → `/talks/` (Video presentations)
 - Library → `/blog/` (Blog posts)
 - Forge → `/forge/` (Code projects)
-- Arcane Scrolls → `/newsletter/` (Newsletter)
+- Arcane Scrolls → https://str.riverside.com/newsletter (Newsletter, hosted on Riverside)
 
 ## Content Collections (Type-Safe)
 

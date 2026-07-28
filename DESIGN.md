@@ -106,7 +106,7 @@ The castle acts as the primary navigation system:
 | **Tower** | `/talks/` | 🏰 | Video talks and presentations |
 | **Library** | `/blog/` | 📚 | Blog posts and articles |
 | **Forge** | `/forge/` | ⚒️ | Code projects and repositories |
-| **Arcane Scrolls** | `/newsletter/` | 📜 | Newsletter signup |
+| **Arcane Scrolls** | https://str.riverside.com/newsletter | 📜 | Newsletter (hosted on Riverside) |
 | **About** | `/about/` | 🛡️ | Mission and values |
 
 ## Pixel Art Guidelines

@@ -124,6 +124,15 @@ const currentPath = Astro.url.pathname;
             <li>
               <a href="/#listen" class="nav-link" data-castle-name="Podcast">Listen</a>
             </li>
+            <li>
+              <a
+                href="https://str.riverside.com/newsletter"
+                class="nav-link"
+                data-castle-name="Arcane Scrolls"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Newsletter (opens in new tab)">Newsletter</a>
+            </li>
             <li><a href="/about/" aria-current={currentPath.startsWith('/about') ? 'page' : undefined}>About</a></li>
           </ul>
         </div>
@@ -228,6 +237,15 @@ const currentPath = Astro.url.pathname;
               rel="noopener noreferrer"
               aria-label="Apple Podcasts (opens in new tab)"
               data-social="Apple Podcasts">Apple Podcasts</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://str.riverside.com/newsletter"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Arcane Scrolls newsletter (opens in new tab)"
+              data-social="Newsletter">Newsletter</a
             >
           </li>
         </ul>

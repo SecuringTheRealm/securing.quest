@@ -118,7 +118,6 @@ bun run preview
 │   │   ├── blog/            # Library pages
 │   │   ├── talks/           # Tower pages
 │   │   ├── forge/           # Projects pages
-│   │   ├── newsletter/      # Newsletter signup
 │   │   └── 404.astro        # Custom 404 page
 │   └── styles/         # Global styles and design tokens
 │       ├── tokens.css  # CSS custom properties (colors, spacing, etc.)
@@ -190,7 +189,7 @@ The site uses a custom design system inspired by 8-bit fantasy aesthetics:
 
 - **Colors**: Teal background (#0f3c46), gold accents (#d5a425), parchment (#f3e9d2)
 - **Typography**: Press Start 2P for headings, Georgia for body text
-- **Theme**: Castle navigation with Tower (talks), Library (blog), Forge (projects), and Arcane Scrolls (newsletter)
+- **Theme**: Castle navigation with Tower (talks), Library (blog), Forge (projects), and the Moon (shorts)
 
 See `src/styles/tokens.css` for the complete design token system.
 

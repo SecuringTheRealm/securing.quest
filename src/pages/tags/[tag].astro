@@ -10,7 +10,6 @@ interface TaggedContent {
 	url: string;
 	date: Date;
 	source: string;
-	icon: string;
 	description: string;
 }
 
@@ -54,7 +53,6 @@ export const getStaticPaths = (async () => {
 				url: `/blog/${post.id}/`,
 				date: post.data.pubDate,
 				source: 'Library · Blog',
-				icon: '📚',
 				description: post.data.description,
 			});
 		}
@@ -68,7 +66,6 @@ export const getStaticPaths = (async () => {
 				url: `/talks/#${talk.id}`,
 				date: talk.data.date,
 				source: 'Tower · Talks',
-				icon: '🏰',
 				description: talk.data.summary,
 			});
 		}
@@ -82,7 +79,6 @@ export const getStaticPaths = (async () => {
 				url: `/talks/#youtube-${index}`,
 				date: talk.date,
 				source: 'Tower · Talks',
-				icon: '🏰',
 				description: talk.summary,
 			});
 		}
@@ -100,7 +96,6 @@ export const getStaticPaths = (async () => {
 				url: `/shorts/`,
 				date: short.pubDate,
 				source: 'Moon · Shorts',
-				icon: '🌙',
 				description: short.description || 'A short from the Securing the Realm YouTube channel.',
 			});
 		}
@@ -145,9 +140,6 @@ const { tag, items } = Astro.props as Props;
           class="feed-item content-card"
         >
           <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
-            <div aria-hidden="true" style="flex-shrink: 0; font-size: var(--font-size-2xl);">
-              {item.icon}
-            </div>
             <div style="flex: 1; min-width: 0;">
               <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
                 <h2 style="margin: 0; font-size: var(--font-size-lg); color: var(--colour-gold);">

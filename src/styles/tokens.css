@@ -23,14 +23,9 @@
 
   /* Castle/Environment Colors */
   --colour-sky-dark: #0a1820;
-  --colour-ground: #143025;
   --colour-ground-dark: #163028;
   --colour-ground-mid: #1a3a30;
   --colour-grass: #2a5a45;
-  --colour-foundation: #1a4a45;
-  --colour-foundation-dark: #0f3530;
-  --colour-depth-face: #0d3a3a;
-  --colour-chimney-depth: #4a3a2a;
   --colour-roof-depth: #5a6a68;
   --colour-smoke: #999999;
   --colour-forge-orange: #ff6600;
@@ -38,17 +33,10 @@
 
   /* Semantic Colors */
   --colour-bg-primary: var(--colour-teal-bg);
-  --colour-bg-secondary: var(--colour-parchment);
-  --colour-text-primary: var(--colour-ink);
-  --colour-text-secondary: var(--colour-stone);
   --colour-text-inverse: var(--colour-parchment);
-  --colour-accent: var(--colour-gold);
-  --colour-accent-hover: var(--colour-gold-light);
 
   /* Alpha variants (for shadows and overlays) */
-  --colour-gold-alpha-20: color-mix(in srgb, var(--colour-gold) 20%, transparent);
   --colour-gold-alpha-15: color-mix(in srgb, var(--colour-gold) 15%, transparent);
-  --colour-gold-alpha-30: color-mix(in srgb, var(--colour-gold) 30%, transparent);
   --colour-shadow: color-mix(in srgb, var(--colour-black) 30%, transparent);
   --colour-rim-light: color-mix(in srgb, var(--colour-white) 12%, transparent);
   --colour-shadow-band: color-mix(in srgb, var(--colour-black) 15%, transparent);
@@ -56,12 +44,6 @@
   /* Per-realm accent (overridden per [data-realm]) */
   --realm-accent: var(--colour-gold);
 
-  /* Status Colors */
-  --colour-success-bg: #2d5016;
-  --colour-success-border: #4a7c2a;
-  --colour-error-bg: #5d1a1a;
-  --colour-error-border: #d32f2f;
-  
   /* Spacing Scale */
   --space-1: 4px;
   --space-2: 8px;
@@ -69,7 +51,6 @@
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
-  --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
   --space-20: 80px;
@@ -87,27 +68,21 @@
   --radius-pixel: 2px; /* hard-edged retro corners; mirrors the 2px stroke standard */
   --radius-md: 6px;
   --radius-outer: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
   --radius-full: 9999px;
-  
+
   /* Transitions */
   --transition-fast: 150ms ease-in-out;
   --transition-base: 250ms ease-in-out;
-  --transition-slow: 350ms ease-in-out;
-  
+
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 
   /* Stepped pixel shadows (no blur) + carved-stone card chrome */
   --shadow-stepped: 4px 4px 0 var(--colour-gold-dark);
   --shadow-stepped-hover: 2px 2px 0 var(--colour-gold-dark);
   --card-chrome: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band), var(--shadow-stepped);
   --card-chrome-pressed: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band), var(--shadow-stepped-hover);
-  
+
   /* Typography Scale */
   --font-size-xs: 0.75rem;    /* 12px */
   --font-size-sm: 0.875rem;   /* 14px */
@@ -116,39 +91,29 @@
   --font-size-xl: 1.25rem;    /* 20px */
   --font-size-2xl: 1.5rem;    /* 24px */
   --font-size-3xl: 1.875rem;  /* 30px */
-  --font-size-4xl: 2.25rem;   /* 36px */
   --font-size-5xl: 3rem;      /* 48px */
-  
+
   /* Line Heights */
-  --line-height-tight: 1.25;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
-  --line-height-loose: 2;
   --line-height-display: 1.6; /* leading for wrapping pixel-font headings */
   --tracking-display: 0.02em;
   --tracking-display-readable: 0.04em;
-  
+
   /* Font Families */
   --font-display: 'Press Start 2P', monospace;
   --font-body: 'Georgia', 'Times New Roman', serif;
   --font-display-readable: var(--font-body); /* readable heading tier: bold Georgia, no third font file */
 
   /* Font Weights */
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Z-Index Scale */
-  --z-index-base: 0;
   --z-index-dropdown: 1000;
   --z-index-sticky: 1020;
-  --z-index-fixed: 1030;
-  --z-index-modal-backdrop: 1040;
   --z-index-modal: 1050;
-  --z-index-popover: 1060;
-  --z-index-tooltip: 1070;
 }
 
 /* Reduced Motion Support */
@@ -156,9 +121,8 @@
   :root {
     --transition-fast: 0ms;
     --transition-base: 0ms;
-    --transition-slow: 0ms;
   }
-  
+
   *,
   *::before,
   *::after {

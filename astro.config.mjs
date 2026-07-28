@@ -18,6 +18,9 @@ export default defineConfig({
     }),
   ],
   output: 'static',
+  redirects: {
+    '/newsletter': 'https://str.riverside.com/newsletter',
+  },
   build: {
     format: 'directory',
   },

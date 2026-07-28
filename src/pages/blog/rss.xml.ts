@@ -3,19 +3,7 @@ import { getCollection, render } from 'astro:content';
 import mdxRenderer from '@astrojs/mdx/server.js';
 import type { APIContext } from 'astro';
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
-
-const SITE_TITLE = 'Securing the Realm - Blog';
-const SITE_DESCRIPTION =
-	'Epic adventures in cybersecurity, Azure, and AI through the lens of fantasy storytelling.';
-
-function escapeXml(value: string): string {
-	return value
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&apos;');
-}
+import { escapeXml, renderRss } from '../../utils/rss';
 
 export async function GET(context: APIContext): Promise<Response> {
 	const blog = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {
@@ -32,7 +20,7 @@ export async function GET(context: APIContext): Promise<Response> {
 
 	const siteUrl = (context.site || new URL('https://securing.quest')).toString().replace(/\/$/, '');
 
-	const itemsXml = await Promise.all(
+	const items = await Promise.all(
 		sortedPosts.map(async (post: CollectionEntry<'blog'>) => {
 			const { Content } = await render(post);
 			const content = await container.renderToString(Content);
@@ -57,21 +45,12 @@ export async function GET(context: APIContext): Promise<Response> {
 		})
 	);
 
-	const rss = [
-		'<?xml version="1.0" encoding="UTF-8"?>',
-		'<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">',
-		'<channel>',
-		`  <title>${escapeXml(SITE_TITLE)}</title>`,
-		`  <description>${escapeXml(SITE_DESCRIPTION)}</description>`,
-		`  <link>${escapeXml(siteUrl)}</link>`,
-		`  <atom:link href="${escapeXml(`${siteUrl}/blog/rss.xml`)}" rel="self" type="application/rss+xml" />`,
-		'  <language>en-us</language>',
-		itemsXml.join('\n'),
-		'</channel>',
-		'</rss>',
-	].join('\n');
-
-	return new Response(rss, {
-		headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+	return renderRss({
+		title: 'Securing the Realm - Blog',
+		description:
+			'Epic adventures in cybersecurity, Azure, and AI through the lens of fantasy storytelling.',
+		siteUrl,
+		selfPath: '/blog/rss.xml',
+		items,
 	});
 }

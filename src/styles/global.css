@@ -283,10 +283,6 @@ img {
   padding: 0 var(--space-4);
 }
 
-.text-center {
-  text-align: center;
-}
-
 .measure {
   max-width: var(--measure);
   margin-inline: auto;
@@ -300,18 +296,6 @@ img {
 .section-stack {
   margin-bottom: var(--space-16);
 }
-
-.mb-0 { margin-bottom: 0; }
-.mb-2 { margin-bottom: var(--space-2); }
-.mb-4 { margin-bottom: var(--space-4); }
-.mb-6 { margin-bottom: var(--space-6); }
-.mb-8 { margin-bottom: var(--space-8); }
-
-.mt-0 { margin-top: 0; }
-.mt-2 { margin-top: var(--space-2); }
-.mt-4 { margin-top: var(--space-4); }
-.mt-6 { margin-top: var(--space-6); }
-.mt-8 { margin-top: var(--space-8); }
 
 /* Animations */
 /* Stepped, hard-edged halo (no filter blur — AGENTS Pitfall #12) in the
@@ -493,15 +477,6 @@ img {
   box-shadow: var(--card-chrome);
 }
 
-/* Aged-parchment panel for long-form prose */
-.parchment-panel {
-  padding: var(--space-8);
-  background: var(--colour-parchment);
-  color: var(--colour-ink);
-  border: 2px solid var(--colour-parchment-dark);
-  border-radius: var(--radius-pixel);
-}
-
 /* Navigation card grid */
 .realm-grid {
   display: grid;
@@ -555,6 +530,7 @@ button:hover {
 [data-realm="moon"] { --realm-accent: var(--colour-parchment-light); }
 [data-realm="tower"] { --realm-accent: var(--colour-stone-light); }
 [data-realm="library"] { --realm-accent: var(--colour-gold); }
+[data-realm="scrolls"] { --realm-accent: var(--colour-parchment); }
 
 .realm-card[data-realm] {
   border-top: 4px solid var(--realm-accent);

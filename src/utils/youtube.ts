@@ -53,11 +53,20 @@ const YOUTUBE_SHORTS_FEED_URL = `https://www.youtube.com/feeds/videos.xml?playli
 const YOUTUBE_CHANNEL_ID = 'UCS4KTDaZTiyiMj2yZztwmlg';
 const YOUTUBE_CHANNEL_FEED_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
 
+// YouTube rate-limits bursts of feed requests with a 404, so retry once before
+// giving up. Failing loudly beats deploying an empty Talks and Shorts page.
 async function fetchFeedEntries(feedUrl: string): Promise<YouTubeEntry[]> {
-	const response = await fetch(feedUrl);
+	let response = await fetch(feedUrl);
+
 	if (!response.ok) {
-		console.warn(`Failed to fetch YouTube feed ${feedUrl}: ${response.statusText}`);
-		return [];
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+		response = await fetch(feedUrl);
+	}
+
+	if (!response.ok) {
+		throw new Error(
+			`Failed to fetch YouTube feed ${feedUrl}: ${response.status} ${response.statusText}`
+		);
 	}
 
 	const xmlData = await response.text();
@@ -98,6 +107,26 @@ function dedupeByVideoId(entries: YouTubeEntry[]): YouTubeEntry[] {
 	return Array.from(entryMap.values());
 }
 
+// Merge a curated playlist feed with the channel feed (filtered to the right
+// video kind) so newly published videos appear even before they are added to
+// the playlist.
+async function fetchMergedEntries(
+	playlistFeedUrl: string,
+	wantShorts: boolean
+): Promise<YouTubeEntry[]> {
+	const [playlistEntries, channelEntries] = await Promise.all([
+		fetchFeedEntries(playlistFeedUrl),
+		fetchFeedEntries(YOUTUBE_CHANNEL_FEED_URL),
+	]);
+
+	const channelEntriesOfKind = channelEntries.filter((entry: YouTubeEntry) => {
+		const href = entry.link?.['@_href'] || '';
+		return href.includes('/shorts/') === wantShorts;
+	});
+
+	return dedupeByVideoId([...playlistEntries, ...channelEntriesOfKind]);
+}
+
 // Hashtags become Title Case tags: #agentic-ai -> "Agentic Ai"
 function extractHashtagTags(description: string): string[] {
 	const hashtags = description.match(/#[\w-]+/g) || [];
@@ -127,61 +156,40 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 		return _cachedTalks;
 	}
 
-	try {
-		// Merge the curated talks playlist with the channel feed (filtered to
-		// non-shorts) so newly published long-form videos appear even if they
-		// haven't been added to the playlist yet.
-		const [playlistEntries, channelEntries] = await Promise.all([
-			fetchFeedEntries(YOUTUBE_FEED_URL),
-			fetchFeedEntries(YOUTUBE_CHANNEL_FEED_URL),
-		]);
+	const entries = await fetchMergedEntries(YOUTUBE_FEED_URL, false);
 
-		const channelLongFormEntries = channelEntries.filter((entry: YouTubeEntry) => {
-			const href = entry.link?.['@_href'] || '';
-			return !href.includes('/shorts/');
-		});
-
-		const entries = dedupeByVideoId([...playlistEntries, ...channelLongFormEntries]);
-
-		if (entries.length === 0) {
-			console.warn('No entries found in YouTube feed');
-			return [];
-		}
-
-		const talks = entries.map((entry: YouTubeEntry) => {
-			const videoUrl = entry.link['@_href'] || '';
-			const publishedDate = new Date(entry.published);
-
-			const description = entry['media:group']?.['media:description'] ?? '';
-			const extractedTags = extractHashtagTags(description);
-
-			// Default tags for all YouTube talks
-			const defaultTags = ['AI', 'GenAI', 'Agentic Systems', 'Security', 'YouTube', 'Video'];
-
-			// Combine and deduplicate tags
-			const allTags = [...new Set([...defaultTags, ...extractedTags])];
-
-			// Truncate description to a reasonable length for summary
-			const summary =
-				description.length > 200 ? `${description.substring(0, 197)}...` : description;
-
-			return {
-				title: entry.title,
-				date: publishedDate,
-				event: 'YouTube - Securing the Realm',
-				videoUrl,
-				summary: summary || 'A video from the Securing the Realm YouTube channel.',
-				tags: allTags,
-			};
-		});
-
-		_cachedTalks = talks;
-		return talks;
-	} catch (error) {
-		console.error('Error fetching YouTube talks:', error);
-		_cachedTalks = [];
-		return [];
+	if (entries.length === 0) {
+		console.warn('No entries found in YouTube feed');
 	}
+
+	const talks = entries.map((entry: YouTubeEntry) => {
+		const videoUrl = entry.link['@_href'] || '';
+		const publishedDate = new Date(entry.published);
+
+		const description = entry['media:group']?.['media:description'] ?? '';
+		const extractedTags = extractHashtagTags(description);
+
+		// Default tags for all YouTube talks
+		const defaultTags = ['AI', 'GenAI', 'Agentic Systems', 'Security', 'YouTube', 'Video'];
+
+		// Combine and deduplicate tags
+		const allTags = [...new Set([...defaultTags, ...extractedTags])];
+
+		// Truncate description to a reasonable length for summary
+		const summary = description.length > 200 ? `${description.substring(0, 197)}...` : description;
+
+		return {
+			title: entry.title,
+			date: publishedDate,
+			event: 'YouTube - Securing the Realm',
+			videoUrl,
+			summary: summary || 'A video from the Securing the Realm YouTube channel.',
+			tags: allTags,
+		};
+	});
+
+	_cachedTalks = talks;
+	return talks;
 }
 
 /**
@@ -213,70 +221,50 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 		return _cachedShorts;
 	}
 
-	try {
-		// Merge the curated shorts playlist with the channel feed (filtered to
-		// /shorts/ URLs) so newly published shorts appear even if they haven't
-		// been added to the playlist yet.
-		const [playlistEntries, channelEntries] = await Promise.all([
-			fetchFeedEntries(YOUTUBE_SHORTS_FEED_URL),
-			fetchFeedEntries(YOUTUBE_CHANNEL_FEED_URL),
-		]);
+	const entries = await fetchMergedEntries(YOUTUBE_SHORTS_FEED_URL, true);
 
-		const channelShortEntries = channelEntries.filter((entry: YouTubeEntry) => {
-			const href = entry.link?.['@_href'] || '';
-			return href.includes('/shorts/');
-		});
-
-		const entries = dedupeByVideoId([...playlistEntries, ...channelShortEntries]);
-
-		if (entries.length === 0) {
-			console.warn('No entries found in YouTube Shorts feed');
-			return [];
-		}
-
-		const shorts = entries.map((entry: YouTubeEntry) => {
-			const videoUrl = entry.link['@_href'] || '';
-			const publishedDate = new Date(entry.published);
-
-			const videoId = getYouTubeVideoId(videoUrl) ?? getEntryVideoId(entry);
-			const description = entry['media:group']?.['media:description'] ?? '';
-			const extractedTags = extractHashtagTags(description);
-
-			// Default tags for Shorts
-			const defaultTags = ['YouTube', 'Shorts', 'Security'];
-
-			// Combine and deduplicate tags
-			const allTags = [...new Set([...defaultTags, ...extractedTags])];
-
-			// Extract related content from description
-			const relatedContent = extractRelatedContent(description);
-
-			// Generate thumbnail URL
-			const thumbnailUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
-
-			// Generate embed URL
-			const embedUrl = videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : '';
-
-			return {
-				id: videoId,
-				title: entry.title,
-				description,
-				pubDate: publishedDate,
-				thumbnailUrl,
-				videoUrl,
-				embedUrl,
-				tags: allTags,
-				relatedContent,
-			};
-		});
-
-		_cachedShorts = shorts;
-		return shorts;
-	} catch (error) {
-		console.error('Error fetching YouTube Shorts:', error);
-		_cachedShorts = [];
-		return [];
+	if (entries.length === 0) {
+		console.warn('No entries found in YouTube Shorts feed');
 	}
+
+	const shorts = entries.map((entry: YouTubeEntry) => {
+		const videoUrl = entry.link['@_href'] || '';
+		const publishedDate = new Date(entry.published);
+
+		const videoId = getYouTubeVideoId(videoUrl) ?? getEntryVideoId(entry);
+		const description = entry['media:group']?.['media:description'] ?? '';
+		const extractedTags = extractHashtagTags(description);
+
+		// Default tags for Shorts
+		const defaultTags = ['YouTube', 'Shorts', 'Security'];
+
+		// Combine and deduplicate tags
+		const allTags = [...new Set([...defaultTags, ...extractedTags])];
+
+		// Extract related content from description
+		const relatedContent = extractRelatedContent(description);
+
+		// Generate thumbnail URL
+		const thumbnailUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : '';
+
+		// Generate embed URL
+		const embedUrl = videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : '';
+
+		return {
+			id: videoId,
+			title: entry.title,
+			description,
+			pubDate: publishedDate,
+			thumbnailUrl,
+			videoUrl,
+			embedUrl,
+			tags: allTags,
+			relatedContent,
+		};
+	});
+
+	_cachedShorts = shorts;
+	return shorts;
 }
 
 /**

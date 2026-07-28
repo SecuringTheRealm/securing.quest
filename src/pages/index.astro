@@ -13,7 +13,6 @@ interface FeedItem {
 	url: string;
 	date: Date;
 	source: string;
-	icon: string;
 	description: string;
 	realm: 'tower' | 'library' | 'forge' | 'moon';
 	external: boolean;
@@ -35,7 +34,6 @@ const latestBlogPosts: FeedItem[] = blogPosts
 			url: `/blog/${post.id}/`,
 			date: post.data.pubDate,
 			source: 'Library · Blog',
-			icon: '📚',
 			description: post.data.description,
 			realm: 'library',
 			external: false,
@@ -58,7 +56,6 @@ const allTalks: FeedItem[] = [
 			url: `/talks/#${talk.id}`,
 			date: talk.data.date,
 			source: 'Tower · Talks',
-			icon: '🏰',
 			description: talk.data.summary,
 			realm: 'tower',
 			external: false,
@@ -72,7 +69,6 @@ const allTalks: FeedItem[] = [
 				url: `/talks/#youtube-${index}`,
 				date: talk.date,
 				source: 'Tower · Talks',
-				icon: '🏰',
 				description: talk.summary,
 				realm: 'tower',
 				external: false,
@@ -99,7 +95,6 @@ const latestProjects: FeedItem[] = projects
 			url: `/forge/#${project.id}`,
 			date: project.data.firstPublic || new Date(),
 			source: 'Forge · Code',
-			icon: '⚒️',
 			description: project.data.description,
 			realm: 'forge',
 			external: false,
@@ -117,7 +112,6 @@ const latestShorts: FeedItem[] = youtubeShorts
 			url: short.videoUrl,
 			date: short.pubDate,
 			source: 'Moon · Shorts',
-			icon: '🌙',
 			description: short.description || 'A short from the Securing the Realm YouTube channel.',
 			realm: 'moon',
 			external: true,
@@ -153,6 +147,7 @@ const latestContent: FeedItem[] = [
         <li>Code</li>
         <li>Shorts</li>
         <li>Podcast</li>
+        <li>Newsletter</li>
       </ul>
       <p style="margin-top: var(--space-6);">
         <a href="/#listen" class="btn-primary">Listen to the podcast</a>
@@ -218,6 +213,21 @@ const latestContent: FeedItem[] = [
             Quick glimpses - bite-sized adventures in security and AI
           </p>
         </a>
+
+        <a
+          href="https://str.riverside.com/newsletter"
+          class="realm-card content-card glow-on-hover"
+          data-realm="scrolls"
+          style="text-align: center; display: block;"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Arcane Scrolls newsletter (opens in new tab)"
+        >
+          <h3 style="margin-bottom: var(--space-4);">Scrolls · Newsletter</h3>
+          <p style="margin: 0; color: var(--colour-parchment);">
+            Arcane Scrolls - cybersecurity, Azure and AI in your inbox
+          </p>
+        </a>
       </div>
     </section>
 
@@ -240,9 +250,6 @@ const latestContent: FeedItem[] = [
                   <span class="quest-log__num" aria-hidden="true">
                     {index + 1}
                   </span>
-                  <div aria-hidden="true" style="flex-shrink: 0; font-size: var(--font-size-2xl);">
-                    {item.icon}
-                  </div>
                   <div style="flex: 1; min-width: 0;">
                     <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
                       <h3 style="margin: 0; font-size: var(--font-size-lg);">

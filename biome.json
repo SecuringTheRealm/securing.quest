@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["src/**/*.ts", "src/**/*.astro", "scripts/**/*.ts"]
+		"includes": ["src/**/*.ts", "src/**/*.astro", "scripts/**/*.mjs"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -36,7 +36,7 @@
 	},
 	"overrides": [
 		{
-			"includes": ["**/*.svelte", "**/*.astro", "**/*.vue"],
+			"includes": ["**/*.astro"],
 			"linter": {
 				"rules": {
 					"style": {

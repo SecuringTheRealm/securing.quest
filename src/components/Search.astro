@@ -1,5 +1,5 @@
 ---
-import { buildSearchIndex, FUSE_OPTIONS as fuseOptions } from '../utils/search';
+import { buildSearchIndex } from '../utils/search';
 
 const searchData = await buildSearchIndex();
 ---
@@ -21,14 +21,22 @@ const searchData = await buildSearchIndex();
 	</div>
 </div>
 
-<script id="search-data" type="application/json" set:html={JSON.stringify({ searchData, fuseOptions })} />
+<script id="search-data" type="application/json" set:html={JSON.stringify(searchData)} />
 
 <script>
-	import Fuse from 'fuse.js';
+	import { rankItems } from '../utils/search-rank';
+
+	interface SearchItem {
+		type: string;
+		title: string;
+		description: string;
+		url: string;
+		tags: string[];
+	}
 
 	const dataEl = document.getElementById('search-data');
 	if (!dataEl?.textContent) throw new Error('Search data not found');
-	const { searchData, fuseOptions } = JSON.parse(dataEl.textContent);
+	const searchData: SearchItem[] = JSON.parse(dataEl.textContent);
 
 	const searchInput = document.getElementById('search-input') as HTMLInputElement;
 	const searchResultsEl = document.getElementById('search-results') as HTMLElement;
@@ -36,8 +44,6 @@ const searchData = await buildSearchIndex();
 	if (!searchInput || !searchResultsEl) {
 		throw new Error('Search elements not found');
 	}
-
-	const fuse = new Fuse(searchData, fuseOptions);
 
 	let selectedIndex = -1;
 	let searchTrackTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -51,7 +57,7 @@ const searchData = await buildSearchIndex();
 			return;
 		}
 
-		const results = fuse.search(query);
+		const results = rankItems(searchData, query);
 		displayResults(results.slice(0, 8));
 
 		clearTimeout(searchTrackTimeout);
@@ -97,27 +103,45 @@ const searchData = await buildSearchIndex();
 		}
 	});
 
-	function displayResults(results: any[]) {
+	function displayResults(results: SearchItem[]) {
+		searchResultsEl.replaceChildren();
+
 		if (results.length === 0) {
-			searchResultsEl.innerHTML =
-				'<div class="no-results" role="status">No results found</div>';
+			const empty = document.createElement('div');
+			empty.className = 'no-results';
+			empty.setAttribute('role', 'status');
+			empty.textContent = 'No results found';
+			searchResultsEl.append(empty);
 			showResults();
 			return;
 		}
 
-		searchResultsEl.innerHTML = results
-			.map(
-				(result: any, index: number) => `
-        <div class="search-result" role="option" aria-selected="${index === selectedIndex}" data-index="${index}">
-          <a href="${result.item.url}">
-            <div class="result-type">${getTypeIcon(result.item.type)} ${result.item.type}</div>
-            <div class="result-title">${result.item.title}</div>
-            <div class="result-description">${truncate(result.item.description, 100)}</div>
-          </a>
-        </div>
-      `
-			)
-			.join('');
+		// Built as DOM nodes, not innerHTML: titles and descriptions include
+		// YouTube feed text, which is not ours to trust.
+		for (const [index, item] of results.entries()) {
+			const wrapper = document.createElement('div');
+			wrapper.className = 'search-result';
+			wrapper.setAttribute('role', 'option');
+			wrapper.setAttribute('aria-selected', String(index === selectedIndex));
+			wrapper.dataset.index = String(index);
+
+			const link = document.createElement('a');
+			link.href = item.url;
+
+			for (const [className, text] of [
+				['result-type', `${getTypeIcon(item.type)} ${item.type}`],
+				['result-title', item.title],
+				['result-description', truncate(item.description, 100)],
+			]) {
+				const line = document.createElement('div');
+				line.className = className;
+				line.textContent = text;
+				link.append(line);
+			}
+
+			wrapper.append(link);
+			searchResultsEl.append(wrapper);
+		}
 
 		showResults();
 		selectedIndex = -1;

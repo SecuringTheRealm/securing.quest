@@ -16,7 +16,7 @@ on:
       - "tsconfig.json"
       - ".github/workflows/publish.yml"
   schedule:
-    - cron: "0 5 * * 1,4"
+    - cron: "0 5 * * 1,4" # Rebuild so new YouTube videos appear
 
 permissions:
   contents: write
@@ -30,75 +30,17 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      should_deploy: ${{ steps.deploy_check.outputs.result }}
 
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 
-      - name: Cache XML feeds
-        id: xml_cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .cache/xml-feed.xml
-            .cache/xml-shorts-feed.xml
-          key: xml-feeds-${{ hashFiles('.cache/xml-feed.xml', '.cache/xml-shorts-feed.xml') }}
-          restore-keys: xml-feeds-
-
-      - name: Fetch latest XML feeds
-        run: |
-          mkdir -p .cache
-          curl -sL 'https://www.youtube.com/feeds/videos.xml?playlist_id=PLo9Ah7HeyG1QVWTBPzOROBQNqinh0ZPWv' -o .cache/current.xml
-          curl -sL 'https://www.youtube.com/feeds/videos.xml?playlist_id=PLo9Ah7HeyG1Rkqq0cc1QJtttkywXKWd9g' -o .cache/current-shorts.xml
-
-      - name: Check XML changes
-        id: diff
-        shell: bash
-        run: |
-          CHANGED=false
-          if [ -f .cache/xml-feed.xml ]; then
-            if ! diff -q .cache/xml-feed.xml .cache/current.xml > /dev/null; then
-              CHANGED=true
-            fi
-          else
-            CHANGED=true
-          fi
-          if [ -f .cache/xml-shorts-feed.xml ]; then
-            if ! diff -q .cache/xml-shorts-feed.xml .cache/current-shorts.xml > /dev/null; then
-              CHANGED=true
-            fi
-          else
-            CHANGED=true
-          fi
-          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
-
-      - name: Update cached XML
-        run: |
-          mv .cache/current.xml .cache/xml-feed.xml
-          mv .cache/current-shorts.xml .cache/xml-shorts-feed.xml
-
-      - name: Determine if deployment needed
-        id: deploy_check
-        shell: bash
-        run: |
-          # Push/dispatch: the paths filter already proved something deploy-worthy
-          # changed. Schedule: deploy only if the YouTube feeds changed.
-          if [ "${{ github.event_name }}" != "schedule" ] || [ "${{ steps.diff.outputs.changed }}" = "true" ]; then
-            echo "result=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "result=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Setup Bun 🥟
-        if: steps.deploy_check.outputs.result == 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Cache bun dependencies ⚡
-        if: steps.deploy_check.outputs.result == 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -108,27 +50,23 @@ jobs:
           restore-keys: bun-${{ runner.os }}-
 
       - name: Install dependencies 🔧
-        if: steps.deploy_check.outputs.result == 'true'
         run: bun install --frozen-lockfile
 
       - name: Lint and unit tests 🔍
-        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: bun run lint && bun test
 
       - name: Setup Pages ⚙️
-        if: steps.deploy_check.outputs.result == 'true'
         uses: actions/configure-pages@v4
 
       - name: Build with Astro 🏗️
-        if: steps.deploy_check.outputs.result == 'true'
         run: bun run build
 
       - name: Send webmentions
-        if: steps.deploy_check.outputs.result == 'true' && github.event_name == 'push'
+        if: github.event_name == 'push'
         run: bun run send:webmentions
 
       - name: Commit sent webmentions tracking
-        if: steps.deploy_check.outputs.result == 'true' && github.event_name == 'push'
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -137,7 +75,6 @@ jobs:
           git push
 
       - name: Upload artifact 📡
-        if: steps.deploy_check.outputs.result == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
@@ -149,7 +86,6 @@ jobs:
 
     runs-on: ubuntu-latest
     needs: build
-    if: needs.build.outputs.should_deploy == 'true'
 
     steps:
       - name: Publish to GitHub Pages 🚀

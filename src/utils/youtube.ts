@@ -140,6 +140,113 @@ function extractHashtagTags(description: string): string[] {
 	);
 }
 
+// YouTube titles often end in a hashtag run ("... #ai #agents"). Those are
+// already tags; in a heading they are just noise.
+export function toTitle(title: string): string {
+	return title.replace(/(\s+#[\w-]+)+\s*$/, '').trim() || title;
+}
+
+// Call-to-action lines: a short label, a colon, then a link — "Full video:",
+// "GitHub Repo:", "Learn more:", "📖 Microsoft's model catalogue:". Stripping
+// only the URL strands the label ("...Whoops! Full video"), so drop the whole
+// line, including any trailing "and find a link to the paper" that likewise
+// only made sense while the link was there. Guards: the label is capped at 40
+// characters and may not contain sentence-ending punctuation, so a real
+// sentence that happens to quote a URL is left alone.
+const PROMO_LINE = /^[^\n.!?:]{0,40}:[ \t]*https?:\/\/\S+.*$/gm;
+
+// "The conversation delves into X" — "delves" is a well-worn LLM tell, and
+// "the conversation" is a contentless subject, so promote X to the front.
+const DELVES_OPENER = /^The (?:conversation|discussion) delves into /i;
+
+// "In this conversation, ..." / 'In this episode of "Securing the Realm," ...'
+// Scene-setting filler ahead of the real sentence. The optional quote covers
+// the show name being quoted with the comma inside the quotes.
+const SCENE_SETTING_OPENER = /^In this (?:conversation|episode|short)\b[^,\n]{0,50},["'”’]?\s+/i;
+
+// Only the leading preamble is stripped: the same phrasing mid-paragraph is
+// usually carrying real content by then.
+function stripOpener(text: string): string {
+	const stripped = text.replace(DELVES_OPENER, '').replace(SCENE_SETTING_OPENER, '');
+	return stripped === text ? text : stripped.charAt(0).toUpperCase() + stripped.slice(1);
+}
+
+// Sentence-ending punctuation, plus any closing quote or bracket carried along
+// with it ('the Realm"!'). The trailing lookahead is the main defence: a real
+// break is always followed by whitespace, so a decimal ("version 9.0"), a URL
+// path ("arxiv.org/abs/2509.02853") and a file name never read as sentence ends.
+const SENTENCE_END = /[.!?]+["'”’)\]]*(?=\s|$)/g;
+
+// Full stops that do not end a sentence. "vs." is the only one that actually
+// occurs in the YouTube corpus ("23:52 Optimism vs. Pessimism in Technology"),
+// where the following word is capitalised and so gives nothing else away. The
+// titles and Latin tags are cheap insurance for a corpus that cites papers and
+// co-authors. The trailing single-letter alternative covers initials
+// ("J. McDonald") and acronym runs ("U.S."), whose final dot is likewise
+// preceded by a lone letter — "of AI." is not caught, because "I" has no word
+// boundary in front of it, so it stays a real sentence end.
+// Missing an entry here costs a mid-sentence cut; a spurious one only costs a
+// missed break, so this list errs towards over-listing.
+const ABBREVIATION = /(?:\b(?:vs|etc|eg|ie|al|approx|Dr|Mr|Mrs|Ms|Prof)|\b[A-Za-z])\.$/;
+
+// Whitespace and dangling clause punctuation, so the ellipsis never lands on
+// "AI.…" or "agents,…".
+const TRAILING_PUNCTUATION = /[\s.,:;!?-]+$/;
+
+// The house style is a spaced hyphen and the site ships no em dashes, but the
+// descriptions are YouTube's copy, not ours. Every em dash in the corpus is an
+// appositive, spaced or not ("the CIA triangle of security—confidentiality,
+// integrity, and availability—"), and a comma would flatten that one into a
+// four-item list, so a spaced hyphen replaces both forms. Swallowing the
+// surrounding whitespace is what lets the two forms share a rule. Applied after
+// the URL strip, so a dash inside a link is already gone rather than mangled.
+// ponytail: en dashes get the same spaced hyphen, so a numeric range would come
+// out as "2024 - 2025". The corpus has no en dashes at all; split the rule if
+// one ever shows up.
+const EM_DASH = /\s*[—–]\s*/g;
+
+// Index of the last sentence break inside `text`, or -1 when there is none to
+// trust. Abbreviations are re-tested against the text up to and including the
+// dot, so the check sees the word the dot is attached to.
+function lastSentenceBreak(text: string): number {
+	let breakAt = -1;
+	for (const match of text.matchAll(SENTENCE_END)) {
+		const index = match.index ?? 0;
+		if (ABBREVIATION.test(text.slice(0, index + 1))) continue;
+		breakAt = index;
+	}
+	return breakAt;
+}
+
+/**
+ * Turns a raw YouTube description into display copy: the URLs and hashtags are
+ * already harvested into relatedContent and tags, so on the page they are noise.
+ * Drops promo lines and filler openers, normalises em dashes to the house
+ * spaced hyphen, then truncates at the last complete
+ * sentence that fits, falling back to a word boundary when the budget holds no
+ * sentence break at all (a single very long sentence still has to render).
+ */
+export function toSummary(description: string, maxLength = 200): string {
+	const cleaned = stripOpener(
+		description
+			.replace(PROMO_LINE, '')
+			.replace(/https?:\/\/\S+/g, '')
+			.replace(/#[\w-]+/g, '')
+			.replace(EM_DASH, ' - ')
+			.replace(/\s+/g, ' ')
+			.trim()
+	).replace(/[\s,:;-]+$/, '');
+
+	if (cleaned.length <= maxLength) return cleaned;
+
+	const budget = cleaned.slice(0, maxLength);
+	const sentenceBreak = lastSentenceBreak(budget);
+	const wordBreak = budget.lastIndexOf(' ');
+	const cut = sentenceBreak > 0 ? sentenceBreak : wordBreak > 0 ? wordBreak : budget.length;
+
+	return `${budget.slice(0, cut).replace(TRAILING_PUNCTUATION, '')}…`;
+}
+
 // Module-level cache to avoid redundant fetches during a single build.
 // Multiple pages call fetchYouTubeTalks() (directly and via buildSearchIndex),
 // so caching saves N-1 HTTP requests to YouTube during static generation.
@@ -175,11 +282,10 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 		// Combine and deduplicate tags
 		const allTags = [...new Set([...defaultTags, ...extractedTags])];
 
-		// Truncate description to a reasonable length for summary
-		const summary = description.length > 200 ? `${description.substring(0, 197)}...` : description;
+		const summary = toSummary(description);
 
 		return {
-			title: entry.title,
+			title: toTitle(entry.title),
 			date: publishedDate,
 			event: 'YouTube - Securing the Realm',
 			videoUrl,
@@ -252,8 +358,8 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 
 		return {
 			id: videoId,
-			title: entry.title,
-			description,
+			title: toTitle(entry.title),
+			description: toSummary(description),
 			pubDate: publishedDate,
 			thumbnailUrl,
 			videoUrl,

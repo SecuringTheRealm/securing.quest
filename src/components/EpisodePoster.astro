@@ -1,0 +1,131 @@
+---
+/**
+ * Branded 16:9 episode poster — a stand-in for raw Riverside/Zoom screenshots.
+ * Plain HTML + CSS rather than SVG: the browser already wraps and truncates
+ * text (line-clamp), and container query units already scale type to the
+ * card's own width, so there is no line-breaking maths to write or test.
+ */
+export interface Props {
+	/** Episode title. Wraps to at most 3 lines, then truncates with an ellipsis. */
+	title: string;
+	/** Eyebrow label, e.g. "Tower · Talks". Kept short — it is set in the pixel font. */
+	source: string;
+	realm: 'tower' | 'library' | 'forge' | 'moon';
+	date?: Date;
+	/** Poster sits next to the real title, so it is hidden from AT by default. */
+	decorative?: boolean;
+	/** 'poster' bakes the title in, for shares. 'card' omits it, for on-site use. */
+	variant?: 'poster' | 'card';
+}
+
+const { title, source, realm, date, decorative = true, variant = 'poster' } = Astro.props;
+
+const DATE_FORMAT = { year: 'numeric', month: 'long', day: 'numeric' } as const;
+
+const a11y: Record<string, string> = decorative
+	? { 'aria-hidden': 'true' }
+	: { role: 'img', 'aria-label': `${source}: ${title}` };
+---
+
+<div class:list={['poster', `poster--${variant}`]} data-realm={realm} {...a11y}>
+	{variant === 'poster' && <p class="pixel-eyebrow poster__source">{source}</p>}
+	{variant === 'poster' && <p class="poster__title">{title}</p>}
+	<div class="poster__foot">
+		<svg
+			class="poster__mark"
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 48 48"
+			shape-rendering="crispEdges"
+		>
+			<!-- Crenellated shield: castle silhouette reduced to a show mark -->
+			<path
+				d="M8 8H16V12H20V8H28V12H32V8H40V32H36V36H32V40H28V44H20V40H16V36H12V32H8Z"
+				fill="var(--colour-teal-bg)"
+				stroke="var(--colour-gold)"
+				stroke-width="2"></path>
+			<rect x="20" y="12" width="8" height="4" fill="var(--realm-accent)"></rect>
+			<rect
+				x="20"
+				y="20"
+				width="8"
+				height="8"
+				fill="var(--colour-teal-light)"
+				stroke="var(--colour-gold)"
+				stroke-width="2"></rect>
+		</svg>
+	</div>
+</div>
+
+<style>
+	.poster {
+		container-type: inline-size;
+		/* inline-size containment makes the intrinsic width 0, so a flex parent
+		   would shrink this to nothing and aspect-ratio would give it 0 height */
+		width: 100%;
+		display: grid;
+		grid-template-rows: auto 1fr auto;
+		gap: var(--space-2);
+		aspect-ratio: 16 / 9;
+		padding: clamp(var(--space-3), 4cqi, var(--space-8));
+		background-color: var(--colour-teal-dark);
+		/* Faint mortar grid — keeps the flat fill from reading as a blank box */
+		background-image:
+			repeating-linear-gradient(
+				to right,
+				var(--colour-rim-light) 0 2px,
+				transparent 2px var(--space-8)
+			),
+			repeating-linear-gradient(
+				to bottom,
+				var(--colour-rim-light) 0 2px,
+				transparent 2px var(--space-8)
+			);
+		border: 2px solid var(--colour-gold);
+		border-top: 4px solid var(--realm-accent);
+		overflow: hidden;
+	}
+
+	.poster__source {
+		margin: 0;
+		color: var(--realm-accent);
+		/* Pixel font shrinks with the card so it never outgrows a small slot */
+		font-size: min(var(--font-size-xs), 3cqi);
+	}
+
+	.poster__title {
+		margin: 0;
+		align-self: center;
+		font-family: var(--font-display-readable);
+		font-weight: var(--font-weight-bold);
+		letter-spacing: var(--tracking-display-readable);
+		line-height: var(--line-height-snug);
+		font-size: clamp(var(--font-size-base), 6cqi, var(--font-size-5xl));
+		color: var(--colour-gold);
+		/* Native 3-line wrap + ellipsis; no line-breaking maths in the component */
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+	}
+
+	.poster__foot {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: var(--space-3);
+	}
+
+	.poster__date {
+		font-family: var(--font-body);
+		font-size: min(var(--font-size-sm), 3.5cqi);
+		color: var(--colour-parchment);
+	}
+
+	.poster__mark {
+		width: clamp(var(--space-8), 10cqi, var(--space-16));
+		height: auto;
+		margin-inline-start: auto;
+		image-rendering: pixelated;
+	}
+</style>

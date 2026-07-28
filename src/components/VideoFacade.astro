@@ -1,0 +1,132 @@
+---
+/**
+ * Click-to-load YouTube facade. Renders a poster and a play button; the real
+ * iframe is only created on click, so no third-party player loads on page view.
+ * Without JS the anchor is a plain link to YouTube.
+ */
+export interface Props {
+	embedUrl: string;
+	videoUrl: string;
+	title: string;
+	thumbnailUrl?: string | null;
+	/** Set on the first facade in the viewport so the poster is not lazy-loaded. */
+	eager?: boolean;
+}
+
+const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
+---
+
+<div class="video-frame">
+	<a
+		class="video-facade"
+		href={videoUrl}
+		data-embed={embedUrl}
+		data-title={title}
+		target="_blank"
+		rel="noopener noreferrer"
+		data-action="video"
+		aria-label={`Play video: ${title} (opens YouTube)`}
+	>
+		{/* A poster slot beats the raw YouTube still: multi-cam recordings letterbox
+		    and crop faces. Callers pass a branded poster; the still is the fallback. */}
+		<slot name="poster">
+			{
+				thumbnailUrl && (
+					<img
+						src={thumbnailUrl}
+						alt=""
+						loading={eager ? 'eager' : 'lazy'}
+						width="480"
+						height="270"
+					/>
+				)
+			}
+		</slot>
+		<span class="video-facade__play" aria-hidden="true"></span>
+	</a>
+</div>
+
+<style>
+	.video-frame {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		background: var(--colour-black);
+		overflow: hidden;
+	}
+
+	.video-facade {
+		position: absolute;
+		inset: 0;
+		display: block;
+	}
+
+	/* Inset ring so it isn't clipped by the frame's overflow: hidden */
+	.video-facade:focus-visible {
+		outline: 3px solid var(--colour-gold);
+		outline-offset: calc(-1 * var(--space-1));
+	}
+
+	.video-facade img,
+	.video-facade :global(> *:not(.video-facade__play)) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.video-facade__play {
+		position: absolute;
+		right: var(--space-4);
+		bottom: var(--space-4);
+		width: var(--space-16);
+		height: var(--space-16);
+		background: var(--colour-gold);
+		border: 2px solid var(--colour-ink);
+		border-radius: var(--radius-pixel);
+	}
+
+	/* Pixel play triangle, stacked rectangles - no smooth curves */
+	.video-facade__play::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 55%;
+		transform: translate(-50%, -50%);
+		border-style: solid;
+		border-width: var(--space-3) 0 var(--space-3) var(--space-4);
+		border-color: transparent transparent transparent var(--colour-ink);
+	}
+
+	.video-frame :global(iframe) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: 0;
+	}
+</style>
+
+<script is:inline>
+	// Defer the heavy player until intent.
+	document.querySelectorAll('.video-facade').forEach(function (facade) {
+		facade.addEventListener('click', function (event) {
+			var embed = facade.getAttribute('data-embed');
+			if (!embed) return; // without JS the link just opens YouTube
+			event.preventDefault();
+			var frame = facade.parentNode;
+			var iframe = document.createElement('iframe');
+			iframe.setAttribute('src', embed + '?autoplay=1');
+			iframe.setAttribute('title', facade.getAttribute('data-title') || 'Video');
+			iframe.setAttribute(
+				'allow',
+				'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+			);
+			iframe.setAttribute('allowfullscreen', '');
+			iframe.setAttribute(
+				'sandbox',
+				'allow-scripts allow-same-origin allow-presentation allow-popups'
+			);
+			frame.replaceChild(iframe, facade);
+		});
+	});
+</script>

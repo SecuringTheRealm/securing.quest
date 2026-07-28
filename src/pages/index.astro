@@ -3,9 +3,21 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import CastleSceneRetro from '../components/CastleSceneRetro.astro';
 import CredibilityStrip from '../components/CredibilityStrip.astro';
+import EpisodePoster from '../components/EpisodePoster.astro';
+import ForgeIcon from '../components/ForgeIcon.astro';
+import LibraryIcon from '../components/LibraryIcon.astro';
 import ListenHub from '../components/ListenHub.astro';
+import MoonIcon from '../components/MoonIcon.astro';
+import TowerIcon from '../components/TowerIcon.astro';
+import VideoFacade from '../components/VideoFacade.astro';
 import Base from '../layouts/Base.astro';
-import { fetchYouTubeShorts, fetchYouTubeTalks } from '../utils/youtube';
+import {
+	fetchYouTubeShorts,
+	fetchYouTubeTalks,
+	getYouTubeEmbedUrl,
+	getYouTubeThumbnailUrl,
+	toSummary,
+} from '../utils/youtube';
 
 // Unified content item for the Quest Log feed
 interface FeedItem {
@@ -16,6 +28,10 @@ interface FeedItem {
 	description: string;
 	realm: 'tower' | 'library' | 'forge' | 'moon';
 	external: boolean;
+	/** Video poster where one exists; blog posts and projects have none. */
+	thumbnailUrl: string | null;
+	/** Set for videos so the lead story can play in place. */
+	embedUrl: string | null;
 }
 
 // Get latest blog posts
@@ -37,6 +53,8 @@ const latestBlogPosts: FeedItem[] = blogPosts
 			description: post.data.description,
 			realm: 'library',
 			external: false,
+			thumbnailUrl: null,
+			embedUrl: null,
 		})
 	);
 
@@ -59,6 +77,8 @@ const allTalks: FeedItem[] = [
 			description: talk.data.summary,
 			realm: 'tower',
 			external: false,
+			thumbnailUrl: getYouTubeThumbnailUrl(talk.data.videoUrl),
+			embedUrl: getYouTubeEmbedUrl(talk.data.videoUrl),
 		})
 	),
 	...youtubeTalks
@@ -72,6 +92,8 @@ const allTalks: FeedItem[] = [
 				description: talk.summary,
 				realm: 'tower',
 				external: false,
+				thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
+				embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
 			})
 		),
 ];
@@ -98,6 +120,8 @@ const latestProjects: FeedItem[] = projects
 			description: project.data.description,
 			realm: 'forge',
 			external: false,
+			thumbnailUrl: null,
+			embedUrl: null,
 		})
 	);
 
@@ -115,6 +139,8 @@ const latestShorts: FeedItem[] = youtubeShorts
 			description: short.description || 'A short from the Securing the Realm YouTube channel.',
 			realm: 'moon',
 			external: true,
+			thumbnailUrl: short.thumbnailUrl || null,
+			embedUrl: short.embedUrl || null,
 		})
 	);
 
@@ -127,214 +153,185 @@ const latestContent: FeedItem[] = [
 ]
 	.sort((a, b) => b.date.valueOf() - a.date.valueOf())
 	.slice(0, 6);
+
+// Editorial feed: newest item leads, the rest run as compact rows.
+const [heroItem, ...restItems] = latestContent;
+
+const DATE_FORMAT = { year: 'numeric', month: 'long', day: 'numeric' } as const;
+const DATE_LOCALE = 'en-GB';
 ---
 
 <Base title="Securing the Realm - Castle Gate">
   <div class="container page-shell">
-    <section class="section-stack" style="text-align: center;">
-      <h1 style="margin-bottom: var(--space-6);">Welcome to the Castle</h1>
-      <p class="hero-lede measure" style="font-size: var(--font-size-lg);">
-        Azure, Microsoft AI, and cybersecurity — explained as a tabletop adventure. The Securing the
-        Realm podcast, talks, and writeups, from two Microsoft MVPs.
-      </p>
-      <p class="hero-audience measure">
-        For the builders, architects, and security folk who have to deploy and defend AI in the real
-        world.
-      </p>
-      <ul class="format-chips" aria-label="What you'll find here">
-        <li>Talks</li>
-        <li>Blog</li>
-        <li>Code</li>
-        <li>Shorts</li>
-        <li>Podcast</li>
-        <li>Newsletter</li>
-      </ul>
-      <p style="margin-top: var(--space-6);">
-        <a href="/#listen" class="btn-primary">Listen to the podcast</a>
-      </p>
-      <div style="margin-top: var(--space-6);">
-        <CredibilityStrip talkCount={allTalks.length} />
+    {/* Hero is left-aligned throughout: copy, CTA and trust bar share one axis.
+        One measure wrapper, not one per paragraph - 66ch resolves against each
+        element's own font-size, so per-paragraph measures gave ragged left edges. */}
+    <section class="section-stack hero">
+      <p class="pixel-eyebrow hero__eyebrow">Welcome to the Castle</p>
+      <h1 class="hero__title">Azure, AI and cybersecurity,<br /> run as a tabletop adventure</h1>
+      <div class="hero__copy">
+        <p class="hero-lede">
+          The Securing the Realm podcast, talks and writeups, from Chris Lloyd-Jones and Josh
+          McDonald. For the people who have to deploy AI and then defend it.
+        </p>
+        <p class="hero-cta">
+          <a href="/#listen" class="btn-primary">Listen to the podcast</a>
+        </p>
+        <CredibilityStrip itemCount={allTalks.length + youtubeShorts.length} />
       </div>
+
+      {
+        heroItem && (
+          <article class="lead-story content-card" data-realm={heroItem.realm}>
+            <div class="lead-story__media">
+              {heroItem.embedUrl ? (
+                <VideoFacade
+                  embedUrl={heroItem.embedUrl}
+                  videoUrl={heroItem.url}
+                  title={heroItem.title}
+                  thumbnailUrl={heroItem.thumbnailUrl}
+                  eager
+                >
+                  <EpisodePoster
+                    slot="poster"
+                    variant="card"
+                    title={heroItem.title}
+                    source={heroItem.source}
+                    realm={heroItem.realm}
+                  />
+                </VideoFacade>
+              ) : (
+                <div class="lead-story__crest" aria-hidden="true">
+                  {heroItem.realm === 'library' && <LibraryIcon />}
+                  {heroItem.realm === 'tower' && <TowerIcon />}
+                  {heroItem.realm === 'forge' && <ForgeIcon />}
+                  {heroItem.realm === 'moon' && <MoonIcon />}
+                </div>
+              )}
+            </div>
+            <div class="lead-story__body">
+              <p class="quest-eyebrow">
+                <span>{heroItem.source}</span>
+                <time datetime={heroItem.date.toISOString()}>
+                  {heroItem.date.toLocaleDateString(DATE_LOCALE, DATE_FORMAT)}
+                </time>
+              </p>
+              <h3 class="lead-story__title">
+                <a
+                  href={heroItem.url}
+                  target={heroItem.external ? '_blank' : undefined}
+                  rel={heroItem.external ? 'noopener noreferrer' : undefined}
+                >
+                  {heroItem.title}
+                  {heroItem.external && (
+                    <span class="ext-glyph" aria-hidden="true">
+                      ↗
+                    </span>
+                  )}
+                  {heroItem.external && <span class="sr-only"> (opens in new tab)</span>}
+                </a>
+              </h3>
+            </div>
+          </article>
+        )
+      }
     </section>
 
-    <section class="section-stack">
-      <!-- Interactive Castle Scene -->
-      <div style="max-width: var(--max-width-wide); margin: 0 auto var(--space-12) auto;">
+    <section class="section-stack" aria-labelledby="map-heading">
+      <h2 id="map-heading" class="section-heading">Map of the Realm</h2>
+      <p class="map-subhead">Every part of the realm, one keep. Pick a door.</p>
+      <div style="max-width: var(--max-width-wide); margin-inline: auto;">
         <CastleSceneRetro />
-      </div>
-
-      <!-- Text-based Navigation Fallback -->
-      <h2 style="text-align: center; margin-bottom: var(--space-8);">Explore the Realm</h2>
-      <div class="realm-grid">
-        <a
-          href="/talks/"
-          class="realm-card content-card glow-on-hover"
-          data-realm="tower"
-          style="text-align: center; display: block;"
-        >
-          <h3 style="margin-bottom: var(--space-4);">Tower · Talks</h3>
-          <p style="margin: 0; color: var(--colour-parchment);">
-            Watch talks and presentations on Azure, AI, and cybersecurity
-          </p>
-        </a>
-
-        <a
-          href="/blog/"
-          class="realm-card content-card glow-on-hover"
-          data-realm="library"
-          style="text-align: center; display: block;"
-        >
-          <h3 style="margin-bottom: var(--space-4);">Library · Blog</h3>
-          <p style="margin: 0; color: var(--colour-parchment);">
-            Read articles and insights on technology and security
-          </p>
-        </a>
-
-        <a
-          href="/forge/"
-          class="realm-card content-card glow-on-hover"
-          data-realm="forge"
-          style="text-align: center; display: block;"
-        >
-          <h3 style="margin-bottom: var(--space-4);">Forge · Code</h3>
-          <p style="margin: 0; color: var(--colour-parchment);">
-            Explore code projects and open-source contributions
-          </p>
-        </a>
-
-        <a
-          href="/shorts/"
-          class="realm-card content-card glow-on-hover"
-          data-realm="moon"
-          style="text-align: center; display: block;"
-        >
-          <h3 style="margin-bottom: var(--space-4);">Moon · Shorts</h3>
-          <p style="margin: 0; color: var(--colour-parchment);">
-            Quick glimpses - bite-sized adventures in security and AI
-          </p>
-        </a>
-
-        <a
-          href="https://str.riverside.com/newsletter"
-          class="realm-card content-card glow-on-hover"
-          data-realm="scrolls"
-          style="text-align: center; display: block;"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Arcane Scrolls newsletter (opens in new tab)"
-        >
-          <h3 style="margin-bottom: var(--space-4);">Scrolls · Newsletter</h3>
-          <p style="margin: 0; color: var(--colour-parchment);">
-            Arcane Scrolls - cybersecurity, Azure and AI in your inbox
-          </p>
-        </a>
       </div>
     </section>
 
     <!-- Latest Content Feed -->
     <section class="section-stack" style="max-width: var(--max-width-content); margin: 0 auto;">
-      <h2 style="text-align: center; margin-bottom: var(--space-8);">Quest Log</h2>
-      <ol class="quest-log">
+      <h2 class="section-heading">Quest Log</h2>
+      <ul class="quest-log">
         {
-          latestContent.map((item: FeedItem, index: number) => (
+          restItems.map((item: FeedItem) => (
             <li>
               <a
                 href={item.url}
-                class="feed-item content-card"
+                class="quest-row"
                 data-realm={item.realm}
                 target={item.external ? '_blank' : undefined}
                 rel={item.external ? 'noopener noreferrer' : undefined}
-                style="display: block; padding: var(--space-4); text-decoration: none;"
               >
-                <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
-                  <span class="quest-log__num" aria-hidden="true">
-                    {index + 1}
+                <span class="quest-row__thumb" aria-hidden="true">
+                  <span class="quest-row__crest">
+                    {item.realm === 'library' && <LibraryIcon />}
+                    {item.realm === 'tower' && <TowerIcon />}
+                    {item.realm === 'forge' && <ForgeIcon />}
+                    {item.realm === 'moon' && <MoonIcon />}
                   </span>
-                  <div style="flex: 1; min-width: 0;">
-                    <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
-                      <h3 style="margin: 0; font-size: var(--font-size-lg);">
-                        {item.title}
-                        {item.external && (
-                          <span class="ext-glyph" aria-hidden="true">
-                            ↗
-                          </span>
-                        )}
-                        {item.external && <span class="sr-only"> (opens in new tab)</span>}
-                      </h3>
-                      <span style="font-size: var(--font-size-xs); color: var(--colour-stone-light); white-space: nowrap;">
-                        {item.source}
-                      </span>
-                    </div>
-                    <p style="margin: 0; color: var(--colour-parchment); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed);">
-                      {item.description.length > 150
-                        ? `${item.description.substring(0, 147)}...`
-                        : item.description}
-                    </p>
-                    <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
-                      {item.date.toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                </div>
+                </span>
+                <span class="quest-row__body">
+                <p class="quest-eyebrow">
+                  <span>{item.source}</span>
+                  <time datetime={item.date.toISOString()}>
+                    {item.date.toLocaleDateString(DATE_LOCALE, DATE_FORMAT)}
+                  </time>
+                </p>
+                <h3 class="quest-row__title">
+                  {item.title}
+                  {item.external && (
+                    <span class="ext-glyph" aria-hidden="true">
+                      ↗
+                    </span>
+                  )}
+                  {item.external && <span class="sr-only"> (opens in new tab)</span>}
+                </h3>
+                <p class="quest-row__summary">{toSummary(item.description, 150)}</p>
+                </span>
               </a>
             </li>
           ))
         }
-      </ol>
+      </ul>
+      <p class="quest-log__more">
+        <a href="/talks/">All talks and episodes →</a>
+      </p>
     </section>
 
+
     <ListenHub band={true} />
+
+    {/* Signup is a hosted Riverside page, so this links out. Swapping the button for
+        an inline field is a small diff once there is an endpoint to POST to. */}
+    <section class="section-stack newsletter-band" aria-labelledby="scrolls-heading">
+      <h2 id="scrolls-heading" class="section-heading">Arcane Scrolls</h2>
+      <p class="newsletter-band__blurb">
+        The newsletter. Episodes and writeups, in your inbox. We send one when there is one.
+      </p>
+      <a
+        href="https://str.riverside.com/newsletter"
+        class="btn-primary notched"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Subscribe to Arcane Scrolls (opens in new tab)">Subscribe</a
+      >
+    </section>
 
     <section
       class="section-stack"
       style="max-width: var(--max-width-prose); margin: var(--space-16) auto 0 auto; text-align: center;"
     >
-      <h2 style="margin-bottom: var(--space-6);">Our Quest</h2>
+      <h2 class="section-heading">The Party</h2>
       <p class="measure" style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);">
-        Through epic storytelling and engaging demos, we transform complex topics like deploying
-        Large-Language Models (LLMs), Small-Language Models (SLMs), and Agentic AI into adventurous
-        quests. Whether you're a seasoned tech adventurer or a curious newcomer, you'll gain insights
-        into Azure's cutting-edge capabilities, responsible AI practices, and open-source projects—all
-        while battling kobolds, training AI elves, and unlocking the secrets of the Crystal Keep.
+        We run large language models, small language models and agentic systems on Azure as a
+        campaign: architecture and live demos on one side of the screen, kobolds at the gate and AI
+        elves in training on the other. The Crystal Keep still refuses to give up its secrets.
       </p>
-      <a
-        href="https://www.youtube.com/@SecuringTheRealm"
-        class="btn-primary"
-        target="_blank"
-        rel="noopener noreferrer"
-        data-social="YouTube"
-        aria-label="Subscribe on YouTube (opens in new tab)"
-        style="margin-top: var(--space-6);"
-      >
-        Subscribe on YouTube
+      <a href="/about/" class="btn-outline notched" style="margin-top: var(--space-6);">
+        Meet the party →
       </a>
     </section>
   </div>
 </Base>
 
 <style>
-  .format-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--space-2);
-    list-style: none;
-    margin: var(--space-6) 0 0;
-    padding: 0;
-  }
-
-  .format-chips li {
-    font-family: var(--font-display);
-    font-size: var(--font-size-xs);
-    color: var(--colour-gold);
-    border: 2px solid var(--colour-gold);
-    border-radius: var(--radius-sm);
-    padding: var(--space-2) var(--space-3);
-  }
-
   .quest-log {
     list-style: none;
     margin: 0;
@@ -344,28 +341,236 @@ const latestContent: FeedItem[] = [
     gap: var(--space-4);
   }
 
-  .quest-log__num {
-    flex-shrink: 0;
-    min-width: var(--space-8);
-    font-family: var(--font-display);
-    font-size: var(--font-size-lg);
-    color: var(--colour-gold);
-  }
-
   .ext-glyph {
     margin-left: var(--space-1);
     color: var(--colour-gold);
   }
 
-  .realm-card:hover,
-  .feed-item:hover {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+    column-gap: var(--space-12);
+    align-items: start;
+  }
+
+  .hero__eyebrow,
+  .hero__title {
+    grid-column: 1 / -1;
+  }
+
+  .hero__title {
+    margin-bottom: var(--space-8);
+    text-wrap: balance;
+  }
+
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+
+    /* Stacked, the row gap already separates the title from the copy */
+    .hero__title {
+      margin-bottom: 0;
+    }
+  }
+
+  .lead-story {
+    display: block;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .lead-story__media {
+    display: block;
+    border-bottom: 2px solid var(--realm-accent);
+  }
+
+  .lead-story__crest {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    background: var(--colour-teal-dark);
+  }
+
+  .lead-story__body {
+    padding: var(--space-4);
+  }
+
+  .content-card .lead-story__title {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-display-readable);
+    font-weight: var(--font-weight-bold);
+    font-variant-caps: normal;
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-snug);
+    letter-spacing: 0;
+    color: var(--colour-gold);
+  }
+
+  .lead-story__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .lead-story__title a:hover,
+  .lead-story__title a:focus-visible {
+    text-decoration: underline;
+  }
+
+  .lead-story__summary {
+    margin: 0;
+    color: var(--colour-stone-light);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+  }
+
+  .hero-lede {
+    font-size: var(--font-size-lg);
+  }
+
+  .hero-cta {
+    margin: var(--space-6) 0 var(--space-4);
+  }
+
+  /* Realm cards: the accent is a committed material cue, not a hairline */
+  .map-subhead {
+    margin: calc(-1 * var(--space-4)) 0 var(--space-8);
+    text-align: center;
+    color: var(--colour-stone-light);
+  }
+
+  .newsletter-band {
+    text-align: center;
+    padding-block: var(--space-16);
+  }
+
+  .newsletter-band__blurb {
+    max-width: var(--max-width-narrow);
+    margin: 0 auto var(--space-6);
+    color: var(--colour-parchment);
+  }
+
+  @media (max-width: 768px) {
+    .newsletter-band {
+      padding-block: var(--space-12);
+    }
+  }
+
+  /* The facade is a flex child; without a width its aspect-ratio resolves to zero */
+  /* Compact rows */
+  .quest-log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .section-heading {
+    margin-bottom: var(--space-8);
+  }
+
+  .quest-log__more {
+    margin: var(--space-6) 0 0;
+  }
+
+  .quest-row {
+    display: grid;
+    grid-template-columns: var(--space-20) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--realm-accent);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--transition-fast);
+  }
+
+  .quest-row__thumb {
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--colour-teal-dark);
+  }
+
+  .quest-row__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .quest-row__crest {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .quest-row__crest :global(svg) {
+    width: var(--space-8);
+    height: var(--space-8);
+  }
+
+  .quest-row:hover,
+  .quest-row:focus-visible {
+    background: var(--colour-teal-dark);
+  }
+
+  .quest-row__title {
+    margin: 0 0 var(--space-1);
+    font-family: var(--font-display-readable);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-snug);
+    letter-spacing: 0;
+    color: var(--colour-gold);
+  }
+
+  .quest-row__summary {
+    margin: 0;
+    color: var(--colour-stone-light);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+  }
+
+  /* Shared eyebrow: source on the left, date on the right */
+  .quest-eyebrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--tracking-display-readable);
+    text-transform: uppercase;
+    color: var(--realm-accent);
+  }
+
+  .quest-eyebrow time {
+    color: var(--colour-stone-light);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 600px) {
+    .quest-row {
+      grid-template-columns: 1fr;
+    }
+
+    .quest-row__thumb {
+      max-width: var(--space-24);
+    }
+  }
+
+  .lead-story:hover {
     transform: translate(2px, 2px);
     box-shadow: var(--card-chrome-pressed);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .realm-card:hover,
-    .feed-item:hover {
+    .lead-story:hover {
       transform: none;
     }
   }

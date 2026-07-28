@@ -1,6 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
-import { fetchYouTubeShorts, fetchYouTubeTalks } from './youtube';
+import { fetchYouTubeShorts, fetchYouTubeTalks, toSummary } from './youtube';
 
 export interface SearchItem {
 	type: 'blog' | 'talk' | 'project' | 'short';
@@ -40,7 +40,7 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 		items.push({
 			type: 'talk',
 			title: talk.data.title,
-			description: `${talk.data.event}: ${talk.data.summary}`,
+			description: toSummary(`${talk.data.event}: ${talk.data.summary}`, 120),
 			url: `/talks/#${talk.id}`,
 			date: talk.data.date,
 			tags: talk.data.tags,
@@ -53,7 +53,7 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 		items.push({
 			type: 'talk',
 			title: talk.title,
-			description: `${talk.event}: ${talk.summary}`,
+			description: toSummary(`${talk.event}: ${talk.summary}`, 120),
 			url: `/talks/#youtube-${index}`,
 			date: talk.date,
 			tags: talk.tags,
@@ -66,7 +66,8 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 		items.push({
 			type: 'short',
 			title: short.title,
-			description: short.description || 'A short from the Securing the Realm YouTube channel.',
+			description:
+				toSummary(short.description, 120) || 'A short from the Securing the Realm YouTube channel.',
 			url: short.videoUrl,
 			date: short.pubDate,
 			tags: short.tags,

@@ -11,7 +11,9 @@
   --colour-gold: #d5a425;
   --colour-gold-light: #e8be4a;
   --colour-gold-dark: #b8901f;
-  --colour-stone: #8a877f;
+  /* Lightened from #8a877f: it carries 12px webmention timestamps on
+     --colour-teal-dark, where the old value was 4.35:1 (AA needs 4.5) */
+  --colour-stone: #949189;
   --colour-stone-light: #c4c1b8;
   --colour-stone-dark: #6f6d67;
   --colour-parchment: #f3e9d2;
@@ -20,6 +22,13 @@
   --colour-ink: #1a1a1a;
   --colour-white: #ffffff;
   --colour-black: #000000;
+
+  /* Realm accents — one metallic family so the four cards read as a set.
+     Bone reuses --colour-parchment-dark. Distinct from the castle's forge
+     fire below, which stays fully saturated. */
+  --colour-brass: #c9a45a;
+  --colour-copper: #d19470;
+  --colour-silver-blue: #a9bcc9;
 
   /* Castle/Environment Colors */
   --colour-sky-dark: #0a1820;
@@ -43,6 +52,9 @@
 
   /* Per-realm accent (overridden per [data-realm]) */
   --realm-accent: var(--colour-gold);
+  /* Offset shadow colour. Realm cards darken their own accent (see global.css);
+     everything else keeps the literal gold-dark. */
+  --realm-shadow: var(--colour-gold-dark);
 
   /* Spacing Scale */
   --space-1: 4px;
@@ -78,10 +90,22 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
   /* Stepped pixel shadows (no blur) + carved-stone card chrome */
-  --shadow-stepped: 4px 4px 0 var(--colour-gold-dark);
-  --shadow-stepped-hover: 2px 2px 0 var(--colour-gold-dark);
-  --card-chrome: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band), var(--shadow-stepped);
-  --card-chrome-pressed: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band), var(--shadow-stepped-hover);
+  --shadow-stepped: 4px 4px 0 var(--realm-shadow);
+  --shadow-stepped-hover: 2px 2px 0 var(--realm-shadow);
+  --card-chrome-inset: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band);
+  --card-chrome: var(--card-chrome-inset), var(--shadow-stepped);
+  --card-chrome-pressed: var(--card-chrome-inset), var(--shadow-stepped-hover);
+
+  /* 8-bit ornament kit */
+  /* 4px-on/4px-off gold dash: section-heading flanks and standalone rules */
+  --pixel-dash: repeating-linear-gradient(90deg, var(--colour-gold) 0 var(--space-1), transparent var(--space-1) var(--space-2));
+  /* 5x5 stepped diamond, used as a mask so the fill stays a colour token */
+  --pixel-diamond-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5'%3E%3Cpath d='M2 0h1v1h1v1h1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h1v-1h1z'/%3E%3C/svg%3E");
+  /* 10px = exactly 2x the 5px diamond grid. No spacing token divides by 5, and a
+     fractional scale would blur the steps, so this one is deliberately literal. */
+  --pixel-glyph-size: 10px;
+  /* Corner notch depth for .notched; matches the 4px pixel unit */
+  --notch: var(--space-1);
 
   /* Typography Scale */
   --font-size-xs: 0.75rem;    /* 12px */

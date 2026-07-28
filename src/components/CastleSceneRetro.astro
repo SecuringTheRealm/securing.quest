@@ -35,6 +35,43 @@ const Merlon = (x: number, y: number) => ({
 	shadow: { x: x + 2, y: y + 2, width: 4, height: 20 }, // Left face
 });
 
+// Hanging signboard behind each section label. Press Start 2P advances one em
+// per glyph, so at font-size 16 a label is chars*16 wide; +32 padding keeps the
+// plaque and its half-width on the 8px grid. Height 32 puts the baseline 8px up
+// from the lower edge.
+const SIGN_GAP = 16;
+const Sign = (cx: number, structureTop: number, chars: number) => ({
+	plate: {
+		x: cx - (chars * 16 + 32) / 2,
+		y: structureTop - SIGN_GAP - 32,
+		width: chars * 16 + 32,
+		height: 32,
+	},
+	text: { x: cx, y: structureTop - SIGN_GAP - 8 },
+});
+
+// One placement rule for all six: the plaque's bottom edge hangs SIGN_GAP above
+// the top of the silhouette it labels. Silhouette means masonry and flag pole -
+// animated FX (smoke, moon glow) pass behind the sign rather than pushing it up.
+const SIGNS = {
+	talks: Sign(240, 72, 5), // tower flag pole
+	blog: Sign(460, 132, 4), // library flag pole
+	about: Sign(720, 88, 5), // keep flag pole
+	code: Sign(960, 200, 4), // forge chimney
+	shorts: Sign(1080, 80, 6), // moon disc
+	listen: Sign(1096, 520, 6), // podcast scroll
+};
+
+// Mobile navigation chips - same six destinations as the drawn buildings.
+const CHIPS = [
+	{ href: '/talks/', label: 'Talks', section: 'Tower' },
+	{ href: '/blog/', label: 'Blog', section: 'Library' },
+	{ href: '/forge/', label: 'Code', section: 'Forge' },
+	{ href: '/shorts/', label: 'Shorts', section: 'Shorts' },
+	{ href: '/about/', label: 'About', section: 'Keep' },
+	{ href: '/#listen', label: 'Listen', section: 'Podcast' },
+];
+
 // Brick pattern - stepped pixel blocks
 const BrickRow = (x: number, y: number, width: number, offset = 0) => {
 	const bricks: Array<{ x: number; y: number; width: number; height: number }> = [];
@@ -55,7 +92,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
 <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 1200 600"
-  role="img"
+  role="group"
   aria-labelledby={`${uid}-title`} aria-describedby={`${uid}-desc`}
   class="castle-scene-retro"
 >
@@ -148,24 +185,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       <rect x="1062" y="122" width="6" height="4" fill="var(--colour-forge-orange)" opacity="0.3" />
       <rect x="1092" y="122" width="6" height="4" fill="var(--colour-forge-orange)" opacity="0.3" />
 
-      <!-- Moon label (always visible, like other sections) -->
+      <!-- Signboard -->
+      <rect
+        {...SIGNS.shorts.plate}
+        class="sign-plate"
+        shape-rendering="crispEdges"></rect>
       <text
-        x="1080"
-        y="184"
+        {...SIGNS.shorts.text}
+        class="sign-label"
         text-anchor="middle"
-        fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
-        font-size="11"
+        font-size="16"
         letter-spacing="1">SHORTS</text>
-      <text
-        x="1080"
-        y="198"
-        text-anchor="middle"
-        fill="var(--colour-parchment)"
-        font-family="'Press Start 2P', monospace"
-        font-size="7"
-        opacity="0"
-        class="castle-subtitle">The Moon</text>
     </g>
   </a>
 
@@ -405,7 +436,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         ].map((w) => (
           <g class="window-flicker">
             <rect {...w.outer} fill="var(--colour-black)" opacity="0.4" />
-            <rect {...w.light} fill="var(--colour-gold)" opacity="0.85" />
+            <rect {...w.light} class="window-light" fill="var(--colour-gold)" opacity="0.85" />
             <rect {...w.crossV} fill="var(--colour-stone-dark)" opacity="0.6" />
             <rect {...w.crossH} fill="var(--colour-stone-dark)" opacity="0.6" />
             <rect {...w.highlight} fill="var(--colour-white)" opacity="0.2" />
@@ -413,25 +444,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         ))
       }
 
-      <!-- Label -->
+      <!-- Signboard -->
+      <rect
+        {...SIGNS.talks.plate}
+        class="sign-plate"
+        shape-rendering="crispEdges"></rect>
       <text
-        x="240"
-        y="88"
+        {...SIGNS.talks.text}
+        class="sign-label"
         text-anchor="middle"
-        fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
-        font-size="11"
-        letter-spacing="1">TALKS</text
-      >
-      <text
-        x="240"
-        y="102"
-        text-anchor="middle"
-        fill="var(--colour-parchment)"
-        font-family="'Press Start 2P', monospace"
-        font-size="7"
-        opacity="0"
-        class="castle-subtitle">The Tower</text>
+        font-size="16"
+        letter-spacing="1">TALKS</text>
 
       <!-- Hover sparkles -->
       <g class="hover-sparkle" opacity="0">
@@ -585,7 +609,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         ].map((w) => (
           <g class="window-flicker">
             <rect {...w.outer} fill="var(--colour-black)" opacity="0.4" />
-            <rect {...w.light} fill="var(--colour-gold)" opacity="0.85" />
+            <rect {...w.light} class="window-light" fill="var(--colour-gold)" opacity="0.85" />
             <rect {...w.crossV} fill="var(--colour-stone-dark)" opacity="0.6" />
             <rect {...w.crossH} fill="var(--colour-stone-dark)" opacity="0.6" />
             <rect {...w.highlight} fill="var(--colour-white)" opacity="0.2" />
@@ -657,25 +681,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         ></rect>
       </g>
 
-      <!-- Label -->
+      <!-- Signboard -->
+      <rect
+        {...SIGNS.blog.plate}
+        class="sign-plate"
+        shape-rendering="crispEdges"></rect>
       <text
-        x="460"
-        y="168"
+        {...SIGNS.blog.text}
+        class="sign-label"
         text-anchor="middle"
-        fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
-        font-size="11"
-        letter-spacing="1">BLOG</text
-      >
-      <text
-        x="460"
-        y="182"
-        text-anchor="middle"
-        fill="var(--colour-parchment)"
-        font-family="'Press Start 2P', monospace"
-        font-size="7"
-        opacity="0"
-        class="castle-subtitle">The Library</text>
+        font-size="16"
+        letter-spacing="1">BLOG</text>
 
       <!-- Hover sparkles -->
       <g class="hover-sparkle" opacity="0">
@@ -871,7 +888,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       ].map((w) => (
         <g class="window-flicker">
           <rect {...w.outer} fill="var(--colour-black)" opacity="0.4" />
-          <rect {...w.light} fill="var(--colour-gold)" opacity="0.85" />
+          <rect {...w.light} class="window-light" fill="var(--colour-gold)" opacity="0.85" />
           <rect {...w.crossV} fill="var(--colour-stone-dark)" opacity="0.6" />
           <rect {...w.crossH} fill="var(--colour-stone-dark)" opacity="0.6" />
           <rect {...w.highlight} fill="var(--colour-white)" opacity="0.2" />
@@ -943,24 +960,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         fill="var(--colour-gold)"
         opacity="0"
         class="section-glow"></rect>
-      <!-- About label + keyboard/hover reveal affordances -->
+      <!-- Signboard -->
+      <rect
+        {...SIGNS.about.plate}
+        class="sign-plate"
+        shape-rendering="crispEdges"></rect>
       <text
-        x="720"
-        y="404"
+        {...SIGNS.about.text}
+        class="sign-label"
         text-anchor="middle"
-        fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
-        font-size="11"
+        font-size="16"
         letter-spacing="1">ABOUT</text>
-      <text
-        x="720"
-        y="418"
-        text-anchor="middle"
-        fill="var(--colour-parchment)"
-        font-family="'Press Start 2P', monospace"
-        font-size="7"
-        opacity="0"
-        class="castle-subtitle">The Keep</text>
       <g class="hover-sparkle" opacity="0">
         <rect x="600" y="152" width="4" height="4" fill="var(--colour-gold)" />
         <rect x="840" y="152" width="4" height="4" fill="var(--colour-gold)" />
@@ -1336,25 +1347,18 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         fill="var(--colour-grass)"
         opacity="0.12"></ellipse>
 
-      <!-- Label -->
+      <!-- Signboard -->
+      <rect
+        {...SIGNS.code.plate}
+        class="sign-plate"
+        shape-rendering="crispEdges"></rect>
       <text
-        x="960"
-        y="248"
+        {...SIGNS.code.text}
+        class="sign-label"
         text-anchor="middle"
-        fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
-        font-size="11"
-        letter-spacing="1">CODE</text
-      >
-      <text
-        x="960"
-        y="262"
-        text-anchor="middle"
-        fill="var(--colour-parchment)"
-        font-family="'Press Start 2P', monospace"
-        font-size="7"
-        opacity="0"
-        class="castle-subtitle">The Forge</text>
+        font-size="16"
+        letter-spacing="1">CODE</text>
 
       <!-- Hover sparkles -->
       <g class="hover-sparkle" opacity="0">
@@ -1431,28 +1435,20 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
         font-size="12"
-        font-weight="700">S</text
-      >
+        font-weight="700">S</text>
 
-      <!-- Label -->
+      <!-- Signboard -->
+      <rect
+        {...SIGNS.listen.plate}
+        class="sign-plate"
+        shape-rendering="crispEdges"></rect>
       <text
-        x="1096"
-        y="512"
+        {...SIGNS.listen.text}
+        class="sign-label"
         text-anchor="middle"
-        fill="var(--colour-parchment)"
         font-family="'Press Start 2P', monospace"
-        font-size="9"
-        letter-spacing="1">LISTEN</text
-      >
-      <text
-        x="1096"
-        y="526"
-        text-anchor="middle"
-        fill="var(--colour-parchment)"
-        font-family="'Press Start 2P', monospace"
-        font-size="7"
-        opacity="0"
-        class="castle-subtitle">Podcast</text>
+        font-size="16"
+        letter-spacing="1">LISTEN</text>
 
       <!-- Hover sparkles -->
       <g class="hover-sparkle" opacity="0">
@@ -1491,6 +1487,25 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
   <rect x="896" y="490" width="128" height="8" fill="var(--colour-black)" opacity="0.15" />
 </svg>
 
+<!-- Same six destinations as the signboards. Below 640px the scene is inert
+     decoration and these chips are the visible navigation; above it they are the
+     visually-hidden link list, so the wayfinding survives however you read it. -->
+<ul class="castle-chips">
+  {
+    CHIPS.map((chip: { href: string; label: string; section: string }) => (
+      <li>
+        <a
+          href={chip.href}
+          class="castle-chip pixel-eyebrow notched"
+          data-castle-nav={chip.section}
+        >
+          {chip.label}
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
 <style>
   .castle-scene-retro {
     width: 100%;
@@ -1498,6 +1513,9 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     max-width: var(--max-width-wide);
     display: block;
     shape-rendering: crispEdges;
+    /* The scroll and its sparkles sit on the viewBox's bottom edge, so the SVG
+       viewport would otherwise clip that anchor's focus ring. */
+    overflow: visible;
   }
 
   @supports (image-rendering: pixelated) {
@@ -1529,10 +1547,6 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     opacity: 0.25;
   }
 
-  .castle-scene-retro a:focus-visible .castle-subtitle {
-    opacity: 0.7;
-  }
-
   .castle-scene-retro a:focus-visible .hover-sparkle {
     opacity: 1;
     animation: sparkle-pop 0.6s steps(3, end);
@@ -1543,28 +1557,44 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     animation-play-state: paused !important;
   }
 
+  /* Signboard: SVG text has no background, so the plaque is a rect drawn just
+     before each label. Visible at rest — gold on navy reads as a sign, and a
+     sign reads as clickable where floating text does not (6.8:1 either way). */
+  .sign-plate {
+    fill: var(--colour-teal-dark);
+    stroke: var(--colour-gold);
+    stroke-width: 1;
+  }
+
+  .sign-label {
+    fill: var(--colour-gold);
+  }
+
+  /* Hover/focus inverts the sign. Instant swap, not a fade — the hard cut suits
+     the pixel art and leaves nothing to gate on reduced motion. */
+  .castle-section:hover .sign-plate,
+  .castle-scene-retro a:focus-visible .sign-plate {
+    fill: var(--colour-gold);
+  }
+
+  .castle-section:hover .sign-label,
+  .castle-scene-retro a:focus-visible .sign-label {
+    fill: var(--colour-teal-dark);
+  }
+
+  /* Lights up one step: the building reads as "open" under the cursor */
+  .castle-section:hover .window-light,
+  .castle-scene-retro a:focus-visible .window-light {
+    fill: var(--colour-gold-light);
+    opacity: 1;
+  }
+
   .section-glow {
     transition: opacity 0.25s ease-in-out;
   }
 
   .castle-section:hover .section-glow {
     opacity: 0.25;
-  }
-
-  .castle-label {
-    transition: opacity 0.25s ease-in-out;
-  }
-
-  .castle-section:hover .castle-label {
-    opacity: 1;
-  }
-
-  .castle-subtitle {
-    transition: opacity 0.25s ease-in-out;
-  }
-
-  .castle-section:hover .castle-subtitle {
-    opacity: 0.7;
   }
 
   .hover-sparkle {
@@ -1897,16 +1927,66 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     }
   }
 
-  /* Mobile: castle becomes a decorative banner */
-  @media (max-width: 768px) {
-    .castle-scene-retro {
-      max-height: 180px;
+  .castle-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+    list-style: none;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+  }
+
+  .castle-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* WCAG 2.5.8 target size */
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 var(--space-3);
+    border: 2px solid var(--colour-gold);
+    background: var(--colour-teal-dark);
+    text-decoration: none;
+  }
+
+  .castle-chip:hover,
+  .castle-chip:focus-visible {
+    background: var(--colour-gold);
+    color: var(--colour-teal-dark);
+  }
+
+  .castle-chip:focus-visible {
+    outline: 3px solid var(--colour-parchment);
+    outline-offset: 2px;
+  }
+
+  /* Above the breakpoint the castle's own six anchors are the visible nav, so the
+     list is present for screen readers but hidden — and revealed on focus, so a
+     sighted keyboard user never lands on an invisible tab stop. Inlined rather
+     than reusing .sr-only because the hiding has to be conditional. */
+  @media (min-width: 640px) {
+    .castle-chips:not(:focus-within) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
       overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+  }
+
+  /* Below 640px the castle is decoration only: at that width its 16px signs
+     render around 5px, and the inline script takes the scene out of the tab
+     order and the accessibility tree. The chips carry the navigation instead. */
+  @media (max-width: 639px) {
+    .castle-scene-retro {
       pointer-events: none;
     }
 
     .castle-section text,
-    .castle-subtitle {
+    .sign-plate {
       display: none;
     }
   }
@@ -1917,10 +1997,6 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     }
     .castle-section:hover {
       transform: none;
-    }
-    .section-glow,
-    .castle-subtitle {
-      transition: none;
     }
     .window-flicker,
     .forge-glow-animation,
@@ -1954,6 +2030,25 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
       }
     });
   });
+</script>
+
+<script is:inline>
+  // Below 640px the scene is a decorative banner: its labels are hidden, so take the
+  // whole thing out of the tab order rather than leave six invisible stops for
+  // keyboard and screen reader users. The .castle-chips list takes over there, and
+  // the breakpoint must stay in step with the media query above or a viewport width
+  // exists with no navigation at all.
+  (function () {
+    var scene = document.querySelector('.castle-scene-retro');
+    if (!scene) return;
+    var mobile = window.matchMedia('(max-width: 639px)');
+    var apply = function () {
+      scene.inert = mobile.matches;
+      scene.setAttribute('aria-hidden', String(mobile.matches));
+    };
+    mobile.addEventListener('change', apply);
+    apply();
+  })();
 </script>
 
 <script is:inline>

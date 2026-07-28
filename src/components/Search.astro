@@ -4,7 +4,17 @@ import { buildSearchIndex } from '../utils/search';
 const searchData = await buildSearchIndex();
 ---
 
+<!--
+  Ships expanded and collapses on load, so search still works without JS.
+-->
 <div class="search-container">
+	<button type="button" class="search-toggle" aria-label="Search" title="Search (press /)" aria-expanded="true" aria-controls="search-input" hidden>
+		<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" shape-rendering="crispEdges">
+			<path
+				d="M4 2h8v2H4zM2 4h2v8H2zM12 4h2v8h-2zM4 12h8v2H4zM12 12h2v2h-2zM14 14h2v2h-2zM16 16h2v2h-2zM18 18h2v2h-2z"
+				fill="currentColor"></path>
+		</svg>
+	</button>
 	<div class="search-wrapper">
 		<label for="search-input" class="sr-only">Search content</label>
 		<input
@@ -41,9 +51,42 @@ const searchData = await buildSearchIndex();
 	const searchInput = document.getElementById('search-input') as HTMLInputElement;
 	const searchResultsEl = document.getElementById('search-results') as HTMLElement;
 
-	if (!searchInput || !searchResultsEl) {
+	const searchContainer = document.querySelector('.search-container') as HTMLElement;
+	const searchToggle = document.querySelector('.search-toggle') as HTMLButtonElement;
+
+	if (!searchInput || !searchResultsEl || !searchContainer || !searchToggle) {
 		throw new Error('Search elements not found');
 	}
+
+	// Collapse on load: the markup ships expanded so a no-JS visitor still gets a
+	// working search box.
+	searchToggle.hidden = false;
+	setExpanded(false);
+
+	function setExpanded(expanded: boolean) {
+		searchContainer.classList.toggle('is-expanded', expanded);
+		searchToggle.setAttribute('aria-expanded', String(expanded));
+		if (expanded) {
+			searchInput.focus();
+		} else {
+			searchInput.value = '';
+			hideResults();
+		}
+	}
+
+	searchToggle.addEventListener('click', () => {
+		setExpanded(!searchContainer.classList.contains('is-expanded'));
+	});
+
+	// "/" is the conventional site-search shortcut; never steal it mid-typing.
+	document.addEventListener('keydown', (e: KeyboardEvent) => {
+		if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+		const active = document.activeElement as HTMLElement | null;
+		if (active?.isContentEditable) return;
+		if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return;
+		e.preventDefault();
+		setExpanded(true);
+	});
 
 	let selectedIndex = -1;
 	let searchTrackTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -84,14 +127,11 @@ const searchData = await buildSearchIndex();
 				break;
 			case 'Enter':
 				e.preventDefault();
-				if (selectedIndex >= 0 && resultItems[selectedIndex]) {
-					const link = resultItems[selectedIndex].querySelector('a') as HTMLAnchorElement | null;
-					if (link) link.click();
-				}
+					(resultItems[selectedIndex] as HTMLAnchorElement | undefined)?.click();
 				break;
 			case 'Escape':
-				hideResults();
-				searchInput.blur();
+				setExpanded(false);
+				searchToggle.focus();
 				break;
 		}
 	});
@@ -99,7 +139,7 @@ const searchData = await buildSearchIndex();
 	document.addEventListener('click', (e: MouseEvent) => {
 		const target = e.target as HTMLElement;
 		if (!target.closest('.search-container')) {
-			hideResults();
+			setExpanded(false);
 		}
 	});
 
@@ -119,17 +159,16 @@ const searchData = await buildSearchIndex();
 		// Built as DOM nodes, not innerHTML: titles and descriptions include
 		// YouTube feed text, which is not ours to trust.
 		for (const [index, item] of results.entries()) {
-			const wrapper = document.createElement('div');
-			wrapper.className = 'search-result';
-			wrapper.setAttribute('role', 'option');
-			wrapper.setAttribute('aria-selected', String(index === selectedIndex));
-			wrapper.dataset.index = String(index);
-
+			// The anchor IS the option: role="option" must not wrap interactive children.
 			const link = document.createElement('a');
 			link.href = item.url;
+			link.className = 'search-result';
+			link.id = `search-result-${index}`;
+			link.setAttribute('role', 'option');
+			link.setAttribute('aria-selected', 'false');
 
 			for (const [className, text] of [
-				['result-type', `${getTypeIcon(item.type)} ${item.type}`],
+				['result-type', item.type],
 				['result-title', item.title],
 				['result-description', truncate(item.description, 100)],
 			]) {
@@ -139,8 +178,7 @@ const searchData = await buildSearchIndex();
 				link.append(line);
 			}
 
-			wrapper.append(link);
-			searchResultsEl.append(wrapper);
+			searchResultsEl.append(link);
 		}
 
 		showResults();
@@ -152,10 +190,12 @@ const searchData = await buildSearchIndex();
 			if (index === selectedIndex) {
 				item.setAttribute('aria-selected', 'true');
 				item.scrollIntoView({ block: 'nearest' });
+				searchInput.setAttribute('aria-activedescendant', item.id);
 			} else {
 				item.setAttribute('aria-selected', 'false');
 			}
 		});
+		if (selectedIndex < 0) searchInput.removeAttribute('aria-activedescendant');
 	}
 
 	function showResults() {
@@ -169,34 +209,79 @@ const searchData = await buildSearchIndex();
 		selectedIndex = -1;
 	}
 
-	function getTypeIcon(type: string) {
-		switch (type) {
-			case 'blog':
-				return '\u{1F4DA}';
-			case 'talk':
-				return '\u{1F3F0}';
-			case 'project':
-				return '\u2692\uFE0F';
-			default:
-				return '\u{1F4C4}';
-		}
-	}
-
+	// The index is summarised at build time; this is only a hard length guard.
 	function truncate(text: string, length: number) {
 		if (text.length <= length) return text;
-		return text.slice(0, length) + '...';
+		const cut = text.slice(0, length);
+		const lastSpace = cut.lastIndexOf(' ');
+		return `${cut.slice(0, lastSpace > 0 ? lastSpace : cut.length).replace(/[\s,:;-]+$/, '')}\u2026`;
 	}
 </script>
 
 <style>
 	.search-container {
 		position: relative;
-		width: 100%;
-		max-width: 400px;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+	}
+
+	/* Icon only: no box. The 44px tap target stays, the chrome goes. */
+	.search-toggle {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+		padding: 0;
+		background: transparent;
+		border: 0;
+		color: var(--colour-gold);
+		cursor: pointer;
+	}
+
+	/*
+	 * Hover/focus tell: a 2px gold underline block that steps in under the glyph.
+	 * Inset by --space-3 either side so it lines up with the 20px icon.
+	 * The keyboard focus ring itself is the global button:focus-visible outline —
+	 * this bar is on top of it, never instead of it.
+	 */
+	.search-toggle::after {
+		content: '';
+		position: absolute;
+		bottom: var(--space-2);
+		left: var(--space-3);
+		right: var(--space-3);
+		height: 2px;
+		background: var(--colour-gold);
+		transform: scaleX(0);
+		transition: transform 100ms steps(2);
+	}
+
+	.search-toggle:hover::after,
+	.search-toggle:focus-visible::after {
+		transform: scaleX(1);
+	}
+
+	.search-container.is-expanded .search-toggle {
+		display: none;
 	}
 
 	.search-wrapper {
-		position: relative;
+		position: absolute;
+		top: 50%;
+		right: 0;
+		transform: translateY(-50%);
+		width: min(320px, 60vw);
+		/* Opaque: the expanded field sits over the wordmark */
+		background: var(--colour-bg-primary);
+		z-index: var(--z-index-dropdown);
+	}
+
+	.search-container:not(.is-expanded) .search-wrapper {
+		display: none;
 	}
 
 	#search-input {
@@ -235,47 +320,50 @@ const searchData = await buildSearchIndex();
 		box-shadow: 0 4px 12px var(--colour-shadow);
 	}
 
-	.search-result {
-		border-bottom: 1px solid var(--colour-gold);
-	}
-
-	.search-result:last-child {
-		border-bottom: none;
-	}
-
-	.search-result a {
+	/*
+	 * Results are built in JS, so they never get Astro's scope attribute.
+	 * :global keeps the rules alive; the #search-results prefix stops them leaking.
+	 */
+	#search-results :global(.search-result) {
 		display: block;
 		padding: var(--space-3);
 		text-decoration: none;
 		color: var(--colour-parchment);
+		border-bottom: 1px solid var(--colour-gold);
 		transition: background var(--transition-fast);
 	}
 
-	.search-result a:hover,
-	.search-result[aria-selected='true'] a {
+	#search-results :global(.search-result:last-child) {
+		border-bottom: none;
+	}
+
+	#search-results :global(.search-result:hover),
+	#search-results :global(.search-result:focus-visible),
+	#search-results :global(.search-result[aria-selected='true']) {
 		background: var(--colour-gold-alpha-15);
 	}
 
-	.result-type {
+	#search-results :global(.result-type) {
 		font-size: var(--font-size-xs);
 		color: var(--colour-stone-light);
 		text-transform: uppercase;
+		letter-spacing: var(--tracking-display-readable);
 		margin-bottom: var(--space-1);
 	}
 
-	.result-title {
+	#search-results :global(.result-title) {
 		font-weight: var(--font-weight-bold);
 		margin-bottom: var(--space-1);
 		color: var(--colour-gold);
 	}
 
-	.result-description {
+	#search-results :global(.result-description) {
 		font-size: var(--font-size-sm);
 		color: var(--colour-stone-light);
 		line-height: var(--line-height-relaxed);
 	}
 
-	.no-results {
+	#search-results :global(.no-results) {
 		padding: var(--space-4);
 		text-align: center;
 		color: var(--colour-stone-light);
@@ -295,9 +383,21 @@ const searchData = await buildSearchIndex();
 	}
 
 	/* Mobile responsive */
+	/* Mobile: expanded search takes a full-width row beneath the header bar */
 	@media (max-width: 768px) {
-		.search-container {
-			max-width: 100%;
+		.search-container.is-expanded {
+			position: static;
+		}
+
+		.search-container.is-expanded .search-wrapper {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			right: 0;
+			max-width: none;
+			padding: var(--space-2) var(--space-4);
+			background: var(--colour-bg-primary);
+			border-bottom: 2px solid var(--colour-gold);
 		}
 
 		#search-results {
@@ -307,8 +407,9 @@ const searchData = await buildSearchIndex();
 
 	/* Reduced motion */
 	@media (prefers-reduced-motion: reduce) {
+		.search-toggle::after,
 		#search-input,
-		.search-result a {
+		#search-results :global(.search-result) {
 			transition: none;
 		}
 	}

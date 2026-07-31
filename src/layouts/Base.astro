@@ -81,7 +81,17 @@ const currentPath = Astro.url.pathname;
             class="logo-link"
             aria-label="Securing the Realm - Home"
           >
-            <Image src={logoSrc} alt="Securing the Realm logo" class="logo-img" width={48} height={48} loading="eager" />
+            {/* densities: the 1024px source was being emitted at a single 48px, so
+                every 2x display scaled it up and the shield looked soft */}
+            <Image
+              src={logoSrc}
+              alt="Securing the Realm logo"
+              class="logo-img"
+              width={48}
+              height={48}
+              densities={[1, 2, 3]}
+              loading="eager"
+            />
             <span class="logo-text">
               Securing the Realm
             </span>
@@ -100,11 +110,18 @@ const currentPath = Astro.url.pathname;
             <span class="hamburger"></span>
           </button>
 
+          {/* Five items. Listen lives on the hero CTA, the castle scene and the
+              Listen band; Newsletter moved to the footer. */}
           <ul class="nav-menu">
             <li>
               <a href="/talks/" class="nav-link" data-castle-name="Tower"
                 aria-current={currentPath.startsWith('/talks') ? 'page' : undefined}
                 >Talks</a>
+            </li>
+            <li>
+              <a href="/shorts/" class="nav-link" data-castle-name="Moon"
+                aria-current={currentPath.startsWith('/shorts') ? 'page' : undefined}
+                >Shorts</a>
             </li>
             <li>
               <a href="/blog/" class="nav-link" data-castle-name="Library"
@@ -115,23 +132,6 @@ const currentPath = Astro.url.pathname;
               <a href="/forge/" class="nav-link" data-castle-name="Forge"
                 aria-current={currentPath.startsWith('/forge') ? 'page' : undefined}
                 >Code</a>
-            </li>
-            <li>
-              <a href="/shorts/" class="nav-link" data-castle-name="Moon"
-                aria-current={currentPath.startsWith('/shorts') ? 'page' : undefined}
-                >Shorts</a>
-            </li>
-            <li>
-              <a href="/#listen" class="nav-link" data-castle-name="Podcast">Listen</a>
-            </li>
-            <li>
-              <a
-                href="https://str.riverside.com/newsletter"
-                class="nav-link"
-                data-castle-name="Arcane Scrolls"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Newsletter (opens in new tab)">Newsletter</a>
             </li>
             <li><a href="/about/" aria-current={currentPath.startsWith('/about') ? 'page' : undefined}>About</a></li>
           </ul>
@@ -181,82 +181,192 @@ const currentPath = Astro.url.pathname;
       <slot />
     </main>
 
-    <footer
-      class="container"
-      style="margin-top: var(--space-16); padding: var(--space-8) 0; border-top: 2px solid var(--colour-gold);"
-    >
-      <div style="text-align: center;">
-        <h2
-          style="font-size: var(--font-size-lg); margin-bottom: var(--space-4);"
-        >
-          Elsewhere
-        </h2>
-        <ul
-          style="display: flex; justify-content: center; gap: var(--space-4) var(--space-8); flex-wrap: wrap; list-style: none; margin: 0;"
-        >
-          <li>
-            <a
-              href="https://www.youtube.com/@SecuringTheRealm"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="YouTube (opens in new tab)"
-              data-social="YouTube">YouTube</a
-            >
-          </li>
-          <li>
-            <a
-              href="https://github.com/SecuringTheRealm"
-              target="_blank"
-              rel="me noopener noreferrer"
-              aria-label="GitHub (opens in new tab)"
-              data-social="GitHub">GitHub</a
-            >
-          </li>
-          <li>
-            <a
-              href="https://www.linkedin.com/company/securingtherealm/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn (opens in new tab)"
-              data-social="LinkedIn">LinkedIn</a
-            >
-          </li>
-          <li>
-            <a
-              href="https://open.spotify.com/show/1Yo0bHunKuloEXda0Zn3t2"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Spotify (opens in new tab)"
-              data-social="Spotify">Spotify</a
-            >
-          </li>
-          <li>
-            <a
-              href="https://podcasts.apple.com/gb/podcast/securing-the-realm/id1835736136"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Apple Podcasts (opens in new tab)"
-              data-social="Apple Podcasts">Apple Podcasts</a
-            >
-          </li>
-          <li>
-            <a
-              href="https://str.riverside.com/newsletter"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Arcane Scrolls newsletter (opens in new tab)"
-              data-social="Newsletter">Newsletter</a
-            >
-          </li>
-        </ul>
-        <p
-          style="margin-top: var(--space-6); font-size: var(--font-size-sm); color: var(--colour-stone-light);"
-        >
-          © {new Date().getFullYear()} Securing the Realm. Content licensed under
-          CC BY-SA 4.0.
-        </p>
+    <footer class="container site-footer">
+      <div class="site-footer__cols">
+        <div class="site-footer__identity">
+          <Image
+            src={logoSrc}
+            alt="Securing the Realm logo"
+            class="site-footer__shield"
+            width={64}
+            height={64}
+            densities={[1, 2, 3]}
+            loading="lazy"
+          />
+          <p>Cloud security and Microsoft AI, run as a tabletop campaign.</p>
+          {/* "4.0" was orphaning onto its own line. Non-breaking spaces alone
+              don't fix it — the browser then breaks at the hyphen inside
+              "BY-SA" — so the identifier is held by nowrap instead, which
+              covers both the spaces and the hyphen. Same for the symbol and
+              its year. */}
+          <p class="site-footer__licence">
+            <span class="site-footer__nowrap">© {new Date().getFullYear()}</span> Securing the Realm.
+            Site text is licensed under <span class="site-footer__nowrap">CC BY-SA 4.0</span>. The
+            code is MIT.
+          </p>
+        </div>
+
+        <nav class="site-footer__col" aria-labelledby="footer-realm">
+          <h2 id="footer-realm" class="pixel-eyebrow">The Realm</h2>
+          <ul>
+            <li><a href="/talks/">Talks</a></li>
+            <li><a href="/blog/">Blog</a></li>
+            <li><a href="/forge/">Code</a></li>
+            <li><a href="/shorts/">Shorts</a></li>
+            <li><a href="/about/">About</a></li>
+          </ul>
+        </nav>
+
+        <nav class="site-footer__col" aria-labelledby="footer-follow">
+          <h2 id="footer-follow" class="pixel-eyebrow">Follow</h2>
+          <ul>
+            <li>
+              <a
+                href="https://www.youtube.com/@SecuringTheRealm"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube (opens in new tab)"
+                data-social="YouTube">YouTube</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://github.com/SecuringTheRealm"
+                target="_blank"
+                rel="me noopener noreferrer"
+                aria-label="GitHub (opens in new tab)"
+                data-social="GitHub">GitHub</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://www.linkedin.com/company/securingtherealm/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn (opens in new tab)"
+                data-social="LinkedIn">LinkedIn</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://open.spotify.com/show/1Yo0bHunKuloEXda0Zn3t2"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Spotify (opens in new tab)"
+                data-social="Spotify">Spotify</a
+              >
+            </li>
+            <li>
+              <a
+                href="https://podcasts.apple.com/gb/podcast/securing-the-realm/id1835736136"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Apple Podcasts (opens in new tab)"
+                data-social="Apple Podcasts">Apple Podcasts</a
+              >
+            </li>
+          </ul>
+        </nav>
+
+        <nav class="site-footer__col" aria-labelledby="footer-feeds">
+          <h2 id="footer-feeds" class="pixel-eyebrow">Feeds &amp; more</h2>
+          <ul>
+            <li><a href="/blog/rss.xml">Blog RSS</a></li>
+            <li><a href="/shorts/rss.xml">Shorts RSS</a></li>
+            <li>
+              <a
+                href="https://str.riverside.com/newsletter"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Arcane Scrolls newsletter (opens in new tab)"
+                data-social="Newsletter">Newsletter</a
+              >
+            </li>
+            <li><a href="/contact/">Contact</a></li>
+            <li><a href="/privacy/">Privacy</a></li>
+          </ul>
+        </nav>
       </div>
     </footer>
+
+    <style>
+      /* global.css spreads .nav-wrapper with space-between, which parks the
+         links mid-bar and leaves a dead zone either side. The wordmark takes
+         all the slack instead, so links and search read as one right-hand
+         group. Desktop only — the mobile block owns the wrapped layout. */
+      @media (min-width: 769px) {
+        header .nav-wrapper {
+          justify-content: flex-end;
+          gap: var(--space-6);
+        }
+
+        header .logo-link {
+          margin-right: auto;
+        }
+
+        /* The search glyph is 20px inside a 44px tap target, so its optical
+           edge sat 12px in from the container's 24px inline padding. Pulling
+           the box back by that 12px makes both ends of the header line up,
+           and leaves the links a true 24px off the icon. */
+        header .nav-search {
+          margin-left: 0;
+          margin-right: calc(var(--space-3) * -1);
+        }
+      }
+
+      /* The panel's own background, block padding and width cap live in
+         global.css, so this block only lays the columns out.
+         Identity is wide because it carries prose; the three link columns are
+         even. align-items:start puts the shield on the same line as the
+         headings. */
+      .site-footer__cols {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        align-items: start;
+        gap: var(--space-8);
+      }
+
+      /* Two up, identity across the top: three link columns at tablet width
+         squeeze "Apple Podcasts" onto two lines. */
+      @media (max-width: 768px) {
+        .site-footer__cols {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .site-footer__identity {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .site-footer__cols {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .site-footer__shield {
+        display: block;
+        margin-bottom: var(--space-4);
+      }
+
+      .site-footer__licence {
+        font-size: var(--font-size-sm);
+        color: var(--colour-stone-light);
+        margin-bottom: 0;
+      }
+
+      .site-footer__nowrap {
+        white-space: nowrap;
+      }
+
+      .site-footer__col ul {
+        display: grid;
+        gap: var(--space-2);
+        justify-items: start;
+        list-style: none;
+        margin: 0;
+      }
+    </style>
 
     <script is:inline>
       document.querySelectorAll('[data-social]').forEach(function (link) {

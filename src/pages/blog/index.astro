@@ -13,13 +13,16 @@ const sortedPosts = allBlogPosts.sort(
 	(a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) =>
 		b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
+
+// Card previews show a handful of tags; the post itself carries the full set.
+const TAG_LIMIT = 4;
 ---
 
 <Base title="Library - Blog Posts">
   <div class="container page-shell">
     <PageHeader title="The Library · Blog" eyebrow="The Library" realm="library">
       <LibraryIcon slot="icon" />
-      Welcome to the Library, where we document our adventures in technology, security, and AI.
+      Writeups from the Library: the architecture, the security work, and what broke on the way.
       <a
         slot="actions"
         href="/blog/rss.xml"
@@ -33,7 +36,7 @@ const sortedPosts = allBlogPosts.sort(
     <div style="max-width: var(--max-width-content); margin: 0 auto;" data-realm="library">
       {sortedPosts.length === 0 && (
         <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg);">
-          The Library shelves are empty for now. New scrolls will appear here soon!
+          The shelves are bare. New scrolls will appear here.
         </p>
       )}
       {sortedPosts.map((post: CollectionEntry<'blog'>) => (
@@ -46,12 +49,15 @@ const sortedPosts = allBlogPosts.sort(
           </p>
           <p style="margin-bottom: var(--space-4);">{post.data.description}</p>
           {post.data.tags.length > 0 && (
-            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
-              {post.data.tags.map((tag: string) => (
+            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;">
+              {post.data.tags.slice(0, TAG_LIMIT).map((tag: string) => (
                 <a href={`/tags/${tag}/`} class="tag-chip">
                   {tag}
                 </a>
               ))}
+              {post.data.tags.length > TAG_LIMIT && (
+                <span class="tag-more">+{post.data.tags.length - TAG_LIMIT} more</span>
+              )}
             </div>
           )}
         </article>

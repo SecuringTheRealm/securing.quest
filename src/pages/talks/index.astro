@@ -73,7 +73,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
   <div class="container page-shell">
     <PageHeader title="The Tower · Talks" eyebrow="The Tower" realm="tower">
       <TowerIcon slot="icon" />
-      Watch talks, presentations, and video content from conferences and events.
+      Full sessions and recorded talks, from conference stages and from the studio.
       <SubscribeChip
         slot="actions"
         href="https://www.youtube.com/@SecuringTheRealm"
@@ -88,7 +88,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
           No talks yet. Check back soon for upcoming presentations!
         </p>
       )}
-      {allTalks.map((talk: UnifiedTalk) => (
+      {allTalks.map((talk: UnifiedTalk, index: number) => (
         <article id={talk.id} class="content-card" style="margin-bottom: var(--space-12);">
           <h2 style="margin-bottom: var(--space-3);">{talk.title}</h2>
           <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
@@ -109,7 +109,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
                 aria-label={`Play video: ${talk.title} (opens YouTube)`}
               >
                 {talk.thumbnailUrl && (
-                  <img src={talk.thumbnailUrl} alt="" loading="lazy" width="480" height="270" />
+                  <img src={talk.thumbnailUrl} alt="" loading={index === 0 ? 'eager' : 'lazy'} width="480" height="270" />
                 )}
                 <span class="video-facade__play" aria-hidden="true" />
               </a>

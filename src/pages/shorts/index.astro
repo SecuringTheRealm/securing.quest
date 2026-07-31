@@ -44,7 +44,7 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
   <div class="container page-shell">
     <PageHeader title="The Moon · Shorts" eyebrow="The Moon" realm="moon">
       <MoonIcon slot="icon" />
-      Quick glimpses into the realm - bite-sized adventures in security, AI, and beyond.
+      A minute or two from the Moon. One idea, no preamble.
       <SubscribeChip
         slot="actions"
         href="https://www.youtube.com/@SecuringTheRealm"
@@ -56,16 +56,18 @@ const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate
     <div class="shorts-grid" data-realm="moon">
       {sortedShorts.length === 0 && (
         <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg); grid-column: 1 / -1;">
-          No shorts yet. Quick glimpses into the realm will appear here soon!
+          Nothing from the Moon yet. Look up again shortly.
         </p>
       )}
-      {sortedShorts.map((short) => (
+      {sortedShorts.map((short, index) => (
         <article class="short-card">
           <a href={short.videoUrl} target="_blank" rel="noopener noreferrer" class="short-thumbnail-link" aria-label={`Watch ${short.title} on YouTube`}>
             <img
               src={short.thumbnailUrl}
               alt={short.title}
-              loading="lazy"
+              width="480"
+              height="360"
+              loading={index < 3 ? 'eager' : 'lazy'}
               class="short-thumbnail"
             />
             <span class="play-icon" aria-hidden="true">&#9654;</span>

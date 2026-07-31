@@ -31,3 +31,76 @@ jobs:
 
       - name: Run tests (lint + type check) 🔍
         run: bun run test
+
+      # Build here so the content lint below sees the real rendered output,
+      # including YouTube descriptions fetched at build time that never
+      # appear in src/. Deliberately after the offline checks above, so an
+      # unreachable feed cannot mask the lint and type-check verdict.
+      - name: Build site 🏗️
+        run: bun run build
+
+      - name: Content lint (prose) 📝
+        run: |
+          cat > "$RUNNER_TEMP/lint-content.mjs" <<'LINT'
+          import { readFileSync, readdirSync } from "node:fs";
+          import { join } from "node:path";
+
+          const RULES = [
+            [/—|&mdash;|&#8212;|&#x2014;/gi, "em dash"],
+            [/\bdelv(e|es|ed|ing)\b/gi, "delve"],
+          ];
+
+          // Non-prose regions, blanked before matching. Order matters: the
+          // escape hatch and code samples must go before the catch-all tag strip.
+          const STRIP = [
+            /<script\b[\s\S]*?<\/script>/gi,
+            /<style\b[\s\S]*?<\/style>/gi,
+            /<pre\b[\s\S]*?<\/pre>/gi,
+            /<code\b[\s\S]*?<\/code>/gi,
+            /<(\w+)\b[^>]*\sdata-lint-ignore\b[\s\S]*?<\/\1>/gi,
+            /<!--[\s\S]*?-->/g,
+            /<[^>]+>/g, // tags: attributes, URLs, embed params
+          ];
+
+          const root = process.argv[2] ?? "dist";
+          const blank = (m) => m.replace(/[^\n]/g, " "); // keep byte offsets stable
+
+          let failures = 0;
+          const files = readdirSync(root, { recursive: true }).filter((f) =>
+            f.endsWith(".html"),
+          );
+
+          // A missing or empty dist must fail loudly: a lint that passes
+          // because it found nothing to check is worse than no lint at all.
+          if (files.length === 0) {
+            console.error(`content lint: no HTML found under ${root} — did the build run?`);
+            process.exit(1);
+          }
+
+          for (const file of files.sort()) {
+            const path = join(root, file);
+            const html = readFileSync(path, "utf8");
+            const prose = STRIP.reduce((s, re) => s.replace(re, blank), html);
+
+            for (const [rule, name] of RULES) {
+              for (const m of prose.matchAll(rule)) {
+                const line = html.slice(0, m.index).split("\n").length;
+                const col = m.index - (html.lastIndexOf("\n", m.index - 1) + 1) + 1;
+                const context = html
+                  .slice(Math.max(0, m.index - 70), m.index + 70)
+                  .replace(/\s+/g, " ");
+                console.error(`${path}:${line}:${col}  ${name}: …${context}…`);
+                failures++;
+              }
+            }
+          }
+
+          if (failures > 0) {
+            console.error(
+              `\n${failures} content lint failure(s) in ${root}. Fix the source, or wrap a deliberate use in an element carrying data-lint-ignore.`,
+            );
+            process.exit(1);
+          }
+          console.log(`content lint: ${files.length} pages clean`);
+          LINT
+          bun "$RUNNER_TEMP/lint-content.mjs" dist

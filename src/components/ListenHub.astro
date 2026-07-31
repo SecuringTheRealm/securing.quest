@@ -7,6 +7,9 @@ export interface Props {
 }
 
 const { band = false } = Astro.props;
+
+const primary = PODCAST_PLATFORMS.filter((p: PodcastPlatform) => p.filled);
+const secondary = PODCAST_PLATFORMS.filter((p: PodcastPlatform) => !p.filled);
 ---
 
 <section
@@ -15,15 +18,33 @@ const { band = false } = Astro.props;
 	aria-labelledby="listen-heading"
 >
 	<div class:list={[{ 'band-inner': band }]}>
-		<h2 id="listen-heading">Listen to the Podcast</h2>
+		<h2 id="listen-heading" class="section-heading">Listen to the Podcast</h2>
 		<p class="listen-hub__blurb">
-			Two Microsoft MVPs turn cloud security, Azure, and AI into tabletop adventures. Subscribe
-			wherever you listen.
+			Chris Lloyd-Jones and Josh McDonald run cloud security and Microsoft AI as a
+			tabletop campaign, where the monsters are misconfigurations and the loot is an
+			architecture that holds.
 		</p>
 		<div class="listen-hub__chips">
 			{
-				PODCAST_PLATFORMS.map((platform: PodcastPlatform) => (
-					<SubscribeChip href={platform.href} label={platform.label} platform={platform.label} />
+				primary.map((platform: PodcastPlatform) => (
+					<SubscribeChip
+						href={platform.href}
+						label={platform.label}
+						platform={platform.label}
+						filled={true}
+					/>
+				))
+			}
+		</div>
+		<div class="listen-hub__chips listen-hub__chips--secondary">
+			{
+				secondary.map((platform: PodcastPlatform) => (
+					<SubscribeChip
+						href={platform.href}
+						label={platform.label}
+						platform={platform.label}
+						filled={false}
+					/>
 				))
 			}
 		</div>
@@ -38,13 +59,21 @@ const { band = false } = Astro.props;
 	.listen-hub__blurb {
 		max-width: var(--max-width-narrow);
 		margin-inline: auto;
-		margin-bottom: var(--space-6);
+		/* 40px down to the first cartridge row — the same step the heading takes
+		   down to this blurb, so the band reads as one ladder. */
+		margin-bottom: var(--space-heading);
 	}
 
+	/* 16px on both axes, so chips that wrap within a row sit the same distance
+	   apart as the two rows do. Matches the button-row gap used site-wide. */
 	.listen-hub__chips {
 		display: flex;
-		gap: var(--space-3);
+		gap: var(--space-4);
 		flex-wrap: wrap;
 		justify-content: center;
+	}
+
+	.listen-hub__chips--secondary {
+		margin-top: var(--space-4);
 	}
 </style>

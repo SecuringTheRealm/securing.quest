@@ -1,41 +1,51 @@
 ---
 export interface Props {
-	talkCount: number;
+	/** Talks and videos actually published, not a rounded-up claim. */
+	itemCount: number;
 }
 
-const { talkCount } = Astro.props;
-const items = [
-	'Hosted by two Microsoft MVPs',
-	`${talkCount}+ talks & videos`,
-	'Listen on Spotify, Apple & YouTube',
-];
+const { itemCount } = Astro.props;
 ---
 
-<p class="cred-strip">
-	{items.map((item: string) => <span class="cred-strip__item">{item}</span>)}
+<p class="cred-strip pixel-diamond">
+	<span class="cred-strip__item">
+		<a href="/about/">Chris Lloyd-Jones &amp; Josh McDonald</a>
+	</span>
+	<span class="cred-strip__item">Microsoft MVPs</span>
+	<span class="cred-strip__item">{itemCount} talks and videos</span>
 </p>
 
 <style>
+	/* No border: the bar sits directly under the primary CTA and must not compete with it */
 	.cred-strip {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
+		row-gap: 0;
+		align-items: baseline;
 		gap: var(--space-2) var(--space-3);
-		width: fit-content;
 		max-width: 100%;
-		margin-inline: auto;
-		padding: var(--space-2) var(--space-4);
-		border: 2px solid var(--colour-gold);
-		border-radius: var(--radius-sm);
-		color: var(--colour-gold);
+		margin: 0;
+		color: var(--colour-stone-light);
 		font-size: var(--font-size-sm);
 		font-family: var(--font-body);
 	}
 
-	.cred-strip__item:not(:first-child)::before {
-		content: '·';
-		margin-right: var(--space-3);
+	.cred-strip a {
 		color: var(--colour-gold);
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 2px;
+	}
+
+	.cred-strip a:hover,
+	.cred-strip a:focus-visible {
+		color: var(--colour-gold-light);
+	}
+
+	/* Separator comes from the .pixel-diamond utility; the gap is even either
+	   side because the flex gap supplies the leading space and the glyph's own
+	   margin supplies the trailing one. */
+	.cred-strip {
+		gap: var(--space-3);
 	}
 </style>

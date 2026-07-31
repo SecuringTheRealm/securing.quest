@@ -3,19 +3,77 @@ export interface Props {
 	href: string;
 	label: string;
 	platform: string;
+	filled?: boolean;
 }
 
-const { href, label, platform } = Astro.props;
+const { href, label, platform, filled = true } = Astro.props;
 ---
 
 <a
 	href={href}
-	class="btn-primary btn-sm"
-	style="border-radius: var(--radius-full);"
+	class:list={['cartridge', { 'cartridge--outline': !filled }]}
 	data-social={platform}
 	target="_blank"
 	rel="noopener noreferrer"
 	aria-label={`${label} (opens in new tab)`}
 >
-	{label}
+	<span class="cartridge__face notched">{label}</span>
 </a>
+
+<style>
+	/* The face carries the notch, so its offset shadow cannot be a box-shadow:
+	   clip-path clips outer box-shadows away. A zero-blur drop-shadow on the
+	   wrapper follows the notched silhouette at the same 4px stepped offset. */
+	.cartridge {
+		display: inline-block;
+		filter: drop-shadow(var(--space-1) var(--space-1) 0 var(--realm-shadow));
+		transition: filter 100ms steps(2);
+	}
+
+	.cartridge__face {
+		display: inline-flex;
+		align-items: center;
+		padding: var(--space-2) var(--space-4);
+		background: var(--colour-gold);
+		color: var(--colour-ink);
+		border: 2px solid var(--colour-gold);
+		border-radius: var(--radius-pixel);
+		font-size: var(--font-size-sm);
+		font-weight: var(--font-weight-bold);
+		transition: transform 100ms steps(2), background-color var(--transition-base);
+	}
+
+	/* Opaque, not transparent: the wrapper's drop-shadow follows whatever is
+	   painted, so a see-through face made it trace the letterforms and stamp an
+	   offset ghost of the label across itself. */
+	.cartridge--outline .cartridge__face {
+		background: var(--colour-teal-dark);
+		color: var(--colour-gold);
+	}
+
+	/* Press mechanics match .btn-primary: the face slides into its own shadow */
+	.cartridge:hover .cartridge__face {
+		transform: translate(2px, 2px);
+	}
+
+	.cartridge:hover {
+		filter: drop-shadow(2px 2px 0 var(--realm-shadow));
+	}
+
+	.cartridge:active .cartridge__face {
+		transform: translate(var(--space-1), var(--space-1));
+	}
+
+	.cartridge:active {
+		filter: none;
+	}
+
+	.cartridge--outline:hover .cartridge__face {
+		background: var(--colour-teal-light);
+	}
+
+	/* The filter would draw a gold-dark ghost of the focus ring, so drop it */
+	.cartridge:focus-visible {
+		filter: none;
+	}
+</style>

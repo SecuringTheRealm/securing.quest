@@ -1,0 +1,132 @@
+---
+/**
+ * Branded 16:9 episode poster — a stand-in for raw Riverside/Zoom screenshots.
+ * Plain HTML + CSS rather than SVG: the browser already wraps and truncates
+ * text (line-clamp), and container query units already scale type to the
+ * card's own width, so there is no line-breaking maths to write or test.
+ */
+import ForgeIcon from './ForgeIcon.astro';
+import LibraryIcon from './LibraryIcon.astro';
+import MoonIcon from './MoonIcon.astro';
+import TowerIcon from './TowerIcon.astro';
+
+export interface Props {
+	/** Episode title. Wraps to at most 3 lines, then truncates with an ellipsis. */
+	title: string;
+	/** Eyebrow label, e.g. "Tower · Talks". Kept short — it is set in the pixel font. */
+	source: string;
+	realm: 'tower' | 'library' | 'forge' | 'moon';
+	date?: Date;
+	/** Poster sits next to the real title, so it is hidden from AT by default. */
+	decorative?: boolean;
+	/** 'poster' bakes the title in, for shares. 'card' omits it, for on-site use. */
+	variant?: 'poster' | 'card';
+}
+
+const { title, source, realm, date, decorative = true, variant = 'poster' } = Astro.props;
+
+const DATE_FORMAT = { year: 'numeric', month: 'long', day: 'numeric' } as const;
+
+const a11y: Record<string, string> = decorative
+	? { 'aria-hidden': 'true' }
+	: { role: 'img', 'aria-label': `${source}: ${title}` };
+---
+
+<div class:list={['poster', `poster--${variant}`]} data-realm={realm} {...a11y}>
+	{variant === 'poster' && <p class="pixel-eyebrow poster__source">{source}</p>}
+	{variant === 'poster' && <p class="poster__title">{title}</p>}
+	{/* Category glyph, not the show shield: the shield is already in the header,
+	    and the thumbnail should say what the episode is. */}
+	<span class="poster__mark">
+		{realm === 'tower' && <TowerIcon />}
+		{realm === 'library' && <LibraryIcon />}
+		{realm === 'forge' && <ForgeIcon />}
+		{realm === 'moon' && <MoonIcon />}
+	</span>
+</div>
+
+<style>
+	.poster {
+		container-type: inline-size;
+		/* Containing block for the centred card glyph */
+		position: relative;
+		/* inline-size containment makes the intrinsic width 0, so a flex parent
+		   would shrink this to nothing and aspect-ratio would give it 0 height */
+		width: 100%;
+		display: grid;
+		grid-template-rows: auto 1fr auto;
+		gap: var(--space-2);
+		aspect-ratio: 16 / 9;
+		padding: clamp(var(--space-3), 4cqi, var(--space-8));
+		background-color: var(--colour-teal-dark);
+		/* Faint mortar grid — keeps the flat fill from reading as a blank box */
+		background-image:
+			repeating-linear-gradient(
+				to right,
+				var(--colour-rim-light) 0 2px,
+				transparent 2px var(--space-8)
+			),
+			repeating-linear-gradient(
+				to bottom,
+				var(--colour-rim-light) 0 2px,
+				transparent 2px var(--space-8)
+			);
+		border: 2px solid var(--colour-gold);
+		border-top: 4px solid var(--realm-accent);
+		overflow: hidden;
+	}
+
+	.poster__source {
+		margin: 0;
+		color: var(--realm-accent);
+		/* Pixel font shrinks with the card so it never outgrows a small slot */
+		font-size: min(var(--font-size-xs), 3cqi);
+	}
+
+	.poster__title {
+		margin: 0;
+		align-self: center;
+		font-family: var(--font-display-readable);
+		font-weight: var(--font-weight-bold);
+		letter-spacing: var(--tracking-display-readable);
+		line-height: var(--line-height-snug);
+		font-size: clamp(var(--font-size-base), 6cqi, var(--font-size-5xl));
+		color: var(--colour-gold);
+		/* Native 3-line wrap + ellipsis; no line-breaking maths in the component */
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+	}
+
+	/* Block, so no baseline gap pads the box below the glyph and shifts its
+	   optical centre off the tile's centre */
+	.poster__mark :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	.poster__mark {
+		display: block;
+		/* Floor and ceiling are the 48-64px target band, so the glyph stays in
+		   it at any card width the container query units would otherwise miss */
+		width: clamp(var(--space-12), 13cqi, var(--space-16));
+		/* Poster variant only: the baked title owns the middle, so the glyph
+		   sits bottom-right of it (last grid row) */
+		justify-self: end;
+		image-rendering: pixelated;
+	}
+
+	/* Card variant bakes in no text, so the glyph takes the centre of the tile.
+	   Positioned rather than laid out: VideoFacade forces display:block on the
+	   slotted poster, so the grid above does not apply inside the hero. The
+	   square ratio gives the auto margins a definite height to centre. */
+	.poster--card .poster__mark {
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		aspect-ratio: 1;
+	}
+</style>

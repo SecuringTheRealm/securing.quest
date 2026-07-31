@@ -3,7 +3,7 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
-import { fetchYouTubeShorts, fetchYouTubeTalks } from '../../utils/youtube';
+import { fetchYouTubeShorts, fetchYouTubeTalks, toSummary } from '../../utils/youtube';
 
 interface TaggedContent {
 	title: string;
@@ -150,9 +150,7 @@ const { tag, items } = Astro.props as Props;
                 </span>
               </div>
               <p style="margin: 0; color: var(--colour-parchment); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed);">
-                {item.description.length > 150
-                  ? `${item.description.substring(0, 147)}...`
-                  : item.description}
+                {toSummary(item.description, 150)}
               </p>
               <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
                 {item.date.toLocaleDateString('en-US', {

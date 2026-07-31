@@ -1,0 +1,142 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Privacy"
+  description="What this site loads, what it counts, and which other companies see your visit."
+>
+  <div class="container page-shell" style="max-width: var(--max-width-prose);">
+    <PageHeader title="Privacy">
+      What this site loads, and who else sees your visit. There are no accounts here and no
+      forms to fill in. The site sets no cookies of its own.
+    </PageHeader>
+
+    <section class="privacy-section">
+      <h2>Hosting</h2>
+      <p>
+        The site is a folder of static files served by GitHub Pages. Every request for a page
+        goes to GitHub's servers, so GitHub sees your IP address and browser user agent, the
+        same as any web server would. What they do with that is covered by the
+        <a
+          href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="GitHub privacy statement (opens in new tab)">GitHub privacy statement</a
+        >.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Analytics</h2>
+      <p>
+        Visits are counted by Plausible. The script loads from plausible.io and is the
+        outbound-links and file-downloads build, so it records page views, clicks on links that
+        leave the site, and file downloads. Clicking a social, podcast or subscribe link sends
+        one extra event carrying the platform name.
+      </p>
+      <p>
+        Plausible sets no cookies and, by their own account, does not identify individual
+        visitors or follow them across sites. We can tell you what this site sends. What
+        Plausible stores is covered by their
+        <a
+          href="https://plausible.io/data-policy"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Plausible data policy (opens in new tab)">data policy</a
+        >.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Video</h2>
+      <p>
+        Talks and shorts show a still image with a play button over it. The still is served by
+        YouTube's image host, i.ytimg.com, so a request reaches Google when the page loads.
+      </p>
+      <p>
+        The player is different. It only appears after you click, and it loads from
+        youtube-nocookie.com. Until you click there is no YouTube player on the page.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Comments</h2>
+      <p>
+        Blog posts carry comments, run by Giscus on top of GitHub Discussions. The Giscus script
+        loads from giscus.app when the post opens, before you interact with it. Leaving a
+        comment needs a GitHub account, and the comment is stored publicly in the
+        SecuringTheRealm/securing.quest repository.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Newsletter</h2>
+      <p>
+        The newsletter sign-up is a page hosted by Riverside at str.riverside.com, and the link
+        takes you off this site. The form lives on their page, so this site never handles your
+        address.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Search</h2>
+      <p>
+        The search box runs in your browser. Its index is already inside the page you
+        downloaded, so what you type stays on your machine.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Fonts</h2>
+      <p>
+        The heading font, Press Start 2P, is served from this site. Body text is Georgia, which
+        your device already has. Nothing is requested from Google Fonts.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Webmentions</h2>
+      <p>
+        Blog posts can show webmentions, which are replies and likes from other websites. That
+        data is collected when the site is built rather than when you visit. If a mention has an
+        author photo, the image loads from wherever that author hosts it. Nothing is showing at
+        the moment, because none have come in yet.
+      </p>
+      <p>
+        The page source also advertises a webmention endpoint at webmention.io. That is an
+        address for other sites to send notifications to, and your browser never contacts it.
+      </p>
+    </section>
+
+    <section class="privacy-section">
+      <h2>Questions</h2>
+      <p>
+        Ways to reach us are on the <a href="/contact/">contact page</a>.
+      </p>
+      <p class="privacy-updated">Checked against the site's code on 28 July 2026.</p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .privacy-section {
+    max-width: var(--max-width-prose);
+    margin-bottom: var(--space-8);
+  }
+
+  .privacy-section h2 {
+    margin-bottom: var(--space-4);
+  }
+
+  .privacy-section p {
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--space-4);
+  }
+
+  .privacy-updated {
+    font-size: var(--font-size-sm);
+    color: var(--colour-stone-light);
+  }
+</style>

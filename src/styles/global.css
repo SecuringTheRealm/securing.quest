@@ -42,41 +42,85 @@ body {
   overflow-x: hidden;
 }
 
-/* Typography */
+/* Typography — headings are bold Georgia. Press Start 2P is reserved for the
+   wordmark and small pixel labels (.pixel-eyebrow): at display size its width
+   and tracking make a sentence unscannable. */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  line-height: var(--line-height-display);
-  letter-spacing: var(--tracking-display);
+  font-family: var(--font-display-readable);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  letter-spacing: normal;
   text-wrap: balance;
   color: var(--colour-gold);
   margin-bottom: var(--space-4);
 }
 
-/* Readable display tier — sentence-shaped headings and card/feed/listing
-   titles use bold Georgia (no third font file) so long strings stay legible */
-.prose h2,
-.prose h3,
-.prose h4,
+/* Small-caps is the card/feed voice only — prose headings stay plain so the
+   page carries two voices (pixel label, serif heading), not three */
 .content-card h2,
 .content-card h3,
 .feed-item h3,
 .short-title {
-  font-family: var(--font-display-readable);
-  font-weight: var(--font-weight-bold);
   font-variant-caps: small-caps;
   letter-spacing: var(--tracking-display-readable);
-  line-height: var(--line-height-snug);
-  color: var(--colour-gold);
-  text-wrap: balance;
 }
 
+/* Pixel eyebrow: the one place Press Start 2P belongs outside the wordmark */
+.pixel-eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-display);
+  letter-spacing: var(--tracking-display-readable);
+  text-transform: uppercase;
+  color: var(--colour-gold);
+}
+
+/* Section heading: pixel is the voice of the interface. Beats the base h1..h6
+   rule on class specificity (0,1,0 vs 0,0,1), so no !important is needed.
+   Flex centres the text between two pixel rules of a FIXED length: the call
+   sites sit in containers of three different widths, and rules that grew to
+   fill made every heading a different component. */
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  font-family: var(--font-display);
+  /* Flat 24px, not a viewport clamp — a clamp made the same heading a different
+     size per breakpoint. html drops to 14px under 768px, so this is 21px there. */
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-display);
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--colour-gold);
+  margin-bottom: var(--space-heading);
+}
+
+.section-heading::before,
+.section-heading::after {
+  content: '';
+  /* 0 0 basis, so the rule is 96px wide in every container. Never grows. */
+  flex: 0 0 var(--space-24);
+  height: 2px;
+  background: var(--pixel-dash);
+}
+
+/* Inside a notched panel the box is already the frame, so the flanking rules
+   would be a second border 48px in from the first. */
+.notched > .section-heading::before,
+.notched > .section-heading::after {
+  display: none;
+}
+
+/* Fluid so long headings shrink instead of wrapping brutally on mobile */
 h1 {
-  font-size: var(--font-size-3xl);
+  font-size: clamp(var(--font-size-2xl), 5vw, var(--font-size-5xl));
   margin-bottom: var(--space-6);
 }
 
 h2 {
-  font-size: var(--font-size-2xl);
+  font-size: clamp(var(--font-size-xl), 3.5vw, var(--font-size-3xl));
 }
 
 h3 {
@@ -276,11 +320,13 @@ img {
 }
 
 /* Utility Classes */
+/* padding-inline, not the `padding` shorthand: the shorthand also zeroed
+   padding-block, so .page-shell only won its own block padding by source order. */
 .container {
   width: 100%;
-  max-width: var(--max-width-wide);
+  max-width: var(--container);
   margin: 0 auto;
-  padding: 0 var(--space-4);
+  padding-inline: var(--space-6);
 }
 
 .measure {
@@ -289,12 +335,82 @@ img {
   text-align: left;
 }
 
+/* Sections own every gap; nothing owns a rhythm margin. One seam is exactly one
+   --space-section, never a bottom margin plus a top padding plus a wrapper. */
 .page-shell {
-  padding-block: var(--space-16);
+  padding-block: var(--space-section);
 }
 
+/* Where the page is built from sections, they own every seam themselves, so the
+   shell must not add a second helping at the top and bottom of the page. */
+.page-shell:has(> .section-stack) {
+  padding-block: 0;
+}
+
+/* Symmetric, so every background edge sits exactly halfway through its seam.
+   Asymmetric padding put the whole gap on one side of the edge, which is what
+   made the band seams read as uneven. */
 .section-stack {
-  margin-bottom: var(--space-16);
+  padding-block: var(--space-section);
+}
+
+/* Ornaments — the 8-bit chrome. Replaces gold hairlines and middot separators. */
+
+/* Standalone pixel-dash divider. On an <hr>, border:0 kills the default rule. */
+.pixel-rule {
+  height: 2px;
+  border: 0;
+  background: var(--pixel-dash);
+}
+
+/* Container class: draws a 5x5 pixel diamond between inline children.
+   Put it on the list/paragraph, not the item. */
+.pixel-diamond > :not(:last-child)::after {
+  content: '';
+  display: inline-block;
+  width: var(--pixel-glyph-size);
+  height: var(--pixel-glyph-size);
+  margin-inline-start: var(--space-3);
+  vertical-align: middle;
+  background: var(--colour-gold);
+  mask: var(--pixel-diamond-mask) center / contain no-repeat;
+  -webkit-mask: var(--pixel-diamond-mask) center / contain no-repeat;
+}
+
+/* 4px square notches clipped from each corner, so panels read as 8-bit windows.
+   No clip-path support degrades to a plain square. Note: clip-path also clips
+   outer box-shadows, so keep it off surfaces carrying --shadow-stepped. */
+.notched {
+  clip-path: polygon(
+    var(--notch) 0,
+    calc(100% - var(--notch)) 0,
+    calc(100% - var(--notch)) var(--notch),
+    100% var(--notch),
+    100% calc(100% - var(--notch)),
+    calc(100% - var(--notch)) calc(100% - var(--notch)),
+    calc(100% - var(--notch)) 100%,
+    var(--notch) 100%,
+    var(--notch) calc(100% - var(--notch)),
+    0 calc(100% - var(--notch)),
+    0 var(--notch),
+    var(--notch) var(--notch)
+  );
+}
+
+/* Clipping would swallow the focus outline, so drop the notch while focused */
+.notched:focus-visible,
+.notched:has(:focus-visible) {
+  clip-path: none;
+}
+
+/* The site's one date style. Serif small-caps, not pixel: at <=768px the root
+   drops to 14px, which would put Press Start 2P off its own pixel grid. */
+.meta-date {
+  font-family: var(--font-body);
+  font-variant-caps: small-caps;
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--tracking-display-readable);
+  color: var(--colour-stone-light);
 }
 
 /* Animations */
@@ -328,7 +444,6 @@ img {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  z-index: var(--z-index-sticky);
 }
 
 .logo-img {
@@ -338,17 +453,21 @@ img {
 }
 
 .logo-text {
+  white-space: nowrap;
   font-family: var(--font-display);
   font-size: var(--font-size-lg);
   line-height: 1.4;
 }
 
+/* Search collapses to a 44px icon, so the header no longer reserves a wide column.
+   order:1 puts it after the nav links (every other nav-wrapper child is order:0),
+   far right of the bar. No auto margin: .nav-wrapper's space-between does the
+   spreading, so the links sit between the wordmark and the search icon. */
 .nav-search {
-  flex: 1;
   display: flex;
-  justify-content: center;
-  max-width: 500px;
-  margin: 0 var(--space-4);
+  justify-content: flex-end;
+  order: 1;
+  margin-left: var(--space-6);
   z-index: var(--z-index-dropdown);
 }
 
@@ -430,7 +549,6 @@ img {
   box-shadow: var(--shadow-stepped);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
-  transition: all var(--transition-base);
   cursor: pointer;
 }
 
@@ -451,7 +569,6 @@ img {
   box-shadow: var(--shadow-stepped);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
-  transition: all var(--transition-base);
   cursor: pointer;
 }
 
@@ -470,23 +587,49 @@ img {
 /* Card styles — carved-stone surface echoing the castle's depth bands */
 .stone-card,
 .content-card {
-  padding: var(--space-6);
+  padding: var(--space-inner);
   background: var(--colour-teal-dark);
   border: 2px solid var(--colour-gold);
   border-radius: var(--radius-pixel);
   box-shadow: var(--card-chrome);
 }
 
-/* Navigation card grid */
-.realm-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--space-6);
+/* clip-path clips outer box-shadows, so a notched card keeps the inset chrome
+   and drops the stepped offset rather than showing a half-eaten one. */
+.stone-card.notched,
+.content-card.notched {
+  box-shadow: var(--card-chrome-inset);
 }
 
+/* Navigation card grid */
+/* Explicit column counts, not auto-fit: five realms must not leave an orphan card */
+.realm-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 999px) {
+  .realm-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+/* The 8-bit tell is stepped easing. Movement snaps in two frames; colour still
+   eases, because a stepped colour change reads as a rendering fault. */
 button,
-.realm-card {
-  transition: all var(--transition-base);
+.realm-card,
+.stone-card,
+.content-card,
+.btn-primary,
+.btn-outline {
+  transition:
+    transform 100ms steps(2),
+    box-shadow 100ms steps(2),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
 }
 
 button:hover {
@@ -509,56 +652,85 @@ button:hover {
   padding-bottom: var(--space-1);
 }
 
-/* Full-bleed banded section for homepage rhythm/depth */
+/* Full-bleed banded section for homepage rhythm/depth. The background is the
+   only separator — edge rules on top of it delimited the band twice. */
 .section--band {
   width: 100vw;
   margin-inline: calc(50% - 50vw);
-  padding-block: var(--space-16);
+  padding-block: var(--space-section);
   background: var(--colour-teal-dark);
-  border-top: 2px solid var(--colour-gold);
-  border-bottom: 2px solid var(--colour-gold);
 }
 
+/* A band's two colour edges need the same air. The section above supplies the gap
+   over the top edge with its padding-block-end; nothing supplies the one under the
+   bottom edge, because a band may not carry a margin. This does. */
 .section--band > .band-inner {
   max-width: var(--max-width-content);
   margin-inline: auto;
-  padding-inline: var(--space-4);
+  padding-inline: var(--space-6);
 }
 
-/* Per-realm house colours — accent applied to borders only to preserve AA */
-[data-realm="forge"] { --realm-accent: var(--colour-forge-orange); }
-[data-realm="moon"] { --realm-accent: var(--colour-parchment-light); }
-[data-realm="tower"] { --realm-accent: var(--colour-stone-light); }
-[data-realm="library"] { --realm-accent: var(--colour-gold); }
-[data-realm="scrolls"] { --realm-accent: var(--colour-parchment); }
+/* Closing panel. The colour change is the separator, so the full-width dashed rule
+   goes: dashes belong to heading flanks only. The width cap and gutter move off the
+   footer (so the panel bleeds) onto its columns, which read the same --container as
+   the shell — so footer text lines up with page text at every breakpoint. */
+.site-footer {
+  max-width: none;
+  padding-block: var(--space-section);
+  padding-inline: 0;
+  background: var(--colour-teal-dark);
+}
+
+.site-footer__cols {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+}
+
+/* Per-realm house colours — one metallic family, all ≥4.5:1 on both teals */
+[data-realm="tower"] { --realm-accent: var(--colour-brass); }
+[data-realm="forge"] { --realm-accent: var(--colour-copper); }
+[data-realm="moon"] { --realm-accent: var(--colour-silver-blue); }
+[data-realm="library"] { --realm-accent: var(--colour-parchment-dark); }
+
+/* Tint the offset shadow to the house colour so border and shadow read as one
+   system. Same 85% darkening that gold-dark is to gold. */
+[data-realm] {
+  --realm-shadow: color-mix(in srgb, var(--realm-accent) 85%, var(--colour-black));
+}
 
 .realm-card[data-realm] {
   border-top: 4px solid var(--realm-accent);
 }
 
 /* Tag/source chip: gold fill + ink text (AA), house colour on the border */
+/* Outline, not filled: tags are metadata and must not outrank the title or the CTA */
 .tag-chip {
   font-size: var(--font-size-sm);
   padding: var(--space-1) var(--space-3);
-  background: var(--colour-gold);
-  color: var(--colour-ink);
-  border: 2px solid var(--realm-accent);
+  background: transparent;
+  color: var(--colour-stone-light);
+  border: 2px solid var(--colour-stone-dark);
   border-radius: var(--radius-full);
   text-decoration: none;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.tag-chip:hover,
+.tag-chip:focus-visible {
+  color: var(--realm-accent);
+  border-color: var(--realm-accent);
+}
+
+.tag-more {
+  font-size: var(--font-size-sm);
+  color: var(--colour-stone-light);
 }
 
 /* Responsive utilities */
 @media (max-width: 768px) {
   html {
     font-size: 14px;
-  }
-
-  h1 {
-    font-size: var(--font-size-2xl);
-  }
-
-  h2 {
-    font-size: var(--font-size-xl);
   }
 
   /* Sticky header on mobile */
@@ -594,12 +766,6 @@ button:hover {
     padding-top: var(--space-2);
   }
 
-  /* Reduce hero/page container top padding on mobile (overrides inline styles) */
-  main > .container {
-    padding-top: var(--space-8) !important;
-    padding-bottom: var(--space-8) !important;
-  }
-
   .nav-wrapper {
     flex-wrap: wrap;
     gap: var(--space-2);
@@ -616,15 +782,14 @@ button:hover {
   }
 
   .logo-text {
-    display: none;
+    font-size: var(--font-size-xs);
   }
 
   .nav-search {
     order: 2;
-    position: relative;
-    flex: 1 1 auto;
-    margin: 0;
-    max-width: none;
+    position: static;
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
     z-index: var(--z-index-dropdown);
   }
 
@@ -685,14 +850,10 @@ button:hover {
     display: none;
   }
 
-  /* Improve mobile card grid */
-  .container {
-    padding: 0 var(--space-3);
-  }
-
-  /* Better mobile spacing for sections */
-  section {
-    margin-bottom: var(--space-8) !important;
+  /* 96px each side would push a pixel heading off-centre at 390px */
+  .section-heading::before,
+  .section-heading::after {
+    flex-basis: var(--space-8);
   }
 
   /* Improve mobile buttons — enforce 44px minimum touch target */
@@ -706,42 +867,11 @@ button:hover {
   }
 }
 
-/* Wide desktop: show all 4 realm cards in a single row */
-@media (min-width: 1200px) {
-  .realm-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* Tablet breakpoint */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .container {
-    max-width: var(--max-width-content);
-  }
-
-  h1 {
-    font-size: var(--font-size-3xl);
-  }
-
-  .nav-search {
-    min-width: 120px;
-  }
-}
+/* Tablet container width now steps via --container in tokens.css, so the
+   full-bleed footer is not re-capped here. */
 
 /* Small mobile */
 @media (max-width: 480px) {
-  .container {
-    padding: 0 var(--space-2);
-  }
-
-  h1 {
-    font-size: var(--font-size-xl);
-  }
-
-  h2 {
-    font-size: var(--font-size-lg);
-  }
-
   /* Stack cards vertically on very small screens */
   .realm-grid {
     grid-template-columns: 1fr;

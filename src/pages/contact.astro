@@ -1,0 +1,144 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import Base from '../layouts/Base.astro';
+import type { Author, AuthorLink } from '../utils/authors';
+import { AUTHORS } from '../utils/authors';
+
+const hosts: Author[] = [AUTHORS.chris, AUTHORS.josh];
+---
+
+<Base title="Contact" description="Where to find the show and its hosts. There is no contact form.">
+  <div class="container page-shell" style="max-width: var(--max-width-prose);">
+    <PageHeader title="Contact">
+      There is no contact form here. The site is static files with no server behind it to
+      receive one, so these are the places that reach us.
+    </PageHeader>
+
+    <section class="contact-section">
+      <h2>The show</h2>
+      <ul class="contact-list">
+        <li>
+          <a
+            href="https://github.com/SecuringTheRealm"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub organisation (opens in new tab)">GitHub</a
+          >
+          <span
+            >Everything we build in the open. Anything broken on this site belongs in the issue
+            tracker for the securing.quest repository.</span
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.linkedin.com/company/securingtherealm/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn page for Securing the Realm (opens in new tab)">LinkedIn</a
+          >
+          <span>The page for the show.</span>
+        </li>
+        <li>
+          <a
+            href="https://www.youtube.com/@SecuringTheRealm"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="YouTube channel (opens in new tab)">YouTube</a
+          >
+          <span>Comments on episodes get read.</span>
+        </li>
+        <li>
+          <a href="/blog/">Blog comments</a>
+          <span>Every post has a comment thread. Signing in uses GitHub.</span>
+        </li>
+      </ul>
+      <p class="contact-note">
+        There is no shared inbox for the show, so GitHub or LinkedIn is the way in.
+      </p>
+    </section>
+
+    <section class="contact-section">
+      <h2>The hosts</h2>
+      {
+        hosts.map((host: Author) => (
+          <div class="contact-host">
+            <h3>{host.name}</h3>
+            <ul class="contact-links">
+              {host.links.map((link: AuthorLink) => (
+                <li>
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${host.name} on ${link.label} (opens in new tab)`}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </section>
+
+    <section class="contact-section">
+      <h2>Before you write</h2>
+      <p>
+        The <a href="/privacy/">privacy page</a> covers what the site loads and who sees your
+        visit. <a href="/about/">About</a> covers what the show is for.
+      </p>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .contact-section {
+    max-width: var(--max-width-prose);
+    margin-bottom: var(--space-8);
+  }
+
+  .contact-section h2 {
+    margin-bottom: var(--space-4);
+  }
+
+  .contact-section p {
+    line-height: var(--line-height-relaxed);
+  }
+
+  .contact-list {
+    display: grid;
+    gap: var(--space-4);
+    list-style: none;
+    margin: 0 0 var(--space-4);
+  }
+
+  .contact-list li {
+    line-height: var(--line-height-relaxed);
+  }
+
+  .contact-list span {
+    display: block;
+    color: var(--colour-stone-light);
+  }
+
+  .contact-note {
+    color: var(--colour-stone-light);
+  }
+
+  .contact-host {
+    margin-bottom: var(--space-6);
+  }
+
+  .contact-host h3 {
+    margin-bottom: var(--space-2);
+  }
+
+  .contact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    list-style: none;
+    margin: 0;
+  }
+</style>

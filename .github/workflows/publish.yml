@@ -31,6 +31,7 @@ jobs:
   schedule_gate:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       run: ${{ steps.calculate.outputs.run }}
 
@@ -53,19 +54,20 @@ jobs:
   build:
     if: always() && (github.event_name != 'schedule' || needs.schedule_gate.outputs.run == 'true')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: schedule_gate
 
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Setup Bun 🥟
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@v2.2.0
         with:
           bun-version: "1.4.5"
 
       - name: Cache bun dependencies ⚡
-        uses: actions/cache@v4
+        uses: actions/cache@v6.1.0
         with:
           path: |
             ~/.bun/install/cache
@@ -80,7 +82,7 @@ jobs:
         run: bun run lint && bun test
 
       - name: Setup Pages ⚙️
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v6.0.0
 
       - name: Build with Astro 🏗️
         run: bun run build
@@ -99,7 +101,7 @@ jobs:
           git push
 
       - name: Upload artifact 📡
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: ./dist
 
@@ -109,10 +111,30 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: [schedule_gate, build]
     if: always() && needs.build.result == 'success' && (github.event_name != 'schedule' || needs.schedule_gate.outputs.run == 'true')
 
     steps:
       - name: Publish to GitHub Pages 🚀
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.1
+
+      - name: Smoke test live assets
+        run: |
+          set -euo pipefail
+          homepage=$(mktemp)
+          curl --fail --retry 5 --retry-delay 5 --output "$homepage" https://securing.quest/
+
+          css_count=0
+          while IFS= read -r css; do
+            curl --fail --retry 5 --retry-delay 5 --output /dev/null "https://securing.quest${css}"
+            css_count=$((css_count + 1))
+          done < <(grep -oE '/_astro/[^"]+\.css' "$homepage" | sort -u)
+
+          if (( css_count == 0)); then
+            echo "No generated CSS assets referenced by the live homepage"
+            exit 1
+          fi
+
+          echo "Live homepage and ${css_count} stylesheet(s) passed"

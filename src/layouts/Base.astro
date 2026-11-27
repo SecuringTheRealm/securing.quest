@@ -30,6 +30,9 @@ const currentPath = Astro.url.pathname;
 <!doctype html>
 <html lang="en">
   <head>
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content={Astro.generator} />
@@ -105,6 +108,7 @@ const currentPath = Astro.url.pathname;
             class="mobile-menu-toggle"
             aria-label="Toggle navigation menu"
             aria-expanded="false"
+            aria-controls="primary-navigation"
             type="button"
           >
             <span class="hamburger"></span>
@@ -112,7 +116,7 @@ const currentPath = Astro.url.pathname;
 
           {/* Five items. Listen lives on the hero CTA, the castle scene and the
               Listen band; Newsletter moved to the footer. */}
-          <ul class="nav-menu">
+          <ul class="nav-menu" id="primary-navigation">
             <li>
               <a href="/talks/" class="nav-link" data-castle-name="Tower"
                 aria-current={currentPath.startsWith('/talks') ? 'page' : undefined}
@@ -151,7 +155,7 @@ const currentPath = Astro.url.pathname;
       mobileMenuToggle?.addEventListener('click', () => {
         const isExpanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true';
         mobileMenuToggle.setAttribute('aria-expanded', String(!isExpanded));
-        navMenu?.classList.toggle('is-open');
+        navMenu?.classList.toggle('is-open', !isExpanded);
 
         // When opening, move focus to first menu link for keyboard users
         if (!isExpanded) {
@@ -162,9 +166,12 @@ const currentPath = Astro.url.pathname;
 
       // Close menu when clicking outside
       document.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (!target.closest('.nav-wrapper')) {
+        const target = e.target as Node;
+        const outsideMenu = navMenu && !navMenu.contains(target);
+        const outsideToggle = mobileMenuToggle && !mobileMenuToggle.contains(target);
+        if (navMenu?.classList.contains('is-open') && outsideMenu && outsideToggle) {
           closeMenu();
+          mobileMenuToggle?.focus();
         }
       });
 

@@ -1,43 +1,15 @@
 ---
-import type { CollectionEntry } from 'astro:content';
-import { getCollection } from 'astro:content';
 import MoonIcon from '../../components/MoonIcon.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import SubscribeChip from '../../components/SubscribeChip.astro';
 import Base from '../../layouts/Base.astro';
-import { resolveRelated } from '../../utils/relatedContent';
 import { fetchYouTubeShorts } from '../../utils/youtube';
 
 // Fetch shorts from YouTube at build time
 const youtubeShorts = await fetchYouTubeShorts();
 
-// Get manual overrides from content collection
-const manualOverrides = await getCollection('shorts');
-
-// Create a map of overrides by youtubeId
-const overrideMap = new Map<string, CollectionEntry<'shorts'>>();
-manualOverrides.forEach((override: CollectionEntry<'shorts'>) => {
-	overrideMap.set(override.data.youtubeId, override);
-});
-
-// Apply overrides
-const mergedShorts = youtubeShorts.map((short) => {
-	const override = overrideMap.get(short.id);
-	if (override) {
-		return {
-			...short,
-			title: override.data.title || short.title,
-			tags: override.data.tags ? [...new Set([...short.tags, ...override.data.tags])] : short.tags,
-			relatedContent: override.data.relatedContent
-				? [...short.relatedContent, ...resolveRelated(override.data.relatedContent)]
-				: short.relatedContent,
-		};
-	}
-	return short;
-});
-
 // Sort by pubDate descending (newest first)
-const sortedShorts = mergedShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
+const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
 ---
 
 <Base title="Moon - Shorts">

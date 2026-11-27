@@ -3,6 +3,7 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
+import { getDedupedYouTubeTalks } from '../../utils/talks';
 import { fetchYouTubeShorts, fetchYouTubeTalks, toSummary } from '../../utils/youtube';
 
 interface TaggedContent {
@@ -22,18 +23,7 @@ export const getStaticPaths = (async () => {
 	const youtubeTalks = await fetchYouTubeTalks();
 	const youtubeShorts = await fetchYouTubeShorts();
 
-	// Match the /talks id space: drop feed videos already covered by a manual
-	// talk, then re-index from 0 so #youtube-N anchors line up with /talks.
-	const manualVideoUrls = new Set(
-		manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
-	);
-	const dedupedYouTubeTalks = youtubeTalks.filter((talk) => !manualVideoUrls.has(talk.videoUrl));
-
-	const manualOverrides = await getCollection('shorts');
-	const overrideMap = new Map<string, CollectionEntry<'shorts'>>();
-	manualOverrides.forEach((override: CollectionEntry<'shorts'>) => {
-		overrideMap.set(override.data.youtubeId, override);
-	});
+	const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
 
 	// Collect all tags and their content
 	const tagMap = new Map<string, TaggedContent[]>();
@@ -86,13 +76,9 @@ export const getStaticPaths = (async () => {
 
 	// YouTube shorts (with overrides)
 	for (const short of youtubeShorts) {
-		const override = overrideMap.get(short.id);
-		const tags = override?.data.tags
-			? [...new Set([...short.tags, ...override.data.tags])]
-			: short.tags;
-		for (const tag of tags) {
+		for (const tag of short.tags) {
 			addToTag(tag, {
-				title: override?.data.title || short.title,
+				title: short.title,
 				url: `/shorts/`,
 				date: short.pubDate,
 				source: 'Moon · Shorts',

@@ -1,5 +1,5 @@
 # File: .github/workflows/publish.yml
-name: publish-to-github-pages
+name: gh-pages
 on:
   workflow_dispatch:
   push:

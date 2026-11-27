@@ -10,7 +10,9 @@
  */
 
 import { createHash } from 'node:crypto';
+import { lookup } from 'node:dns/promises';
 import { readdir, readFile } from 'node:fs/promises';
+import { isIP } from 'node:net';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readJson, writeJson } from './lib/json-store.mjs';
@@ -19,6 +21,55 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const DIST_DIR = join(__dirname, '..', 'dist');
 const TRACKING_FILE = join(__dirname, '..', 'src', 'data', 'sent-webmentions.json');
 const SITE_URL = 'https://securing.quest';
+
+export function isPrivateAddress(address) {
+	if (isIP(address) === 4) {
+		const octets = address.split('.').map(Number);
+		return (
+			octets[0] === 10 ||
+			octets[0] === 127 ||
+			octets[0] === 0 ||
+			(octets[0] === 100 && octets[1] >= 64 && octets[1] <= 127) ||
+			(octets[0] === 169 && octets[1] === 254) ||
+			(octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+			(octets[0] === 192 && octets[1] === 168) ||
+			octets[0] >= 224
+		);
+	}
+
+	const normalized = address.toLowerCase();
+	return (
+		normalized === '::1' ||
+		normalized === '::' ||
+		normalized.startsWith('fc') ||
+		normalized.startsWith('fd') ||
+		normalized.startsWith('fe8') ||
+		normalized.startsWith('fe9') ||
+		normalized.startsWith('fea') ||
+		normalized.startsWith('feb') ||
+		normalized.startsWith('::ffff:')
+	);
+}
+
+export function isSafeRemoteUrl(url) {
+	if (url.protocol !== 'https:') return false;
+	const host = url.hostname.toLowerCase();
+	if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return false;
+	if (isIP(host) && isPrivateAddress(host)) return false;
+	return true;
+}
+
+async function assertPublicDestination(url) {
+	if (!isSafeRemoteUrl(url)) {
+		throw new Error('Unsafe webmention URL');
+	}
+	if (isIP(url.hostname)) return;
+
+	const addresses = await lookup(url.hostname, { all: true, verbatim: true });
+	if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) {
+		throw new Error('Unsafe webmention destination');
+	}
+}
 
 async function findHtmlFiles(dir) {
 	const entries = await readdir(dir, { recursive: true });
@@ -41,21 +92,37 @@ function extractLinks(html) {
 
 async function discoverEndpoint(targetUrl) {
 	try {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), 10000);
+		let currentUrl = new URL(targetUrl);
+		await assertPublicDestination(currentUrl);
+		let res;
 
-		const res = await fetch(targetUrl, {
-			signal: controller.signal,
-			redirect: 'follow',
-			headers: { Accept: 'text/html' },
-		});
-		clearTimeout(timeout);
+		for (let redirects = 0; redirects <= 5; redirects++) {
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 10000);
+			res = await fetch(currentUrl, {
+				signal: controller.signal,
+				redirect: 'manual',
+				headers: { Accept: 'text/html' },
+			});
+			clearTimeout(timeout);
+
+			if (res.status >= 300 && res.status < 400 && res.headers.has('location')) {
+				currentUrl = new URL(res.headers.get('location'), currentUrl);
+				await assertPublicDestination(currentUrl);
+				continue;
+			}
+			break;
+		}
+
+		if (!res || !res.ok) return null;
 
 		const linkHeader = res.headers.get('link');
 		if (linkHeader) {
 			const wmMatch = linkHeader.match(/<([^>]+)>;\s*rel="?webmention"?/);
 			if (wmMatch) {
-				return new URL(wmMatch[1], targetUrl).href;
+				const endpoint = new URL(wmMatch[1], currentUrl);
+				await assertPublicDestination(endpoint);
+				return endpoint.href;
 			}
 		}
 
@@ -64,7 +131,9 @@ async function discoverEndpoint(targetUrl) {
 			html.match(/<link[^>]+rel="?webmention"?[^>]+href="([^"]+)"/) ||
 			html.match(/<link[^>]+href="([^"]+)"[^>]+rel="?webmention"?/);
 		if (htmlMatch) {
-			return new URL(htmlMatch[1], targetUrl).href;
+			const endpoint = new URL(htmlMatch[1], currentUrl);
+			await assertPublicDestination(endpoint);
+			return endpoint.href;
 		}
 
 		return null;
@@ -75,11 +144,28 @@ async function discoverEndpoint(targetUrl) {
 
 async function sendWebmention(endpoint, source, target) {
 	try {
-		const res = await fetch(endpoint, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams({ source, target }).toString(),
-		});
+		const endpointUrl = new URL(endpoint);
+		await assertPublicDestination(endpointUrl);
+		const body = new URLSearchParams({ source, target }).toString();
+		let currentUrl = endpointUrl;
+		let res;
+
+		for (let redirects = 0; redirects <= 5; redirects++) {
+			res = await fetch(currentUrl, {
+				method: 'POST',
+				redirect: 'manual',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body,
+			});
+
+			if (res.status >= 300 && res.status < 400 && res.headers.has('location')) {
+				currentUrl = new URL(res.headers.get('location'), currentUrl);
+				await assertPublicDestination(currentUrl);
+				continue;
+			}
+			break;
+		}
+
 		return { ok: res.ok, status: res.status };
 	} catch (err) {
 		return { ok: false, status: 0, error: err.message };
@@ -164,7 +250,9 @@ async function main() {
 	);
 }
 
-main().catch((err) => {
-	console.error('Send webmentions failed:', err);
-	process.exit(1);
-});
+if (import.meta.main) {
+	main().catch((err) => {
+		console.error('Send webmentions failed:', err);
+		process.exit(1);
+	});
+}

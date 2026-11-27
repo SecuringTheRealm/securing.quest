@@ -126,7 +126,9 @@ const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
 				'sandbox',
 				'allow-scripts allow-same-origin allow-presentation allow-popups'
 			);
+			iframe.setAttribute('tabindex', '0');
 			frame.replaceChild(iframe, facade);
+			iframe.focus();
 		});
 	});
 </script>

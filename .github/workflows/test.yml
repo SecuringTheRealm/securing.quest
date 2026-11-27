@@ -15,7 +15,7 @@ jobs:
       - name: Setup Bun 🥟
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.4.5"
 
       - name: Cache bun dependencies ⚡
         uses: actions/cache@v4
@@ -32,10 +32,8 @@ jobs:
       - name: Run tests (lint + type check) 🔍
         run: bun run test
 
-      # Build here so the content lint below sees the real rendered output,
-      # including YouTube descriptions fetched at build time that never
-      # appear in src/. Deliberately after the offline checks above, so an
-      # unreachable feed cannot mask the lint and type-check verdict.
+      # Build after the offline checks so the content lint below sees real
+      # rendered HTML without an unreachable feed masking test results.
       - name: Build site 🏗️
         run: bun run build
 
@@ -104,3 +102,26 @@ jobs:
           console.log(`content lint: ${files.length} pages clean`);
           LINT
           bun "$RUNNER_TEMP/lint-content.mjs" dist
+
+  live-feed-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 🥟
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.5"
+
+      - name: Install dependencies 🔧
+        run: bun install --frozen-lockfile
+
+      # This job is the live YouTube feed smoke test. It runs independently
+      # from offline lint/type/unit checks, so an unavailable feed cannot
+      # mask or replace those deterministic results.
+      - name: Live YouTube feed build smoke 🏗️
+        env:
+          LIVE_FEED_SMOKE: "1"
+        run: bun run build

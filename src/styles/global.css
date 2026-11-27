@@ -799,6 +799,10 @@ button:hover {
     flex: 0 0 auto;
   }
 
+  html:not(.js) .mobile-menu-toggle {
+    display: none;
+  }
+
   .nav-menu {
     position: absolute;
     top: calc(100% + var(--space-2));
@@ -810,9 +814,9 @@ button:hover {
     border: 2px solid var(--colour-gold);
     border-radius: var(--radius-md);
     padding: var(--space-2) 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
     transition: opacity var(--transition-base),
                 transform var(--transition-base),
                 visibility var(--transition-base);
@@ -821,7 +825,13 @@ button:hover {
     width: 100%;
   }
 
-  .nav-menu.is-open {
+  html.js .nav-menu {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+  }
+
+  html.js .nav-menu.is-open {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);

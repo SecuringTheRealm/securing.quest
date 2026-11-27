@@ -11,6 +11,7 @@ import MoonIcon from '../components/MoonIcon.astro';
 import TowerIcon from '../components/TowerIcon.astro';
 import VideoFacade from '../components/VideoFacade.astro';
 import Base from '../layouts/Base.astro';
+import { getDedupedYouTubeTalks } from '../utils/talks';
 import {
 	fetchYouTubeShorts,
 	fetchYouTubeTalks,
@@ -62,10 +63,7 @@ const latestBlogPosts: FeedItem[] = blogPosts
 const manualTalks = await getCollection('talks');
 const youtubeTalks = await fetchYouTubeTalks();
 
-// Collect video URLs from manual talks to deduplicate against YouTube feed
-const manualVideoUrls = new Set(
-	manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
-);
+const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
 
 const allTalks: FeedItem[] = [
 	...manualTalks.map(
@@ -81,21 +79,19 @@ const allTalks: FeedItem[] = [
 			embedUrl: getYouTubeEmbedUrl(talk.data.videoUrl),
 		})
 	),
-	...youtubeTalks
-		.filter((talk) => !manualVideoUrls.has(talk.videoUrl))
-		.map(
-			(talk, index): FeedItem => ({
-				title: talk.title,
-				url: `/talks/#youtube-${index}`,
-				date: talk.date,
-				source: 'Tower · Talks',
-				description: talk.summary,
-				realm: 'tower',
-				external: false,
-				thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
-				embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
-			})
-		),
+	...dedupedYouTubeTalks.map(
+		(talk, index): FeedItem => ({
+			title: talk.title,
+			url: `/talks/#youtube-${index}`,
+			date: talk.date,
+			source: 'Tower · Talks',
+			description: talk.summary,
+			realm: 'tower',
+			external: false,
+			thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
+			embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+		})
+	),
 ];
 
 const latestTalks = allTalks.sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 3);
@@ -216,7 +212,7 @@ const DATE_LOCALE = 'en-GB';
                   {heroItem.date.toLocaleDateString(DATE_LOCALE, DATE_FORMAT)}
                 </time>
               </p>
-              <h3 class="lead-story__title">
+              <h2 class="lead-story__title">
                 <a
                   href={heroItem.url}
                   target={heroItem.external ? '_blank' : undefined}
@@ -230,7 +226,7 @@ const DATE_LOCALE = 'en-GB';
                   )}
                   {heroItem.external && <span class="sr-only"> (opens in new tab)</span>}
                 </a>
-              </h3>
+              </h2>
             </div>
           </article>
         )
@@ -267,7 +263,7 @@ const DATE_LOCALE = 'en-GB';
                     {item.realm === 'moon' && <MoonIcon />}
                   </span>
                 </span>
-                <span class="quest-row__body">
+                <div class="quest-row__body">
                 <p class="quest-eyebrow">
                   <span>{item.source}</span>
                   <time datetime={item.date.toISOString()}>
@@ -284,7 +280,7 @@ const DATE_LOCALE = 'en-GB';
                   {item.external && <span class="sr-only"> (opens in new tab)</span>}
                 </h3>
                 <p class="quest-row__summary">{toSummary(item.description, 150)}</p>
-                </span>
+                </div>
               </a>
             </li>
           ))

@@ -1,5 +1,226 @@
 import { describe, expect, test } from 'bun:test';
-import { toSummary, toTitle } from './youtube';
+import {
+	assertLiveFeedEntries,
+	fetchMergedEntries,
+	fetchYouTubeShorts,
+	fetchYouTubeTalks,
+	getYouTubeVideoId,
+	isYouTubeEntryOfKind,
+	parseYouTubeDate,
+	toSummary,
+	toTitle,
+} from './youtube';
+
+describe('YouTube feed hardening', () => {
+	test('throws for an empty live feed only during live smoke', () => {
+		const originalSmoke = process.env.LIVE_FEED_SMOKE;
+		try {
+			delete process.env.LIVE_FEED_SMOKE;
+			expect(() => assertLiveFeedEntries('talks', 0)).not.toThrow();
+
+			process.env.LIVE_FEED_SMOKE = '1';
+			expect(() => assertLiveFeedEntries('talks', 0)).toThrow(
+				'Live feed smoke failed: no usable entries returned for talks'
+			);
+			expect(() => assertLiveFeedEntries('talks', 1)).not.toThrow();
+		} finally {
+			if (originalSmoke === undefined) {
+				delete process.env.LIVE_FEED_SMOKE;
+			} else {
+				process.env.LIVE_FEED_SMOKE = originalSmoke;
+			}
+		}
+	});
+
+	test('accepts exact YouTube hosts and 11-character video IDs', () => {
+		expect(getYouTubeVideoId('https://youtube.com/watch?v=abcdefghijk')).toBe('abcdefghijk');
+		expect(getYouTubeVideoId('https://www.youtube.com/shorts/123456789ab')).toBe('123456789ab');
+		expect(getYouTubeVideoId('https://youtu.be/-AbCdEf1234')).toBe('-AbCdEf1234');
+	});
+
+	test('rejects lookalike hosts and malformed IDs', () => {
+		expect(getYouTubeVideoId('https://evil-youtube.com/watch?v=abcdefghijk')).toBeNull();
+		expect(getYouTubeVideoId('https://www.youtube.com/watch?v=too-short')).toBeNull();
+		expect(getYouTubeVideoId('https://www.youtube.com/watch?v=bad/id!zzzz')).toBeNull();
+		expect(getYouTubeVideoId('http://evil-youtube.com/watch?v=abcdefghijk')).toBeNull();
+		expect(getYouTubeVideoId('ftp://www.youtube.com/watch?v=abcdefghijk')).toBeNull();
+		expect(getYouTubeVideoId('//www.youtube.com/watch?v=abcdefghijk')).toBeNull();
+	});
+
+	test('accepts http and exact YouTube hosts', () => {
+		expect(getYouTubeVideoId('http://youtube.com/watch?v=abcdefghijk')).toBe('abcdefghijk');
+		expect(getYouTubeVideoId('https://www.youtube.com/watch?v=abcdefghijk')).toBe('abcdefghijk');
+		expect(
+			getYouTubeVideoId('https://www.youtube.com.evil.example/watch?v=abcdefghijk')
+		).toBeNull();
+	});
+
+	test('rejects malformed feed dates', () => {
+		expect(parseYouTubeDate('not-a-date')).toBeNull();
+		expect(parseYouTubeDate('2025-02-30T00:00:00Z')).toBeNull();
+		expect(parseYouTubeDate('2025-01-15T12:30:00Z')?.toISOString()).toBe(
+			'2025-01-15T12:30:00.000Z'
+		);
+	});
+
+	test('accepts RFC3339 timezone offsets and converts them to UTC', () => {
+		expect(parseYouTubeDate('2025-01-15T12:30:00+05:30')?.toISOString()).toBe(
+			'2025-01-15T07:00:00.000Z'
+		);
+		expect(parseYouTubeDate('2025-01-15T23:30:00-02:00')?.toISOString()).toBe(
+			'2025-01-16T01:30:00.000Z'
+		);
+		expect(parseYouTubeDate('2025-01-15T12:30:00+24:00')).toBeNull();
+		expect(parseYouTubeDate('2025-01-15T24:30:00Z')).toBeNull();
+	});
+
+	test('filters channel entries by exact /shorts and /watch kinds', () => {
+		expect(
+			isYouTubeEntryOfKind(
+				{
+					id: 'a',
+					title: 'A',
+					published: '2025-01-01',
+					link: { '@_href': 'https://www.youtube.com/shorts/abcdefghijk' },
+				},
+				true
+			)
+		).toBe(true);
+		expect(
+			isYouTubeEntryOfKind(
+				{
+					id: 'b',
+					title: 'B',
+					published: '2025-01-01',
+					link: { '@_href': 'https://evil.example/shorts/abcdefghijk' },
+				},
+				true
+			)
+		).toBe(false);
+		expect(
+			isYouTubeEntryOfKind(
+				{
+					id: 'c',
+					title: 'C',
+					published: '2025-01-01',
+					link: { '@_href': 'https://www.youtube.com/watch?v=abcdefghijk' },
+				},
+				false
+			)
+		).toBe(true);
+		expect(
+			isYouTubeEntryOfKind(
+				{
+					id: 'd',
+					title: 'D',
+					published: '2025-01-01',
+					link: { '@_href': 'https://www.youtube.com/watch-extra?v=abcdefghijk' },
+				},
+				false
+			)
+		).toBe(false);
+		expect(
+			isYouTubeEntryOfKind(
+				{
+					id: 'e',
+					title: 'E',
+					published: '2025-01-01',
+					link: { '@_href': 'https://www.youtube.com/shorts/abcdefghijk/more' },
+				},
+				true
+			)
+		).toBe(false);
+	});
+
+	test('throws for invalid live talk entries after validation', async () => {
+		const originalFetch = globalThis.fetch;
+		const originalSmoke = process.env.LIVE_FEED_SMOKE;
+		process.env.LIVE_FEED_SMOKE = '1';
+		globalThis.fetch = (async () =>
+			new Response(
+				'<feed><entry><id>yt:video:abcdefghijk</id><yt:videoId>abcdefghijk</yt:videoId><title>Invalid</title><published>2025-01-15T12:30:00Z</published><link href="https://evil.example/watch?v=abcdefghijk"/></entry></feed>',
+				{ status: 200 }
+			)) as typeof fetch;
+
+		try {
+			await expect(fetchYouTubeTalks()).rejects.toThrow(
+				'Live feed smoke failed: no usable entries returned for talks'
+			);
+		} finally {
+			globalThis.fetch = originalFetch;
+			if (originalSmoke === undefined) {
+				delete process.env.LIVE_FEED_SMOKE;
+			} else {
+				process.env.LIVE_FEED_SMOKE = originalSmoke;
+			}
+		}
+	});
+
+	test('does not include talk entries with invalid YouTube URLs', async () => {
+		const originalFetch = globalThis.fetch;
+		globalThis.fetch = (async () =>
+			new Response(
+				'<feed><entry><id>yt:video:abcdefghijk</id><yt:videoId>abcdefghijk</yt:videoId><title>Invalid</title><published>2025-01-15T12:30:00Z</published><link href="https://evil.example/watch?v=abcdefghijk"/></entry><entry><id>yt:video:123456789ab</id><yt:videoId>123456789ab</yt:videoId><title>Valid</title><published>2025-01-15T12:30:00+05:30</published><link href="https://www.youtube.com/watch?v=123456789ab"/></entry></feed>',
+				{ status: 200 }
+			)) as typeof fetch;
+
+		try {
+			const talks = await fetchYouTubeTalks();
+			expect(talks.map((talk) => talk.title)).toEqual(['Valid']);
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
+	});
+
+	test('does not fall back to entry IDs for shorts with invalid URLs', async () => {
+		const originalFetch = globalThis.fetch;
+		const originalSmoke = process.env.LIVE_FEED_SMOKE;
+		process.env.LIVE_FEED_SMOKE = '1';
+		globalThis.fetch = (async () =>
+			new Response(
+				'<feed><entry><id>yt:video:abcdefghijk</id><yt:videoId>abcdefghijk</yt:videoId><title>Invalid</title><published>2025-01-15T12:30:00Z</published><link href="https://evil.example/shorts/abcdefghijk"/></entry></feed>',
+				{ status: 200 }
+			)) as typeof fetch;
+
+		try {
+			await expect(fetchYouTubeShorts()).rejects.toThrow(
+				'Live feed smoke failed: no usable entries returned for shorts'
+			);
+		} finally {
+			globalThis.fetch = originalFetch;
+			if (originalSmoke === undefined) {
+				delete process.env.LIVE_FEED_SMOKE;
+			} else {
+				process.env.LIVE_FEED_SMOKE = originalSmoke;
+			}
+		}
+	});
+
+	test('uses the surviving feed when one merged feed rejects', async () => {
+		const originalFetch = globalThis.fetch;
+		globalThis.fetch = (async (input: string | URL | Request) => {
+			const url = String(input);
+			if (url.includes('channel_id')) {
+				throw new Error('channel unavailable');
+			}
+			return new Response(
+				'<feed><entry><id>yt:video:abcdefghijk</id><yt:videoId>abcdefghijk</yt:videoId><title>A</title><published>2025-01-15T12:30:00Z</published><link href="https://www.youtube.com/watch?v=abcdefghijk"/></entry></feed>',
+				{ status: 200 }
+			);
+		}) as typeof fetch;
+
+		try {
+			const entries = await fetchMergedEntries(
+				'https://www.youtube.com/feeds/videos.xml?playlist_id=playlist',
+				false
+			);
+			expect(entries).toHaveLength(1);
+			expect(entries[0].id).toBe('yt:video:abcdefghijk');
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
+	});
+});
 
 describe('toSummary', () => {
 	test('strips the URLs and hashtags that tags and relatedContent already carry', () => {

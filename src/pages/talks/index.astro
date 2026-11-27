@@ -5,6 +5,7 @@ import PageHeader from '../../components/PageHeader.astro';
 import SubscribeChip from '../../components/SubscribeChip.astro';
 import TowerIcon from '../../components/TowerIcon.astro';
 import Base from '../../layouts/Base.astro';
+import { getDedupedYouTubeTalks } from '../../utils/talks';
 import { fetchYouTubeTalks, getYouTubeEmbedUrl, getYouTubeThumbnailUrl } from '../../utils/youtube';
 
 // Unified talk type for rendering
@@ -43,25 +44,20 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	thumbnailUrl: getYouTubeThumbnailUrl(talk.data.videoUrl),
 }));
 
-// Drop YouTube entries that are already covered by a manual talk (matched by video URL)
-const manualVideoUrls = new Set(
-	manualTalks.map((talk: CollectionEntry<'talks'>) => talk.data.videoUrl).filter(Boolean)
-);
+const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
 
 // Convert YouTube talks to unified format
-const unifiedYouTubeTalks: UnifiedTalk[] = youtubeTalks
-	.filter((talk) => !manualVideoUrls.has(talk.videoUrl))
-	.map((talk, index) => ({
-		id: `youtube-${index}`,
-		title: talk.title,
-		date: talk.date,
-		event: talk.event,
-		videoUrl: talk.videoUrl,
-		summary: talk.summary,
-		tags: talk.tags,
-		embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
-		thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
-	}));
+const unifiedYouTubeTalks: UnifiedTalk[] = dedupedYouTubeTalks.map((talk, index) => ({
+	id: `youtube-${index}`,
+	title: talk.title,
+	date: talk.date,
+	event: talk.event,
+	videoUrl: talk.videoUrl,
+	summary: talk.summary,
+	tags: talk.tags,
+	embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+	thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
+}));
 
 // Merge and sort all talks by date (newest first)
 const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(

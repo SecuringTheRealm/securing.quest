@@ -3,6 +3,7 @@
  */
 
 import { XMLParser } from 'fast-xml-parser';
+import { resolveRelated } from './relatedContent';
 
 export interface YouTubeTalk {
 	title: string;
@@ -31,7 +32,20 @@ export interface RelatedContentLink {
 	title: string;
 }
 
-interface YouTubeEntry {
+interface YouTubeShortOverride {
+	data: {
+		youtubeId: string;
+		title?: string;
+		tags?: string[];
+		relatedContent?: Array<{
+			type: 'blog' | 'talk' | 'project' | 'external';
+			slug: string;
+			title?: string;
+		}>;
+	};
+}
+
+export interface YouTubeEntry {
 	id: string;
 	'yt:videoId'?: string;
 	title: string;
@@ -100,7 +114,14 @@ function dedupeByVideoId(entries: YouTubeEntry[]): YouTubeEntry[] {
 	const entryMap = new Map<string, YouTubeEntry>();
 	for (const entry of entries) {
 		const videoId = getEntryVideoId(entry);
-		if (videoId && !entryMap.has(videoId)) {
+		const href = entry.link?.['@_href'];
+		const linkVideoId = getYouTubeVideoId(href);
+		if (
+			linkVideoId &&
+			linkVideoId === videoId &&
+			/^[A-Za-z0-9_-]{11}$/.test(videoId) &&
+			!entryMap.has(videoId)
+		) {
 			entryMap.set(videoId, entry);
 		}
 	}
@@ -110,19 +131,20 @@ function dedupeByVideoId(entries: YouTubeEntry[]): YouTubeEntry[] {
 // Merge a curated playlist feed with the channel feed (filtered to the right
 // video kind) so newly published videos appear even before they are added to
 // the playlist.
-async function fetchMergedEntries(
+export async function fetchMergedEntries(
 	playlistFeedUrl: string,
 	wantShorts: boolean
 ): Promise<YouTubeEntry[]> {
-	const [playlistEntries, channelEntries] = await Promise.all([
+	const results = await Promise.allSettled([
 		fetchFeedEntries(playlistFeedUrl),
 		fetchFeedEntries(YOUTUBE_CHANNEL_FEED_URL),
 	]);
+	const playlistEntries = results[0].status === 'fulfilled' ? results[0].value : [];
+	const channelEntries = results[1].status === 'fulfilled' ? results[1].value : [];
 
-	const channelEntriesOfKind = channelEntries.filter((entry: YouTubeEntry) => {
-		const href = entry.link?.['@_href'] || '';
-		return href.includes('/shorts/') === wantShorts;
-	});
+	const channelEntriesOfKind = channelEntries.filter((entry: YouTubeEntry) =>
+		isYouTubeEntryOfKind(entry, wantShorts)
+	);
 
 	return dedupeByVideoId([...playlistEntries, ...channelEntriesOfKind]);
 }
@@ -323,6 +345,12 @@ export function toSummary(description: string, maxLength = 200): string {
 let _cachedTalks: YouTubeTalk[] | null = null;
 let _cachedShorts: YouTubeShort[] | null = null;
 
+export function assertLiveFeedEntries(feedName: string, entryCount: number): void {
+	if (process.env.LIVE_FEED_SMOKE === '1' && entryCount === 0) {
+		throw new Error(`Live feed smoke failed: no usable entries returned for ${feedName}`);
+	}
+}
+
 /**
  * Fetches YouTube talks from the channel feed dynamically at build time.
  * Results are cached in memory for the duration of the build process.
@@ -339,9 +367,11 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 		console.warn('No entries found in YouTube feed');
 	}
 
-	const talks = entries.map((entry: YouTubeEntry) => {
+	const talks = entries.flatMap((entry: YouTubeEntry) => {
 		const videoUrl = entry.link['@_href'] || '';
-		const publishedDate = new Date(entry.published);
+		const publishedDate = parseYouTubeDate(entry.published);
+		if (!publishedDate) return [];
+		if (!getYouTubeVideoId(videoUrl) || !isYouTubeEntryOfKind(entry, false)) return [];
 
 		const description = entry['media:group']?.['media:description'] ?? '';
 		const extractedTags = extractHashtagTags(description);
@@ -354,17 +384,22 @@ export async function fetchYouTubeTalks(): Promise<YouTubeTalk[]> {
 
 		const summary = toSummary(description);
 
-		return {
-			title: toTitle(entry.title),
-			date: publishedDate,
-			event: 'YouTube - Securing the Realm',
-			videoUrl,
-			summary: summary || 'A video from the Securing the Realm YouTube channel.',
-			tags: allTags,
-		};
+		return [
+			{
+				title: toTitle(entry.title),
+				date: publishedDate,
+				event: 'YouTube - Securing the Realm',
+				videoUrl,
+				summary: summary || 'A video from the Securing the Realm YouTube channel.',
+				tags: allTags,
+			},
+		];
 	});
+	assertLiveFeedEntries('talks', talks.length);
 
-	_cachedTalks = talks;
+	if (talks.length > 0) {
+		_cachedTalks = talks;
+	}
 	return talks;
 }
 
@@ -403,11 +438,14 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 		console.warn('No entries found in YouTube Shorts feed');
 	}
 
-	const shorts = entries.map((entry: YouTubeEntry) => {
+	const shorts = entries.flatMap((entry: YouTubeEntry) => {
 		const videoUrl = entry.link['@_href'] || '';
-		const publishedDate = new Date(entry.published);
+		const publishedDate = parseYouTubeDate(entry.published);
+		if (!publishedDate) return [];
 
-		const videoId = getYouTubeVideoId(videoUrl) ?? getEntryVideoId(entry);
+		const videoId = getYouTubeVideoId(videoUrl);
+		if (!videoId || !isYouTubeEntryOfKind(entry, true)) return [];
+		if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return [];
 		const description = entry['media:group']?.['media:description'] ?? '';
 		const extractedTags = extractHashtagTags(description);
 
@@ -426,21 +464,58 @@ export async function fetchYouTubeShorts(): Promise<YouTubeShort[]> {
 		// Generate embed URL
 		const embedUrl = videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : '';
 
-		return {
-			id: videoId,
-			title: toTitle(entry.title),
-			description: toSummary(description),
-			pubDate: publishedDate,
-			thumbnailUrl,
-			videoUrl,
-			embedUrl,
-			tags: allTags,
-			relatedContent,
-		};
+		return [
+			{
+				id: videoId,
+				title: toTitle(entry.title),
+				description: toSummary(description),
+				pubDate: publishedDate,
+				thumbnailUrl,
+				videoUrl,
+				embedUrl,
+				tags: allTags,
+				relatedContent,
+			},
+		];
 	});
 
-	_cachedShorts = shorts;
-	return shorts;
+	let overrides: YouTubeShortOverride[] = [];
+	try {
+		const { getCollection } = await import('astro:content');
+		overrides = (await getCollection('shorts')) as YouTubeShortOverride[];
+	} catch {
+		// Content collection imports are unavailable outside Astro builds.
+		overrides = [];
+	}
+	const mergedShorts = mergeYouTubeShortOverrides(shorts, overrides);
+	assertLiveFeedEntries('shorts', mergedShorts.length);
+	if (mergedShorts.length > 0) {
+		_cachedShorts = mergedShorts;
+	}
+	return mergedShorts;
+}
+
+export function mergeYouTubeShortOverrides(
+	shorts: YouTubeShort[],
+	overrides: YouTubeShortOverride[]
+): YouTubeShort[] {
+	const overrideMap = new Map<string, YouTubeShortOverride>();
+	for (const override of overrides) {
+		overrideMap.set(override.data.youtubeId, override);
+	}
+
+	return shorts.map((short: YouTubeShort) => {
+		const override = overrideMap.get(short.id);
+		if (!override) return short;
+		return {
+			...short,
+			title: override.data.title || short.title,
+			tags: override.data.tags ? [...new Set([...short.tags, ...override.data.tags])] : short.tags,
+			relatedContent: override.data.relatedContent
+				? [...short.relatedContent, ...resolveRelated(override.data.relatedContent)]
+				: short.relatedContent,
+		};
+	});
 }
 
 /**
@@ -463,22 +538,74 @@ export function getYouTubeVideoId(url: string | undefined): string | null {
 
 	try {
 		const urlObj = new URL(url);
+		if (urlObj.protocol !== 'https:' && urlObj.protocol !== 'http:') return null;
+		const allowedHosts = new Set(['youtube.com', 'www.youtube.com', 'youtu.be']);
+		if (!allowedHosts.has(urlObj.hostname.toLowerCase())) return null;
 
 		if (urlObj.hostname === 'youtu.be') {
-			return urlObj.pathname.slice(1) || null;
+			const videoId = urlObj.pathname.slice(1);
+			return /^[A-Za-z0-9_-]{11}$/.test(videoId) ? videoId : null;
 		}
 
-		if (urlObj.hostname.includes('youtube.com')) {
+		if (urlObj.hostname.endsWith('youtube.com')) {
 			const fromQuery = urlObj.searchParams.get('v');
-			if (fromQuery) return fromQuery;
+			if (fromQuery) {
+				return /^[A-Za-z0-9_-]{11}$/.test(fromQuery) ? fromQuery : null;
+			}
 
 			const match = urlObj.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/);
-			if (match) return match[1];
+			if (match && /^[A-Za-z0-9_-]{11}$/.test(match[1])) return match[1];
 		}
 
 		return null;
 	} catch {
 		return null;
+	}
+}
+
+export function parseYouTubeDate(value: string | undefined): Date | null {
+	if (!value) return null;
+	const isoMatch =
+		/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+	if (!isoMatch) return null;
+
+	const [, calendarDate, hourText, minuteText, secondText, , offsetText] = isoMatch;
+	const [year, month, day] = calendarDate.split('-').map(Number);
+	const hour = Number(hourText);
+	const minute = Number(minuteText);
+	const second = Number(secondText);
+	if (hour > 23 || minute > 59 || second > 59) return null;
+	if (month < 1 || month > 12 || day < 1 || day > new Date(Date.UTC(year, month, 0)).getUTCDate()) {
+		return null;
+	}
+	if (offsetText !== 'Z') {
+		const offsetMatch = /^([+-])(\d{2}):(\d{2})$/.exec(offsetText);
+		if (!offsetMatch) return null;
+		const offsetHour = Number(offsetMatch[2]);
+		const offsetMinute = Number(offsetMatch[3]);
+		if (offsetHour > 14 || offsetMinute > 59 || (offsetHour === 14 && offsetMinute !== 0)) {
+			return null;
+		}
+	}
+
+	const timestamp = Date.parse(value);
+	if (!Number.isFinite(timestamp)) return null;
+	return new Date(timestamp);
+}
+
+export function isYouTubeEntryOfKind(entry: YouTubeEntry, wantShorts: boolean): boolean {
+	const href = entry.link?.['@_href'] || '';
+	try {
+		const url = new URL(href);
+		if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+		const allowedHosts = new Set(['youtube.com', 'www.youtube.com']);
+		if (!allowedHosts.has(url.hostname.toLowerCase())) return false;
+		const isShort =
+			/^\/shorts\/[A-Za-z0-9_-]{11}\/?$/.test(url.pathname) && !!getYouTubeVideoId(href);
+		const isTalk = url.pathname === '/watch' && !!getYouTubeVideoId(href);
+		return wantShorts ? isShort : isTalk;
+	} catch {
+		return false;
 	}
 }
 

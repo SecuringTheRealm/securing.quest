@@ -22,17 +22,17 @@ export const AUTHORS: Record<'chris' | 'josh', Author> = {
 		role: 'AI transformation and platform engineering · Co-host',
 		bio: [
 			[
-				'Chris builds the platforms and teams that help organisations put AI into production. At Kyndryl, he created the Forward Deployed Engineering capability so engineers could build software alongside clients and stay responsible for it. His background in law and engineering shapes the questions he brings to Securing the Realm. What is an agent authorised to do? How do you test those limits? Who owns the outcome when it gets something wrong?',
+				'Chris builds AI platforms and the teams that run them. At Kyndryl, he created the Forward Deployed Engineering capability so engineers could build software alongside clients and stay responsible for it. His background in law and engineering shapes the questions he brings to Securing the Realm. What is an agent authorised to do? How do you test those limits? Who owns the outcome when it gets something wrong?',
 			],
 			[
-				'A seven-time Microsoft MVP in AI and Developer Technologies, Chris leads the Seattle chapter of the Global AI Community, which named him ',
+				'Chris is a seven-time Microsoft MVP in AI and Developer Technologies and co-leads the Seattle chapter of the Global AI Community. The community named him ',
 				{
 					label: 'Organizer of the Week',
 					href: 'https://globalai.community/awards/organizer-of-the-week/2026-W48',
 				},
-				' in November 2026. He researches Green AI at the University of East London, contributed to the Software Carbon Intensity standard and was named in the ',
-				{ label: '2026 OpenUK New Year Honours', href: 'https://openuk.uk/honours/' },
-				' for his open source contributions.',
+				' for the week of 23 November 2026. He researches Green AI at the University of East London, contributed to the Software Carbon Intensity standard and received ',
+				{ label: 'OpenUK New Year Honours', href: 'https://openuk.uk/honours/' },
+				' in 2026 for his open source contributions.',
 			],
 		],
 		links: [

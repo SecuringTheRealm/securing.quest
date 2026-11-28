@@ -1,6 +1,7 @@
 ---
 import AuthorCard from '../components/AuthorCard.astro';
 import ListenHub from '../components/ListenHub.astro';
+import RealmSigil from '../components/RealmSigil.astro';
 import Base from '../layouts/Base.astro';
 import { AUTHORS } from '../utils/authors';
 ---
@@ -8,7 +9,10 @@ import { AUTHORS } from '../utils/authors';
 <Base title="About - Our Mission">
   <div class="container page-shell about-page">
     <section class="about-mission">
-      <h1>About Our Quest</h1>
+      <div class="about-heading">
+        <RealmSigil realm="keep" size={32} />
+        <h1>About Our Quest</h1>
+      </div>
       <h2>Our Mission</h2>
       <p class="mission-lede">
         Deploying AI is mostly unglamorous. Large-Language Models (LLMs), Small-Language Models
@@ -86,7 +90,22 @@ import { AUTHORS } from '../utils/authors';
     max-width: var(--max-width-content);
   }
 
-  .about-mission h1,
+  .about-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-block-end: var(--space-3);
+  }
+
+  .about-heading :global(svg) {
+    flex: none;
+  }
+
+  .about-heading h1 {
+    margin: 0;
+  }
+
+
   .about-mission h2,
   .about-scope h2 {
     margin-block-end: var(--space-3);

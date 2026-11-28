@@ -1,5 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" fill="#0f3c46"/>
-  <path d="M50 20 L70 40 L70 70 L30 70 L30 40 Z" fill="#d5a425" stroke="#f3e9d2" stroke-width="2"/>
-  <rect x="45" y="50" width="10" height="20" fill="#0f3c46"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">
+  <title>Securing the Realm shield</title>
+  <desc>A stepped gold shield with a stone hammer.</desc>
+  <!-- Standalone icons cannot inherit the site's colour tokens. -->
+  <path fill="#0f3c46" stroke="#d5a425" stroke-width="2" d="M4 8h8V4h8v4h8v12h-4v4h-4v4h-8v-4H8v-4H4z"/>
+  <path fill="#f3e9d2" d="M8 12h16v4H8z"/>
+  <path fill="#949189" d="M20 12h4v4h-4z"/>
+  <path fill="#d19470" d="M12 16h8v8h-8z"/>
 </svg>

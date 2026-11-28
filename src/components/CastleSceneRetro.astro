@@ -1,4 +1,6 @@
 ---
+import RealmSigil from './RealmSigil.astro';
+
 /**
  * CastleSceneRetro.astro
  * SNES/NES-style 8-bit pixel art castle scene.
@@ -40,11 +42,12 @@ const Merlon = (x: number, y: number) => ({
 // plaque and its half-width on the 8px grid. Height 32 puts the baseline 8px up
 // from the lower edge.
 const SIGN_GAP = 16;
-const Sign = (cx: number, roofline: number, chars: number) => ({
+const SIGIL_SIZE = 32;
+const Sign = (cx: number, roofline: number, chars: number, badgeSize: number = SIGIL_SIZE) => ({
 	plate: {
-		x: cx - (chars * 16 + 32) / 2,
+		x: cx - (chars * 16 + 32) / 2 - badgeSize,
 		y: roofline - SIGN_GAP - 32,
-		width: chars * 16 + 32,
+		width: chars * 16 + 32 + badgeSize,
 		height: 32,
 	},
 	text: { x: cx, y: roofline - SIGN_GAP - 8 },
@@ -61,7 +64,7 @@ const SIGNS = {
 	about: Sign(720, 136, 5), // keep crenellations, Merlon y 136
 	code: Sign(960, 200, 4), // forge chimney housing, y 200
 	shorts: Sign(1080, 80, 6), // moon disc top, cy 120 - r 40
-	listen: Sign(1096, 520, 6), // podcast scroll, y 520
+	listen: Sign(1096, 520, 6, 0), // podcast scroll, y 520
 };
 
 // Mobile navigation chips - same six destinations as the drawn buildings.
@@ -410,6 +413,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         {...SIGNS.talks.plate}
         class="sign-plate"
         shape-rendering="crispEdges"></rect>
+      <RealmSigil realm="tower" size={SIGIL_SIZE} x={SIGNS.talks.plate.x} y={SIGNS.talks.plate.y} />
       <text
         {...SIGNS.talks.text}
         class="sign-label"
@@ -647,6 +651,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         {...SIGNS.blog.plate}
         class="sign-plate"
         shape-rendering="crispEdges"></rect>
+      <RealmSigil realm="library" size={SIGIL_SIZE} x={SIGNS.blog.plate.x} y={SIGNS.blog.plate.y} />
       <text
         {...SIGNS.blog.text}
         class="sign-label"
@@ -926,6 +931,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         {...SIGNS.about.plate}
         class="sign-plate"
         shape-rendering="crispEdges"></rect>
+      <RealmSigil realm="keep" size={SIGIL_SIZE} x={SIGNS.about.plate.x} y={SIGNS.about.plate.y} />
       <text
         {...SIGNS.about.text}
         class="sign-label"
@@ -1313,6 +1319,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         {...SIGNS.code.plate}
         class="sign-plate"
         shape-rendering="crispEdges"></rect>
+      <RealmSigil realm="forge" size={SIGIL_SIZE} x={SIGNS.code.plate.x} y={SIGNS.code.plate.y} />
       <text
         {...SIGNS.code.text}
         class="sign-label"
@@ -1373,6 +1380,7 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
         {...SIGNS.shorts.plate}
         class="sign-plate"
         shape-rendering="crispEdges"></rect>
+      <RealmSigil realm="moon" size={SIGIL_SIZE} x={SIGNS.shorts.plate.x} y={SIGNS.shorts.plate.y} />
       <text
         {...SIGNS.shorts.text}
         class="sign-label"
@@ -1573,11 +1581,24 @@ const BrickRow = (x: number, y: number, width: number, offset = 0) => {
     fill: var(--colour-gold);
   }
 
+  .castle-scene-retro :global(.realm-sigil) {
+    pointer-events: none;
+  }
+
+  .castle-art[inert] .castle-scene-retro :global(.realm-sigil) {
+    display: none;
+  }
+
   /* Hover/focus inverts the sign. Instant swap, not a fade — the hard cut suits
      the pixel art and leaves nothing to gate on reduced motion. */
   .castle-section:hover .sign-plate,
   .castle-scene-retro a:focus-visible .sign-plate {
     fill: var(--colour-gold);
+  }
+
+  .castle-section:hover :global(.realm-sigil),
+  .castle-scene-retro a:focus-visible :global(.realm-sigil) {
+    color: var(--colour-teal-dark);
   }
 
   .castle-section:hover .sign-label,

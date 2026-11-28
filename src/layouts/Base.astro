@@ -3,6 +3,7 @@ import '../styles/global.css';
 import '../styles/print.css';
 import { Image } from 'astro:assets';
 import logoSrc from '../assets/str-logo.png';
+import RealmSigilDefinitions from '../components/RealmSigilDefinitions.astro';
 import Search from '../components/Search.astro';
 import Seo from '../components/Seo.astro';
 
@@ -47,8 +48,9 @@ const currentPath = Astro.url.pathname;
     />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/str-logo.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <!-- RSS Feed Autodiscovery -->
     <link rel="alternate" type="application/rss+xml" title="Securing the Realm - Blog" href="/blog/rss.xml" />
@@ -75,6 +77,7 @@ const currentPath = Astro.url.pathname;
   </head>
   <body data-url={new URL(Astro.url.pathname, Astro.site).href}>
     <a href="#content" class="skip-link">Skip to content</a>
+    <RealmSigilDefinitions />
 
     <header>
       <nav class="container">

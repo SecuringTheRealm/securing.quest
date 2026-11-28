@@ -84,6 +84,9 @@
 
   /* Layout Widths */
   --max-width-prose: 800px;
+  /* Georgia's zero is wider than its average letter. This fits about 68
+     characters of article text on each full line at the body size. */
+  --reading-measure: 52ch;
   --max-width-content: 900px;
   --max-width-wide: 1200px;
   /* The one page width. Bands, rows and the footer columns all read this, so a
@@ -115,8 +118,8 @@
   --shadow-stepped: 4px 4px 0 var(--realm-shadow);
   --shadow-stepped-hover: 2px 2px 0 var(--realm-shadow);
   --card-chrome-inset: inset 0 2px 0 var(--colour-rim-light), inset -2px 0 0 var(--colour-rim-light), inset 0 -2px 0 var(--colour-shadow-band), inset 2px 0 0 var(--colour-shadow-band);
-  --card-chrome: var(--card-chrome-inset), var(--shadow-stepped);
-  --card-chrome-pressed: var(--card-chrome-inset), var(--shadow-stepped-hover);
+  --card-chrome: var(--card-chrome-inset), var(--space-1) var(--space-1) 0 var(--colour-shadow);
+  --card-chrome-pressed: var(--card-chrome-inset), 2px 2px 0 var(--colour-shadow);
 
   /* 8-bit ornament kit */
   /* 4px-on/4px-off gold dash: section-heading flanks and standalone rules */
@@ -140,6 +143,7 @@
   --font-size-5xl: 3rem;      /* 48px */
 
   /* Line Heights */
+  --line-height-title: 1.2;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
@@ -168,13 +172,12 @@
   }
 }
 
-/* One breakpoint, not a clamp(): a clamp gives the seam a different value at every
-   viewport width, which is the exact fault this token exists to remove — the seam
-   has to be provably identical everywhere. 768px is where the root font-size
-   already steps, so the page changes gear once. */
+/* Two adjacent section edges make a 48px gap on small screens. */
 @media (max-width: 768px) {
   :root {
-    --space-section: var(--space-8);
+    --space-section: var(--space-6);
+    --space-heading: var(--space-4);
+    --space-subhead: var(--space-6);
     --masthead-scroll-clearance: calc(var(--space-16) + var(--space-6));
   }
 }
@@ -189,8 +192,7 @@
   *,
   *::before,
   *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
   }
 }

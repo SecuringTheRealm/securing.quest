@@ -4,6 +4,7 @@ import { getCollection } from 'astro:content';
 import LibraryIcon from '../../components/LibraryIcon.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import Base from '../../layouts/Base.astro';
+import { formatIndexDate } from '../../utils/dates';
 
 const allBlogPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {
 	return data.draft !== true;
@@ -14,15 +15,15 @@ const sortedPosts = allBlogPosts.sort(
 		b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
 );
 
-// Card previews show a handful of tags; the post itself carries the full set.
-const TAG_LIMIT = 4;
+// The post links to every topic in its original order.
+const TAG_LIMIT = 2;
 ---
 
 <Base title="Library - Blog Posts">
   <div class="container page-shell library-page">
     <PageHeader title="The Library · Blog" realm="library">
       <LibraryIcon slot="icon" />
-      Writeups from the Library: the architecture, the security work, and what broke on the way.
+      Notes on architecture and security, including what broke along the way.
       <a
         slot="actions"
         href="/blog/rss.xml"
@@ -44,7 +45,7 @@ const TAG_LIMIT = 4;
             <a href={`/blog/${post.id}/`}>{post.data.title}</a>
           </h2>
           <time datetime={post.data.pubDate.toISOString()}>
-            {post.data.pubDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+            {formatIndexDate(post.data.pubDate)}
           </time>
           <p>{post.data.description}</p>
           {post.data.tags.length > 0 && (
@@ -54,9 +55,6 @@ const TAG_LIMIT = 4;
                   {tag}
                 </a>
               ))}
-              {post.data.tags.length > TAG_LIMIT && (
-                <span class="tag-more">+{post.data.tags.length - TAG_LIMIT} more</span>
-              )}
             </div>
           )}
         </article>
@@ -78,14 +76,31 @@ const TAG_LIMIT = 4;
   .post-row {
     display: grid;
     gap: var(--space-2);
-    padding: var(--space-4) var(--space-6);
-    border-inline-start: 2px solid var(--realm-accent);
+    padding: var(--space-6);
+    border-inline-start: 2px solid var(--colour-stone-dark);
     background: var(--colour-teal-dark);
   }
 
   .post-row h2,
   .post-row p {
     margin: 0;
+  }
+
+  .post-row h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .post-row h2 a {
+    color: var(--colour-parchment);
+    text-decoration: underline;
+    text-decoration-color: var(--colour-stone-dark);
+    text-underline-offset: 0.16em;
+  }
+
+  .post-row h2 a:hover,
+  .post-row h2 a:focus-visible {
+    color: var(--colour-gold-light);
+    text-decoration-color: currentColor;
   }
 
   .post-row time,
@@ -105,9 +120,4 @@ const TAG_LIMIT = 4;
     margin-block-start: var(--space-2);
   }
 
-  @media (max-width: 768px) {
-    .post-row {
-      padding-inline: var(--space-4);
-    }
-  }
 </style>

@@ -6,7 +6,13 @@ import SubscribeChip from '../../components/SubscribeChip.astro';
 import TowerIcon from '../../components/TowerIcon.astro';
 import VideoFacade from '../../components/VideoFacade.astro';
 import Base from '../../layouts/Base.astro';
-import { getDedupedYouTubeTalks } from '../../utils/talks';
+import { formatIndexDate } from '../../utils/dates';
+import {
+	getFormerTalkAnchor,
+	getTalkCatalogue,
+	getTalkKind,
+	type TalkKind,
+} from '../../utils/talks';
 import {
 	fetchYouTubeTalks,
 	getYouTubeEmbedUrl,
@@ -20,6 +26,7 @@ interface UnifiedTalk {
 	title: string;
 	date: Date;
 	event: string;
+	kind: TalkKind;
 	videoUrl?: string;
 	previewUrl?: string;
 	slidesUrl?: string;
@@ -30,11 +37,10 @@ interface UnifiedTalk {
 	thumbnailUrl: string | null;
 }
 
-// Get manual talks from content collection
-const manualTalks = await getCollection('talks');
-
-// Get YouTube talks dynamically at build time
-const youtubeTalks = await fetchYouTubeTalks();
+const { manualTalks, youtubeTalks } = getTalkCatalogue<CollectionEntry<'talks'>>(
+	await getCollection('talks'),
+	await fetchYouTubeTalks()
+);
 
 // Convert manual talks to unified format
 const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry<'talks'>) => ({
@@ -42,6 +48,7 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	title: talk.data.title,
 	date: talk.data.date,
 	event: talk.data.event,
+	kind: getTalkKind(talk.data.event, talk.data.tags),
 	videoUrl: talk.data.videoUrl,
 	previewUrl: talk.data.previewUrl,
 	slidesUrl: talk.data.slidesUrl,
@@ -52,27 +59,47 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	thumbnailUrl: getYouTubeThumbnailUrl(talk.data.videoUrl),
 }));
 
-const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
-
 // Convert YouTube talks to unified format
-const unifiedYouTubeTalks: UnifiedTalk[] = dedupedYouTubeTalks.map(
-	(talk: YouTubeTalk, index: number) => ({
-		id: `youtube-${index}`,
-		title: talk.title,
-		date: talk.date,
-		event: talk.event,
-		videoUrl: talk.videoUrl,
-		summary: talk.summary,
-		tags: talk.tags,
-		embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
-		thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
-	})
-);
+const unifiedYouTubeTalks: UnifiedTalk[] = youtubeTalks.map((talk: YouTubeTalk, index: number) => ({
+	id: `youtube-${index}`,
+	title: talk.title,
+	date: talk.date,
+	event: talk.event,
+	kind: getTalkKind(talk.event, talk.tags),
+	videoUrl: talk.videoUrl,
+	summary: talk.summary,
+	tags: talk.tags,
+	embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+	thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
+}));
 
 // Merge and sort all talks by date (newest first)
 const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
 	(a: UnifiedTalk, b: UnifiedTalk) => b.date.valueOf() - a.date.valueOf()
 );
+
+interface TalkGroup {
+	id: string;
+	title: string;
+	talks: UnifiedTalk[];
+}
+
+const groups = [
+	{
+		id: 'full-episodes',
+		title: 'Full episodes',
+		talks: allTalks.filter((talk: UnifiedTalk) => talk.kind === 'Full episode'),
+	},
+	{
+		id: 'conference-sessions',
+		title: 'Conference talks and workshops',
+		talks: allTalks.filter((talk: UnifiedTalk) => talk.kind !== 'Full episode'),
+	},
+].filter((group: TalkGroup) => group.talks.length > 0);
+
+const firstVideo = groups
+	.flatMap((group: TalkGroup) => group.talks)
+	.find((talk: UnifiedTalk) => talk.embedUrl);
 ---
 
 <Base title="Tower - Talks & Presentations">
@@ -88,69 +115,77 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
       />
     </PageHeader>
 
-    <div class="talk-list" data-realm="tower">
-      {allTalks.length === 0 && (
-        <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg);">
-          No talks yet. Check back soon for upcoming presentations!
-        </p>
-      )}
-      {allTalks.map((talk: UnifiedTalk, index: number) => (
-        <article id={talk.id} class="talk-card content-card">
-          <div class="talk-copy">
-            <h2>{talk.title}</h2>
-            <p class="talk-meta">
-              {talk.event} • {talk.date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
-            </p>
-            <p class="talk-summary">{talk.summary}</p>
-          </div>
-          {talk.embedUrl && talk.videoUrl && (
-            <div class="talk-media">
-              <VideoFacade
-                embedUrl={talk.embedUrl}
-                videoUrl={talk.videoUrl}
-                thumbnailUrl={talk.thumbnailUrl}
-                title={talk.title}
-                eager={index === 0}
-              />
-            </div>
-          )}
-          <div class="talk-links">
-            <div class="talk-actions">
-              {talk.videoUrl && !talk.embedUrl && (
-                <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">
-                  Watch Video
-                </a>
-              )}
-              {talk.previewUrl && (
-                <a href={talk.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" data-action="preview">
-                  Watch preview
-                </a>
-              )}
-              {talk.slidesUrl && (
-                <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
-                  View Slides
-                </a>
-              )}
-              {talk.eventUrl && (
-                <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
-                  Event Details
-                </a>
-              )}
-            </div>
+    {allTalks.length === 0 ? (
+      <p>No episodes or talks in the Tower yet.</p>
+    ) : (
+      <>
+        <nav class="catalogue-jumps" aria-label="Talks catalogue">
+          {groups.map((group: TalkGroup) => (
+            <a href={`#${group.id}`}>{group.title}</a>
+          ))}
+        </nav>
 
-            {talk.tags.length > 0 && (
-              <div class="talk-tags">
-                {talk.tags.map((tag: string) => (
-                  <a href={`/tags/${tag}/`} class="tag-chip">
-                    {tag}
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </article>
-      ))}
-    </div>
+        {groups.map((group: TalkGroup) => (
+          <section class="talk-group" aria-labelledby={group.id}>
+            <h2 id={group.id} tabindex="-1">{group.title}</h2>
+            <div class="talk-list" data-realm="tower">
+              {group.talks.map((talk: UnifiedTalk) => (
+                <article id={talk.id} class="talk-card content-card">
+                  <div class="talk-copy">
+                    <h3 id={getFormerTalkAnchor(talk.videoUrl)}>{talk.title}</h3>
+                    <p class="talk-meta">
+                      <span>{talk.kind}</span>
+                      {talk.kind !== 'Full episode' && <span>{talk.event.replace(/\s*·\s*Workshop$/i, '')}</span>}
+                      <time datetime={talk.date.toISOString()}>{formatIndexDate(talk.date)}</time>
+                    </p>
+                  </div>
+                  {talk.embedUrl && talk.videoUrl && (
+                    <div class="talk-media">
+                      <VideoFacade
+                        embedUrl={talk.embedUrl}
+                        videoUrl={talk.videoUrl}
+                        thumbnailUrl={talk.thumbnailUrl}
+                        title={talk.title}
+                        eager={talk === firstVideo}
+                      />
+                    </div>
+                  )}
+                  <p class="talk-summary">{talk.summary}</p>
+                  <div class="talk-links">
+                    {(talk.previewUrl || talk.slidesUrl || talk.eventUrl || (talk.videoUrl && !talk.embedUrl)) && (
+                      <div class="talk-actions">
+                        {talk.videoUrl && !talk.embedUrl && (
+                          <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" data-action="video">Watch recording</a>
+                        )}
+                        {talk.previewUrl && (
+                          <a href={talk.previewUrl} target="_blank" rel="noopener noreferrer" data-action="preview">Watch preview</a>
+                        )}
+                        {talk.slidesUrl && (
+                          <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" data-action="slides">View slides</a>
+                        )}
+                        {talk.eventUrl && (
+                          <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" data-action="event">Event details</a>
+                        )}
+                      </div>
+                    )}
+                    {talk.tags.length > 0 && (
+                      <details class="talk-topics">
+                        <summary>Topics</summary>
+                        <div class="talk-tags">
+                          {talk.tags.map((tag: string) => (
+                            <a href={`/tags/${tag}/`} class="tag-chip">{tag}</a>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))}
+      </>
+    )}
   </div>
 
   <style>
@@ -158,58 +193,96 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
       max-width: min(var(--container), calc(var(--max-width-content) + var(--space-12)));
     }
 
-    .talk-list {
+    .catalogue-jumps,
+    .talk-actions,
+    .talk-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2) var(--space-4);
+      align-items: baseline;
+    }
+
+    .catalogue-jumps a,
+    .talk-actions a {
+      text-decoration: underline;
+      text-underline-offset: 0.16em;
+    }
+
+    .catalogue-jumps {
+      padding-block-end: var(--space-4);
+      border-block-end: 1px solid var(--colour-stone-dark);
+      margin-block-end: var(--space-6);
+    }
+
+    .talk-group + .talk-group {
+      margin-block-start: var(--space-12);
+    }
+
+    .talk-list,
+    .talk-card,
+    .talk-links {
       display: grid;
-      gap: var(--space-6);
+      gap: var(--space-4);
     }
 
     .talk-card {
-      display: grid;
-      gap: var(--space-4);
-      padding: var(--space-4);
-      border-color: var(--realm-accent);
+      min-width: 0;
+      padding: var(--space-6);
+      border-color: var(--colour-stone-dark);
+      box-shadow: none;
     }
 
-    .talk-copy h2,
-    .talk-meta {
+    .talk-copy {
+      min-width: 0;
+    }
+
+    .talk-copy h3 {
+      color: var(--colour-parchment);
+      font-size: var(--font-size-xl);
       margin-block-end: var(--space-2);
     }
 
-    .talk-meta {
+    .talk-meta,
+    .talk-topics {
       font-size: var(--font-size-sm);
       color: var(--colour-stone-light);
+    }
+
+    .talk-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-1) var(--space-3);
+      margin: 0;
     }
 
     .talk-summary {
       margin: 0;
     }
 
-    .talk-links {
-      display: grid;
-      gap: var(--space-3);
-    }
-
-    .talk-links:empty,
-    .talk-actions:empty {
-      display: none;
-    }
-
-    .talk-actions,
     .talk-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
+      margin-block-start: var(--space-3);
+    }
+
+    .talk-topics summary {
+      width: fit-content;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 0.16em;
+    }
+
+    .talk-topics summary:focus-visible {
+      outline: 2px solid var(--colour-gold);
+      outline-offset: var(--space-1);
     }
 
     .talk-media {
       min-width: 0;
-      border: 2px solid var(--realm-accent);
-      border-radius: var(--radius-pixel);
+      align-self: start;
     }
 
     @media (min-width: 769px) {
       :global(.talk-card:has(.talk-media):not(:has(.video-player.is-playing))) {
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
         align-items: start;
       }
 
@@ -222,7 +295,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
 
   <script is:inline>
     document.querySelectorAll('article').forEach(function (article) {
-      var title = (article.querySelector('h2') || {}).textContent || 'Unknown';
+      var title = (article.querySelector('h3') || {}).textContent || 'Unknown';
       article.querySelectorAll('a[target="_blank"]').forEach(function (link) {
         link.addEventListener('click', function () {
           if (typeof plausible === 'undefined') return;

@@ -1,51 +1,18 @@
----
-export interface Props {
-	/** Talks and videos actually published, not a rounded-up claim. */
-	itemCount: number;
-}
-
-const { itemCount } = Astro.props;
----
-
-<p class="cred-strip pixel-diamond">
-	<span class="cred-strip__item">
-		<a href="/about/">Chris Lloyd-Jones &amp; Josh McDonald</a>
-	</span>
-	<span class="cred-strip__item">Microsoft MVPs</span>
-	<span class="cred-strip__item">{itemCount} talks and videos</span>
+<p class="host-intro">
+	Pull up a chair with <a href="/about/">Chris Lloyd-Jones and Josh McDonald</a>.
+	How do you test an AI agent before you trust it?
 </p>
 
 <style>
-	/* No border: the bar sits directly under the primary CTA and must not compete with it */
-	.cred-strip {
-		display: flex;
-		flex-wrap: wrap;
-		row-gap: 0;
-		align-items: baseline;
-		gap: var(--space-2) var(--space-3);
-		max-width: 100%;
+	.host-intro {
 		margin: 0;
-		color: var(--colour-stone-light);
-		font-size: var(--font-size-sm);
-		font-family: var(--font-body);
+		color: var(--colour-parchment);
+		font-size: var(--font-size-lg);
 	}
 
-	.cred-strip a {
-		color: var(--colour-gold);
+	.host-intro a {
+		color: inherit;
 		text-decoration: underline;
-		text-decoration-thickness: 1px;
-		text-underline-offset: 2px;
-	}
-
-	.cred-strip a:hover,
-	.cred-strip a:focus-visible {
-		color: var(--colour-gold-light);
-	}
-
-	/* Separator comes from the .pixel-diamond utility; the gap is even either
-	   side because the flex gap supplies the leading space and the glyph's own
-	   margin supplies the trailing one. */
-	.cred-strip {
-		gap: var(--space-3);
+		text-underline-offset: 0.15em;
 	}
 </style>

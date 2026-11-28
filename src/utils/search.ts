@@ -1,6 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
-import { getDedupedYouTubeTalks } from './talks';
+import { getTalkCatalogue } from './talks';
 import { fetchYouTubeShorts, fetchYouTubeTalks, toSummary } from './youtube';
 
 export { getDedupedYouTubeTalks } from './talks';
@@ -38,7 +38,10 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 	});
 
 	// Add manual talks from content collection
-	const manualTalks = await getCollection('talks');
+	const { manualTalks, youtubeTalks } = getTalkCatalogue<CollectionEntry<'talks'>>(
+		await getCollection('talks'),
+		await fetchYouTubeTalks()
+	);
 	manualTalks.forEach((talk: CollectionEntry<'talks'>) => {
 		items.push({
 			type: 'talk',
@@ -51,9 +54,7 @@ export async function buildSearchIndex(): Promise<SearchItem[]> {
 	});
 
 	// Add YouTube talks dynamically
-	const youtubeTalks = await fetchYouTubeTalks();
-	const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
-	dedupedYouTubeTalks.forEach((talk, index) => {
+	youtubeTalks.forEach((talk, index) => {
 		items.push({
 			type: 'talk',
 			title: talk.title,

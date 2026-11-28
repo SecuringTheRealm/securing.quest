@@ -1,22 +1,29 @@
 ---
+import EpisodePoster from '../../components/EpisodePoster.astro';
 import MoonIcon from '../../components/MoonIcon.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import SubscribeChip from '../../components/SubscribeChip.astro';
 import Base from '../../layouts/Base.astro';
-import { fetchYouTubeShorts } from '../../utils/youtube';
+import { formatIndexDate } from '../../utils/dates';
+import {
+	fetchYouTubeShorts,
+	type RelatedContentLink,
+	type YouTubeShort,
+} from '../../utils/youtube';
 
-// Fetch shorts from YouTube at build time
-const youtubeShorts = await fetchYouTubeShorts();
-
-// Sort by pubDate descending (newest first)
-const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
+const shorts = await fetchYouTubeShorts();
+const sortedShorts = [...shorts].sort(
+	(a: YouTubeShort, b: YouTubeShort) => b.pubDate.valueOf() - a.pubDate.valueOf()
+);
+const allTags = [...new Set(shorts.flatMap((short: YouTubeShort) => short.tags))].sort();
+const isTopic = (tag: string): boolean => tag !== 'Shorts' && tag !== 'YouTube';
 ---
 
 <Base title="Moon - Shorts">
   <div class="container page-shell">
     <PageHeader title="The Moon · Shorts" realm="moon">
       <MoonIcon slot="icon" />
-      A minute or two from the Moon. One idea, no preamble.
+      Short clips from the studio and the road.
       <SubscribeChip
         slot="actions"
         href="https://www.youtube.com/@SecuringTheRealm"
@@ -25,48 +32,39 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
       />
     </PageHeader>
 
+    {allTags.length > 0 && (
+      <details class="archive-links">
+        <summary>Browse topics</summary>
+        <div class="short-tags">
+          {allTags.map((tag: string) => <a href={`/tags/${tag}/`} class="tag-chip">{tag}</a>)}
+        </div>
+      </details>
+    )}
+
     <div class="shorts-grid" data-realm="moon">
-      {sortedShorts.length === 0 && (
-        <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg); grid-column: 1 / -1;">
-          Nothing from the Moon yet. Look up again shortly.
-        </p>
-      )}
-      {sortedShorts.map((short, index) => (
+      {sortedShorts.length === 0 && <p>Nothing from the Moon yet. Look up again shortly.</p>}
+      {sortedShorts.map((short: YouTubeShort, index: number) => (
         <article class="short-card">
-          <a href={short.videoUrl} target="_blank" rel="noopener noreferrer" class="short-thumbnail-link" aria-label={`Watch ${short.title} on YouTube`}>
-            <img
-              src={short.thumbnailUrl}
-              alt={short.title}
-              width="480"
-              height="360"
-              loading={index < 3 ? 'eager' : 'lazy'}
-              class="short-thumbnail"
-            />
-            <span class="play-icon" aria-hidden="true">&#9654;</span>
+          <a href={short.videoUrl} target="_blank" rel="noopener noreferrer" class="short-watch" aria-label={`Watch ${short.title} on YouTube`}>
+            <div class="short-frame">
+              <EpisodePoster realm="moon" thumbnailUrl={short.thumbnailUrl} eager={index < 3} />
+              <span class="play-icon" aria-hidden="true">&#9654;</span>
+            </div>
+            <h2 class="short-title">{short.title}</h2>
           </a>
           <div class="short-content">
-            <h2 class="short-title">
-              <a href={short.videoUrl} target="_blank" rel="noopener noreferrer">
-                {short.title}
-              </a>
-            </h2>
-            <p class="short-date">
-              {short.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+            <time class="short-date" datetime={short.pubDate.toISOString()}>{formatIndexDate(short.pubDate)}</time>
             {short.relatedContent.length > 0 && (
               <div class="short-related">
-                <span class="related-label">Related:</span>
-                {short.relatedContent.map((link) => (
-                  <a href={link.url} class="related-link">
-                    {link.title}
-                  </a>
+                {short.relatedContent.map((link: RelatedContentLink) => (
+                  <a href={link.url}>{link.title}</a>
                 ))}
               </div>
             )}
-            {short.tags.length > 0 && (
+            {short.tags.some(isTopic) && (
               <div class="short-tags">
-                {short.tags.map((tag: string) => (
-                  <a href={`/tags/${tag}/`} class="short-tag">{tag}</a>
+                {short.tags.filter(isTopic).map((tag: string) => (
+                  <a href={`/tags/${tag}/`} class="tag-chip">{tag}</a>
                 ))}
               </div>
             )}
@@ -77,12 +75,11 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
   </div>
 
   <script is:inline>
-    document.querySelectorAll('.short-card a[target="_blank"]').forEach(function (link) {
+    document.querySelectorAll('.short-watch').forEach(function (link) {
       link.addEventListener('click', function () {
         if (typeof plausible !== 'undefined') {
-          var card = link.closest('.short-card');
-          var title = card ? (card.querySelector('.short-title') || {}).textContent || 'Unknown' : 'Unknown';
-          plausible('Short Watch', { props: { title: title.trim() } });
+          var title = link.querySelector('.short-title');
+          plausible('Short Watch', { props: { title: title ? title.textContent.trim() : 'Unknown' } });
         }
       });
     });
@@ -92,136 +89,103 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
 <style>
   .shorts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
     gap: var(--space-6);
-    max-width: var(--max-width-wide);
-    margin: 0 auto;
+    align-items: start;
   }
 
   .short-card {
-    background: var(--colour-teal-dark);
-    border: 2px solid var(--colour-gold);
+    min-width: 0;
+    border: 1px solid var(--colour-stone-dark);
     border-radius: var(--radius-pixel);
-    box-shadow: var(--card-chrome);
-    overflow: hidden;
-    transition: transform var(--transition-base);
+    background: var(--colour-teal-dark);
   }
 
-  .short-card:hover {
-    transform: translate(2px, 2px);
-    box-shadow: var(--card-chrome-pressed);
-  }
-
-  .short-thumbnail-link {
+  .short-watch,
+  .short-frame {
     display: block;
-    position: relative;
-    aspect-ratio: 16/9;
-    overflow: hidden;
-    background: var(--colour-black);
   }
 
-  .short-thumbnail {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .short-watch {
+    color: var(--colour-parchment);
+  }
+
+  .short-frame {
+    position: relative;
   }
 
   .play-icon {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: var(--font-size-2xl);
-    color: var(--colour-parchment);
-    background: rgba(0, 0, 0, 0.6);
-    width: var(--space-12);
-    height: var(--space-12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--radius-full);
-    opacity: 0;
-    transition: opacity var(--transition-base);
-  }
-
-  .short-thumbnail-link:hover .play-icon,
-  .short-thumbnail-link:focus .play-icon {
-    opacity: 1;
-  }
-
-  .short-content {
-    padding: var(--space-4);
+    inset-inline-end: var(--space-3);
+    inset-block-end: var(--space-3);
+    display: grid;
+    place-items: center;
+    width: var(--space-8);
+    height: var(--space-8);
+    color: var(--colour-ink);
+    background: var(--colour-gold);
+    border: 2px solid var(--colour-ink);
+    border-radius: var(--radius-pixel);
+    line-height: 1;
   }
 
   .short-title {
-    font-size: var(--font-size-base);
-    margin: 0 0 var(--space-2) 0;
-    line-height: var(--line-height-snug);
-  }
-
-  .short-title a {
-    color: var(--colour-gold);
-    text-decoration: none;
-  }
-
-  .short-title a:hover {
+    margin: 0;
+    padding: var(--space-6) var(--space-6) 0;
+    color: inherit;
+    font-size: var(--font-size-xl);
     text-decoration: underline;
+    text-decoration-color: var(--colour-stone-dark);
+    text-underline-offset: 0.16em;
   }
 
-  .short-date {
-    font-size: var(--font-size-xs);
+  .short-watch:hover .short-title,
+  .short-watch:focus-visible .short-title {
+    color: var(--colour-gold-light);
+    text-decoration-color: currentColor;
+  }
+
+  .short-content {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-6) var(--space-6);
+  }
+
+  .short-date,
+  .archive-links {
     color: var(--colour-stone-light);
-    margin: 0 0 var(--space-3) 0;
-  }
-
-  .short-related {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-    margin-bottom: var(--space-3);
     font-size: var(--font-size-sm);
   }
 
-  .related-label {
-    color: var(--colour-stone-light);
-    font-size: var(--font-size-xs);
-  }
-
-  .related-link {
-    color: var(--colour-parchment);
-    font-size: var(--font-size-xs);
-    text-decoration: underline;
-    text-decoration-color: var(--colour-stone-light);
-  }
-
-  .related-link:hover {
-    color: var(--colour-gold);
-  }
-
+  .short-related,
   .short-tags {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-2);
     flex-wrap: wrap;
+    align-items: baseline;
   }
 
-  .short-tag {
-    font-size: var(--font-size-xs);
-    padding: var(--space-1) var(--space-2);
-    background: var(--colour-gold);
-    color: var(--colour-ink);
-    border-radius: var(--radius-full);
-    text-decoration: none;
+  .short-related a,
+  .archive-links summary {
+    text-decoration: underline;
+    text-underline-offset: 0.16em;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .short-card:hover {
-      transform: none;
-    }
+  .archive-links {
+    margin-block-end: var(--space-6);
+  }
 
-    .play-icon {
-      opacity: 1;
-      transition: none;
-    }
+  .archive-links summary {
+    width: fit-content;
+    cursor: pointer;
+  }
+
+  .archive-links summary:focus-visible {
+    outline: 2px solid var(--colour-gold);
+    outline-offset: var(--space-1);
+  }
+
+  .archive-links .short-tags {
+    margin-block-start: var(--space-3);
   }
 </style>

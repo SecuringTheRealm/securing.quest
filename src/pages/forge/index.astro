@@ -5,31 +5,35 @@ import ForgeIcon from '../../components/ForgeIcon.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import SubscribeChip from '../../components/SubscribeChip.astro';
 import Base from '../../layouts/Base.astro';
+import { formatIndexDate } from '../../utils/dates';
 
-const allProjects = await getCollection('projects');
-const activeProjects = allProjects
-	.filter((p: CollectionEntry<'projects'>) => p.data.status === 'active')
-	.sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => {
-		if (!a.data.firstPublic && !b.data.firstPublic) return 0;
-		if (!a.data.firstPublic) return 1;
-		if (!b.data.firstPublic) return -1;
-		return b.data.firstPublic.valueOf() - a.data.firstPublic.valueOf();
-	});
-const otherProjects = allProjects
-	.filter((p: CollectionEntry<'projects'>) => p.data.status !== 'active')
-	.sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => {
-		if (!a.data.firstPublic && !b.data.firstPublic) return 0;
-		if (!a.data.firstPublic) return 1;
-		if (!b.data.firstPublic) return -1;
-		return b.data.firstPublic.valueOf() - a.data.firstPublic.valueOf();
-	});
+type Project = CollectionEntry<'projects'>;
+interface ProjectGroup {
+	title: string;
+	projects: Project[];
+}
+
+const projects = (await getCollection('projects')).sort(
+	(a: Project, b: Project) =>
+		(b.data.firstPublic?.valueOf() ?? -Infinity) - (a.data.firstPublic?.valueOf() ?? -Infinity)
+);
+const groups = [
+	{
+		title: 'Active projects',
+		projects: projects.filter((project: Project) => project.data.status === 'active'),
+	},
+	{
+		title: 'Experimental and archived',
+		projects: projects.filter((project: Project) => project.data.status !== 'active'),
+	},
+].filter((group: ProjectGroup) => group.projects.length > 0);
 ---
 
 <Base title="Forge - Projects & Code">
   <div class="container page-shell">
     <PageHeader title="The Forge · Code" realm="forge">
       <ForgeIcon slot="icon" />
-      Open-source projects, templates and the demos built for the show. All of it public.
+      Open-source projects, templates and demos built for the show.
       <SubscribeChip
         slot="actions"
         href="https://github.com/SecuringTheRealm"
@@ -38,108 +42,36 @@ const otherProjects = allProjects
       />
     </PageHeader>
 
-    {allProjects.length === 0 && (
-      <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg); max-width: var(--max-width-content); margin: 0 auto;">
-        The forge is being stoked. Projects will appear here soon!
-      </p>
-    )}
+    {groups.length === 0 && <p>The forge is being stoked. Projects will appear here soon!</p>}
 
-    {
-      activeProjects.length > 0 && (
-        <section class="project-catalogue">
-          <h2>
-            Active Projects
-          </h2>
-          <div class="project-grid">
-            {activeProjects.map((project: CollectionEntry<'projects'>) => (
-              <article id={project.id} class="content-card">
-                <h3 style="margin-bottom: var(--space-3); overflow-wrap: break-word; word-break: break-word;">
-                  {project.data.name}
-                </h3>
-                {project.data.firstPublic && (
-                  <p style="font-size: var(--font-size-xs); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
-                    First public:{' '}
-                    {project.data.firstPublic.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                )}
-                <p style="margin-bottom: var(--space-4);">
-                  {project.data.description}
-                </p>
-
-                {project.data.tech.length > 0 && (
-                  <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-4);">
-                    {project.data.tech.map((tech: string) => (
-                      <span style="font-size: var(--font-size-xs); padding: var(--space-1) var(--space-2); background: var(--colour-teal-light); color: var(--colour-parchment); border-radius: var(--radius-sm);">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                <a
-                  href={project.data.repoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn-primary btn-sm"
-                  style="border-radius: var(--radius-md);"
-                >
-                  View on GitHub →
-                </a>
-              </article>
-            ))}
-          </div>
-        </section>
-      )
-    }
-
-    {
-      otherProjects.length > 0 && (
-        <section class="project-catalogue">
-          <h2>
-            Other Projects
-          </h2>
-          <div class="project-grid">
-            {otherProjects.map((project: CollectionEntry<'projects'>) => (
-              <article id={project.id} class="content-card project-card-muted">
-                <h3 style="margin-bottom: var(--space-3); overflow-wrap: break-word; word-break: break-word;">
-                  {project.data.name}
-                </h3>
-                <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
-                  Status: {project.data.status}
-                </p>
-                {project.data.firstPublic && (
-                  <p style="font-size: var(--font-size-xs); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
-                    First public:{' '}
-                    {project.data.firstPublic.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
-                )}
-                <p style="margin-bottom: var(--space-4);">
-                  {project.data.description}
-                </p>
-
-                <a
-                  href={project.data.repoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn-outline btn-sm"
-                  style="border-radius: var(--radius-md);"
-                >
-                  View on GitHub →
-                </a>
-              </article>
-            ))}
-          </div>
-        </section>
-      )
-    }
+    {groups.map((group: ProjectGroup) => (
+      <section class="project-catalogue">
+        <h2>{group.title}</h2>
+        <div class="project-grid">
+          {group.projects.map((project: Project) => (
+            <article id={project.id} class="content-card project-card">
+              <h3>{project.data.name}</h3>
+              {project.data.status !== 'active' && (
+                <p class="project-status">{project.data.status === 'archived' ? 'Archived' : 'Experimental'}</p>
+              )}
+              <p class="project-purpose">{project.data.description}</p>
+              <a class="project-link" href={project.data.repoUrl} target="_blank" rel="noopener noreferrer">
+                View on GitHub<span class="sr-only">: {project.data.name} (opens in a new tab)</span>
+              </a>
+              {(project.data.firstPublic || project.data.tech.length > 0) && (
+                <details class="project-details">
+                  <summary>Project details</summary>
+                  {project.data.tech.length > 0 && <p>{project.data.tech.join(' · ')}</p>}
+                  {project.data.firstPublic && (
+                    <p>First public: <time datetime={project.data.firstPublic.toISOString()}>{formatIndexDate(project.data.firstPublic)}</time></p>
+                  )}
+                </details>
+              )}
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
   </div>
 
   <style>
@@ -147,24 +79,63 @@ const otherProjects = allProjects
       margin-block-start: var(--space-12);
     }
 
-    .project-catalogue h2 {
-      margin-block-end: var(--space-6);
-    }
-
     .project-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
       gap: var(--space-6);
+      align-items: start;
     }
 
-    .project-card-muted {
-      border-color: var(--colour-stone);
+    .project-card {
+      display: grid;
+      gap: var(--space-3);
+      min-width: 0;
+      padding: var(--space-6);
+      border-color: var(--colour-stone-dark);
+      box-shadow: none;
     }
 
-    @media (max-width: 1024px) {
-      .project-grid {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-      }
+    .project-card h3 {
+      margin: 0;
+      font-size: var(--font-size-xl);
+      font-variant-caps: normal;
+      letter-spacing: normal;
+      color: var(--colour-parchment);
+      overflow-wrap: anywhere;
+    }
+
+    .project-card p {
+      margin: 0;
+    }
+
+    .project-status {
+      font-weight: var(--font-weight-bold);
+    }
+
+    .project-status,
+    .project-details {
+      color: var(--colour-stone-light);
+      font-size: var(--font-size-sm);
+    }
+
+    .project-link,
+    .project-details summary {
+      width: fit-content;
+      text-decoration: underline;
+      text-underline-offset: 0.16em;
+    }
+
+    .project-details summary {
+      cursor: pointer;
+    }
+
+    .project-details summary:focus-visible {
+      outline: 2px solid var(--colour-gold);
+      outline-offset: var(--space-1);
+    }
+
+    .project-details p {
+      margin-block-start: var(--space-2);
     }
   </style>
 

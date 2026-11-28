@@ -4,11 +4,8 @@ import { buildSearchIndex } from '../utils/search';
 const searchData = await buildSearchIndex();
 ---
 
-<!--
-  Ships expanded and collapses on load, so search still works without JS.
--->
 <div class="search-container">
-	<button type="button" class="search-toggle" aria-label="Search" title="Search (press /)" aria-expanded="true" aria-controls="search-input" hidden>
+	<button type="button" class="search-toggle" aria-label="Search" title="Search (press /)" aria-expanded="false" aria-controls="search-input" hidden>
 		<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" shape-rendering="crispEdges">
 			<path
 				d="M4 2h8v2H4zM2 4h2v8H2zM12 4h2v8h-2zM4 12h8v2H4zM12 12h2v2h-2zM14 14h2v2h-2zM16 16h2v2h-2zM18 18h2v2h-2z"
@@ -21,12 +18,15 @@ const searchData = await buildSearchIndex();
 			type="search"
 			id="search-input"
 			placeholder="Search..."
-			aria-label="Search content"
-			aria-controls="search-results"
+			role="combobox"
+			aria-autocomplete="list"
+			aria-controls="search-options"
 			aria-expanded="false"
 			autocomplete="off"
 		/>
-		<div id="search-results" role="listbox" aria-label="Search results" hidden>
+		<div id="search-results" hidden>
+			<p id="search-count" role="status"></p>
+			<div id="search-options" role="listbox" aria-label="Search results"></div>
 		</div>
 	</div>
 </div>
@@ -50,20 +50,21 @@ const searchData = await buildSearchIndex();
 
 	const searchInput = document.getElementById('search-input') as HTMLInputElement;
 	const searchResultsEl = document.getElementById('search-results') as HTMLElement;
+	const searchOptions = document.getElementById('search-options') as HTMLElement;
+	const searchCount = document.getElementById('search-count') as HTMLElement;
 
 	const searchContainer = document.querySelector('.search-container') as HTMLElement;
 	const searchToggle = document.querySelector('.search-toggle') as HTMLButtonElement;
 
-	if (!searchInput || !searchResultsEl || !searchContainer || !searchToggle) {
+	if (!searchInput || !searchResultsEl || !searchContainer || !searchToggle || !searchOptions || !searchCount) {
 		throw new Error('Search elements not found');
 	}
 
-	// Collapse on load: the markup ships expanded so a no-JS visitor still gets a
-	// working search box.
+	let selectedIndex = -1;
+	let searchTrackTimeout: ReturnType<typeof setTimeout> | undefined;
 	searchToggle.hidden = false;
-	setExpanded(false);
 
-	function setExpanded(expanded: boolean) {
+	function setExpanded(expanded: boolean): void {
 		searchContainer.classList.toggle('is-expanded', expanded);
 		searchToggle.setAttribute('aria-expanded', String(expanded));
 		if (expanded) {
@@ -88,9 +89,6 @@ const searchData = await buildSearchIndex();
 		setExpanded(true);
 	});
 
-	let selectedIndex = -1;
-	let searchTrackTimeout: ReturnType<typeof setTimeout> | undefined;
-
 	searchInput.addEventListener('input', (e: Event) => {
 		const target = e.target as HTMLInputElement;
 		const query = target.value.trim();
@@ -101,12 +99,13 @@ const searchData = await buildSearchIndex();
 		}
 
 		const results = rankItems(searchData, query);
-		displayResults(results.slice(0, 8));
+		displayResults(results);
 
 		clearTimeout(searchTrackTimeout);
 		searchTrackTimeout = setTimeout(() => {
-			if (typeof (window as any).plausible !== 'undefined') {
-				(window as any).plausible('Search', { props: { query: query, resultCount: String(results.length) } });
+			const track: unknown = window.plausible;
+			if (typeof track === 'function') {
+				track('Search', { props: { query, resultCount: String(results.length) } });
 			}
 		}, 1000);
 	});
@@ -127,12 +126,21 @@ const searchData = await buildSearchIndex();
 				break;
 			case 'Enter':
 				e.preventDefault();
-					(resultItems[selectedIndex] as HTMLAnchorElement | undefined)?.click();
+				(resultItems[selectedIndex] as HTMLAnchorElement | undefined)?.click();
 				break;
-			case 'Escape':
-				setExpanded(false);
-				searchToggle.focus();
-				break;
+		}
+	});
+
+	searchContainer.addEventListener('keydown', (e: KeyboardEvent) => {
+		if (e.key === 'Escape' && searchContainer.classList.contains('is-expanded')) {
+			setExpanded(false);
+			searchToggle.focus();
+		}
+	});
+
+	searchContainer.addEventListener('focusout', (e: FocusEvent) => {
+		if (e.relatedTarget instanceof Node && !searchContainer.contains(e.relatedTarget)) {
+			setExpanded(false);
 		}
 	});
 
@@ -143,22 +151,24 @@ const searchData = await buildSearchIndex();
 		}
 	});
 
-	function displayResults(results: SearchItem[]) {
-		searchResultsEl.replaceChildren();
-
-		if (results.length === 0) {
-			const empty = document.createElement('div');
-			empty.className = 'no-results';
-			empty.setAttribute('role', 'status');
-			empty.textContent = 'No results found';
-			searchResultsEl.append(empty);
-			showResults();
-			return;
+	function displayResults(results: SearchItem[]): void {
+		searchOptions.replaceChildren();
+		selectedIndex = -1;
+		searchInput.removeAttribute('aria-activedescendant');
+		searchResultsEl.hidden = false;
+		searchInput.setAttribute('aria-expanded', 'true');
+		const visibleResults = results.slice(0, 8);
+		if (visibleResults.length < results.length) {
+			searchCount.textContent = `Showing ${visibleResults.length} of ${results.length} matches`;
+		} else if (results.length) {
+			searchCount.textContent = `${results.length} ${results.length === 1 ? 'match' : 'matches'}`;
+		} else {
+			searchCount.textContent = 'No results found';
 		}
 
 		// Built as DOM nodes, not innerHTML: titles and descriptions include
 		// YouTube feed text, which is not ours to trust.
-		for (const [index, item] of results.entries()) {
+		for (const [index, item] of visibleResults.entries()) {
 			// The anchor IS the option: role="option" must not wrap interactive children.
 			const link = document.createElement('a');
 			link.href = item.url;
@@ -178,15 +188,12 @@ const searchData = await buildSearchIndex();
 				link.append(line);
 			}
 
-			searchResultsEl.append(link);
+			searchOptions.append(link);
 		}
-
-		showResults();
-		selectedIndex = -1;
 	}
 
-	function updateSelection(items: NodeListOf<Element>) {
-		items.forEach((item, index) => {
+	function updateSelection(items: NodeListOf<Element>): void {
+		items.forEach((item: Element, index: number) => {
 			if (index === selectedIndex) {
 				item.setAttribute('aria-selected', 'true');
 				item.scrollIntoView({ block: 'nearest' });
@@ -198,19 +205,17 @@ const searchData = await buildSearchIndex();
 		if (selectedIndex < 0) searchInput.removeAttribute('aria-activedescendant');
 	}
 
-	function showResults() {
-		searchResultsEl.removeAttribute('hidden');
-		searchInput.setAttribute('aria-expanded', 'true');
-	}
-
-	function hideResults() {
-		searchResultsEl.setAttribute('hidden', '');
+	function hideResults(): void {
+		searchResultsEl.hidden = true;
+		searchOptions.replaceChildren();
+		searchCount.textContent = '';
+		searchInput.removeAttribute('aria-activedescendant');
 		searchInput.setAttribute('aria-expanded', 'false');
 		selectedIndex = -1;
 	}
 
 	// The index is summarised at build time; this is only a hard length guard.
-	function truncate(text: string, length: number) {
+	function truncate(text: string, length: number): string {
 		if (text.length <= length) return text;
 		const cut = text.slice(0, length);
 		const lastSpace = cut.lastIndexOf(' ');
@@ -240,6 +245,10 @@ const searchData = await buildSearchIndex();
 		border: 0;
 		color: var(--colour-gold);
 		cursor: pointer;
+	}
+
+	.search-toggle[hidden] {
+		display: none;
 	}
 
 	/*
@@ -329,7 +338,7 @@ const searchData = await buildSearchIndex();
 		padding: var(--space-3);
 		text-decoration: none;
 		color: var(--colour-parchment);
-		border-bottom: 1px solid var(--colour-gold);
+		border-bottom: 1px solid var(--colour-stone-dark);
 		transition: background var(--transition-fast);
 	}
 
@@ -344,7 +353,7 @@ const searchData = await buildSearchIndex();
 	}
 
 	#search-results :global(.result-type) {
-		font-size: var(--font-size-xs);
+		font-size: var(--font-size-sm);
 		color: var(--colour-stone-light);
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-display-readable);
@@ -352,22 +361,23 @@ const searchData = await buildSearchIndex();
 	}
 
 	#search-results :global(.result-title) {
+		font-size: var(--font-size-lg);
 		font-weight: var(--font-weight-bold);
 		margin-bottom: var(--space-1);
 		color: var(--colour-gold);
 	}
 
 	#search-results :global(.result-description) {
-		font-size: var(--font-size-sm);
-		color: var(--colour-stone-light);
+		font-size: var(--font-size-base);
+		color: var(--colour-parchment);
 		line-height: var(--line-height-relaxed);
 	}
 
-	#search-results :global(.no-results) {
+	#search-count {
+		margin: 0;
 		padding: var(--space-4);
-		text-align: center;
+		font-size: var(--font-size-sm);
 		color: var(--colour-stone-light);
-		font-style: italic;
 	}
 
 	.sr-only {
@@ -394,14 +404,16 @@ const searchData = await buildSearchIndex();
 			top: 100%;
 			left: 0;
 			right: 0;
-			max-width: none;
+			width: auto;
+			transform: none;
 			padding: var(--space-2) var(--space-4);
 			background: var(--colour-bg-primary);
 			border-bottom: 2px solid var(--colour-gold);
 		}
 
 		#search-results {
-			max-height: 300px;
+			top: 100%;
+			max-block-size: min(50dvh, calc(100dvh - var(--masthead-scroll-clearance) - var(--space-16)));
 		}
 	}
 

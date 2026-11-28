@@ -10,8 +10,7 @@ const hosts: Author[] = [AUTHORS.chris, AUTHORS.josh];
 <Base title="Contact" description="Where to find the show and its hosts. There is no contact form.">
   <div class="container page-shell" style="max-width: var(--max-width-prose);">
     <PageHeader title="Contact">
-      There is no contact form here. The site is static files with no server behind it to
-      receive one, so these are the places that reach us.
+      Message us on <a href="https://www.linkedin.com/company/securingtherealm/">LinkedIn</a> about the show. If something on this site is broken, <a href="https://github.com/SecuringTheRealm/securing.quest/issues">open a GitHub issue</a>.
     </PageHeader>
 
     <section class="contact-section">
@@ -24,19 +23,7 @@ const hosts: Author[] = [AUTHORS.chris, AUTHORS.josh];
             rel="noopener noreferrer"
             aria-label="GitHub organisation (opens in new tab)">GitHub</a
           >
-          <span
-            >Everything we build in the open. Anything broken on this site belongs in the issue
-            tracker for the securing.quest repository.</span
-          >
-        </li>
-        <li>
-          <a
-            href="https://www.linkedin.com/company/securingtherealm/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="LinkedIn page for Securing the Realm (opens in new tab)">LinkedIn</a
-          >
-          <span>The page for the show.</span>
+          <span>Code and demos from the show.</span>
         </li>
         <li>
           <a
@@ -52,9 +39,6 @@ const hosts: Author[] = [AUTHORS.chris, AUTHORS.josh];
           <span>Every post has a comment thread. Signing in uses GitHub.</span>
         </li>
       </ul>
-      <p class="contact-note">
-        There is no shared inbox for the show, so GitHub or LinkedIn is the way in.
-      </p>
     </section>
 
     <section class="contact-section">
@@ -93,6 +77,10 @@ const hosts: Author[] = [AUTHORS.chris, AUTHORS.josh];
 </Base>
 
 <style>
+  .page-shell :global(.page-header__intro a) {
+    text-decoration: underline;
+  }
+
   .contact-section {
     max-width: var(--max-width-prose);
     margin-bottom: var(--space-8);
@@ -122,9 +110,6 @@ const hosts: Author[] = [AUTHORS.chris, AUTHORS.josh];
     color: var(--colour-stone-light);
   }
 
-  .contact-note {
-    color: var(--colour-stone-light);
-  }
 
   .contact-host {
     margin-bottom: var(--space-6);

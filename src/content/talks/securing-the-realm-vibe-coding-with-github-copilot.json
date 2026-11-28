@@ -3,7 +3,7 @@
   "date": "2025-04-09",
   "event": "YouTube - Securing the Realm",
   "videoUrl": "https://www.youtube.com/watch?v=pz9beXhsK2E",
-  "summary": "In this conversation, Chris and Josh explore the latest features of GitHub Copilot, particularly focusing on agentic AI and its implications for software development. They discuss the concept of vi...",
+  "summary": "Chris and Josh use GitHub Copilot’s agent mode to build a tabletop role-playing game in TypeScript. Then they debug the code it writes.",
   "tags": [
     "YouTube",
     "Video"

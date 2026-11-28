@@ -3,7 +3,7 @@
   "date": "2025-05-19",
   "event": "YouTube - Securing the Realm",
   "videoUrl": "https://www.youtube.com/watch?v=FKG8-H6RVDU",
-  "summary": "In this conversation, Chris Lloyd-Jones and Josh McDonald discuss the use of Foundry Local for securely generating sensitive AI content. They explain the importance of data privacy and security, sh...",
+  "summary": "Chris and Josh show how AI agents can draft a confidential research document on local hardware and keep track of its sources.",
   "tags": [
     "YouTube",
     "Video"

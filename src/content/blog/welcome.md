@@ -6,8 +6,6 @@ tags: ["welcome", "meta"]
 draft: false
 ---
 
-# Welcome to the Library
-
 Welcome, traveller. You’ve entered **the Library** – the heart of *Securing the Realm*, where we chronicle our adventures across cybersecurity, Azure, and AI.
 
 ## What Awaits Inside

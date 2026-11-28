@@ -9,22 +9,26 @@ const { title, eyebrow, realm } = Astro.props;
 ---
 
 <header class="page-header" data-realm={realm}>
-	{
-		Astro.slots.has('icon') && (
-			<div class="page-header__icon">
-				<slot name="icon" />
-			</div>
-		)
-	}
-	{eyebrow && <p class="page-header__eyebrow">{eyebrow}</p>}
-	<h1 class="page-header__title">{title}</h1>
-	{
-		Astro.slots.has('default') && (
-			<div class="page-header__intro">
-				<slot />
-			</div>
-		)
-	}
+	<div class="page-header__copy">
+		{eyebrow && !title.startsWith(eyebrow) && <p class="page-header__eyebrow">{eyebrow}</p>}
+		<div class="page-header__heading">
+			{
+				Astro.slots.has('icon') && (
+					<div class="page-header__icon">
+						<slot name="icon" />
+					</div>
+				)
+			}
+			<h1 class="page-header__title">{title}</h1>
+		</div>
+		{
+			Astro.slots.has('default') && (
+				<div class="page-header__intro">
+					<slot />
+				</div>
+			)
+		}
+	</div>
 	{
 		Astro.slots.has('actions') && (
 			<div class="page-header__actions">
@@ -37,11 +41,39 @@ const { title, eyebrow, realm } = Astro.props;
 <style>
 	.page-header {
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
+		align-items: end;
+		justify-content: space-between;
+		gap: var(--space-3) var(--space-6);
+		margin-bottom: var(--space-8);
+	}
+
+	.page-header__copy {
+		min-width: 0;
+	}
+
+	.page-header__heading {
+		display: flex;
 		align-items: center;
-		gap: var(--space-4);
-		margin-bottom: var(--space-12);
-		text-align: center;
+		gap: var(--space-3);
+	}
+
+	.page-header__icon {
+		flex: 0 0 var(--space-8);
+	}
+
+	.page-header__icon :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	@media (max-width: 768px) {
+		.page-header {
+			display: grid;
+			align-items: start;
+			grid-template-columns: minmax(0, 1fr);
+		}
 	}
 
 	.page-header__eyebrow {
@@ -61,6 +93,7 @@ const { title, eyebrow, realm } = Astro.props;
 
 	.page-header__intro {
 		max-width: var(--max-width-narrow);
+		margin-top: var(--space-2);
 		font-size: var(--font-size-lg);
 	}
 
@@ -68,6 +101,5 @@ const { title, eyebrow, realm } = Astro.props;
 		display: flex;
 		gap: var(--space-3);
 		flex-wrap: wrap;
-		justify-content: center;
 	}
 </style>

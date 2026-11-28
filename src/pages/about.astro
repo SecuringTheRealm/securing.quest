@@ -1,6 +1,4 @@
 ---
-import { Image } from 'astro:assets';
-import logoSrc from '../assets/str-logo.png';
 import AuthorCard from '../components/AuthorCard.astro';
 import ListenHub from '../components/ListenHub.astro';
 import Base from '../layouts/Base.astro';
@@ -8,52 +6,53 @@ import { AUTHORS } from '../utils/authors';
 ---
 
 <Base title="About - Our Mission">
-  <div class="container page-shell" style="max-width: var(--max-width-prose);">
-    <h1 style="text-align: center; margin-bottom: var(--space-8);">About Our Quest</h1>
-
-    <div style="text-align: center; margin-bottom: var(--space-6);">
-      <Image src={logoSrc} alt="Securing the Realm - Shield and Hammer Logo" width={200} height={200} />
-    </div>
-
-    <section style="margin-bottom: var(--space-8);">
+  <div class="container page-shell about-page">
+    <section class="about-mission">
+      <h1>About Our Quest</h1>
       <h2>Our Mission</h2>
-      <p style="font-size: var(--font-size-lg); line-height: var(--line-height-relaxed);">
+      <p class="mission-lede">
         Deploying AI is mostly unglamorous. Large-Language Models (LLMs), Small-Language Models
         (SLMs) and agentic systems all have to be secured, made to perform, and handed over to people
         who didn't build them. We run it as a campaign because that is honestly how it goes: a party
         of specialists, a map with unlit corners, and something at the gate that nobody put in the
         threat model.
       </p>
+      <div class="mission-actions">
+        <a href="#listen" class="btn-primary">Listen to the Podcast</a>
+        <a href="/talks/" class="btn-outline">Watch Talks</a>
+      </div>
     </section>
 
-    <section style="margin-bottom: var(--space-8);">
-      <h2>Who This Is For</h2>
-      <p style="line-height: var(--line-height-relaxed);">
-        If you build on Azure, worry about what your models do once they are in production, or work
-        in the open, this is for you. You will battle kobolds that are already inside the perimeter,
-        train AI elves that would rather improvise, and lay siege to the Crystal Keep. It still has
-        not given up a single secret.
-      </p>
-    </section>
-
-    <section style="margin-bottom: var(--space-8);">
-      <h2>What We Cover</h2>
-      <ul style="line-height: var(--line-height-relaxed); font-size: var(--font-size-lg);">
-        <li><strong>Azure Cloud Security</strong>: Identity, network boundaries, and where your secrets actually live</li>
-        <li><strong>AI & Machine Learning</strong>: Getting LLMs, SLMs and agentic systems out of the demo and into production</li>
-        <li><strong>DevSecOps</strong>: Security checks that run in the pipeline, before anything ships</li>
-        <li><strong>Open Source Projects</strong>: Using community tools, and what it takes to contribute back</li>
-        <li><strong>Responsible AI</strong>: Governance frameworks, and who answers for it when the model gets it wrong</li>
-      </ul>
-    </section>
-
-    <section style="margin-bottom: var(--space-12);">
+    <section class="about-party">
       <h2 class="section-heading">Meet the Party</h2>
       <div class="host-grid">
         <AuthorCard author={AUTHORS.chris} />
         <AuthorCard author={AUTHORS.josh} />
       </div>
     </section>
+
+    <div class="about-scope">
+      <section>
+        <h2>Who This Is For</h2>
+        <p>
+          If you build on Azure, worry about what your models do once they are in production, or work
+          in the open, this is for you. You will battle kobolds that are already inside the perimeter,
+          train AI elves that would rather improvise, and lay siege to the Crystal Keep. It still has
+          not given up a single secret.
+        </p>
+      </section>
+
+      <section>
+        <h2>What We Cover</h2>
+        <ul>
+          <li><strong>Azure Cloud Security</strong>: Identity, network boundaries, and where your secrets actually live</li>
+          <li><strong>AI & Machine Learning</strong>: Getting LLMs, SLMs and agentic systems out of the demo and into production</li>
+          <li><strong>DevSecOps</strong>: Security checks that run in the pipeline, before anything ships</li>
+          <li><strong>Open Source Projects</strong>: Using community tools, and what it takes to contribute back</li>
+          <li><strong>Responsible AI</strong>: Governance frameworks, and who answers for it when the model gets it wrong</li>
+        </ul>
+      </section>
+    </div>
 
     <ListenHub>
       <p slot="featured-episode" class="featured-episode">
@@ -62,23 +61,63 @@ import { AUTHORS } from '../utils/authors';
         We talk through how to test AI agents before deployment and monitor them in production.
       </p>
     </ListenHub>
-
-    <section
-      style="text-align: center; background: var(--colour-teal-dark); padding: var(--space-8); border-radius: var(--radius-pixel); border: 2px solid var(--colour-gold); margin-top: var(--space-12);"
-    >
-      <h2>Join the Adventure</h2>
-      <p style="margin-bottom: var(--space-6);">
-        Start with the podcast. The talks are the side quests.
-      </p>
-      <div style="display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-        <a href="#listen" class="btn-primary">Listen to the Podcast</a>
-        <a href="/talks/" class="btn-outline">Watch Talks</a>
-      </div>
-    </section>
   </div>
 </Base>
 
 <style>
+  .about-page {
+    display: grid;
+    gap: var(--space-section);
+  }
+
+  .about-mission,
+  .about-party,
+  .about-scope {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .about-mission {
+    max-width: var(--measure);
+  }
+
+  .about-party,
+  .about-scope {
+    max-width: var(--max-width-content);
+  }
+
+  .about-mission h1,
+  .about-mission h2,
+  .about-scope h2 {
+    margin-block-end: var(--space-3);
+  }
+
+  .mission-lede,
+  .about-scope {
+    line-height: var(--line-height-relaxed);
+  }
+
+  .mission-lede {
+    font-size: var(--font-size-lg);
+  }
+
+  .mission-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block-start: var(--space-4);
+  }
+
+  .about-scope {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .about-scope p,
+  .about-scope ul {
+    margin-block-end: 0;
+  }
+
   .featured-episode {
     margin: 0;
   }
@@ -89,7 +128,13 @@ import { AUTHORS } from '../utils/authors';
 
   .host-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--space-6);
+  }
+
+  @media (min-width: 769px) {
+    .host-grid,
+    .about-scope {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 </style>

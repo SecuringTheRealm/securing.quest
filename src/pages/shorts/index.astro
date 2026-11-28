@@ -14,7 +14,7 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
 
 <Base title="Moon - Shorts">
   <div class="container page-shell">
-    <PageHeader title="The Moon · Shorts" eyebrow="The Moon" realm="moon">
+    <PageHeader title="The Moon · Shorts" realm="moon">
       <MoonIcon slot="icon" />
       A minute or two from the Moon. One idea, no preamble.
       <SubscribeChip
@@ -92,7 +92,7 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
 <style>
   .shorts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
     gap: var(--space-6);
     max-width: var(--max-width-wide);
     margin: 0 auto;
@@ -117,7 +117,7 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
     position: relative;
     aspect-ratio: 16/9;
     overflow: hidden;
-    background: black;
+    background: var(--colour-black);
   }
 
   .short-thumbnail {
@@ -134,8 +134,8 @@ const sortedShorts = youtubeShorts.sort((a, b) => b.pubDate.valueOf() - a.pubDat
     font-size: var(--font-size-2xl);
     color: var(--colour-parchment);
     background: rgba(0, 0, 0, 0.6);
-    width: 48px;
-    height: 48px;
+    width: var(--space-12);
+    height: var(--space-12);
     display: flex;
     align-items: center;
     justify-content: center;

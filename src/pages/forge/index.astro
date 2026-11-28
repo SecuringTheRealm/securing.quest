@@ -27,7 +27,7 @@ const otherProjects = allProjects
 
 <Base title="Forge - Projects & Code">
   <div class="container page-shell">
-    <PageHeader title="The Forge · Code" eyebrow="The Forge" realm="forge">
+    <PageHeader title="The Forge · Code" realm="forge">
       <ForgeIcon slot="icon" />
       Open-source projects, templates and the demos built for the show. All of it public.
       <SubscribeChip
@@ -46,11 +46,11 @@ const otherProjects = allProjects
 
     {
       activeProjects.length > 0 && (
-        <section style="max-width: var(--max-width-content); margin: 0 auto var(--space-12) auto;">
-          <h2 style="text-align: center; margin-bottom: var(--space-6);">
+        <section class="project-catalogue">
+          <h2>
             Active Projects
           </h2>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
+          <div class="project-grid">
             {activeProjects.map((project: CollectionEntry<'projects'>) => (
               <article id={project.id} class="content-card">
                 <h3 style="margin-bottom: var(--space-3); overflow-wrap: break-word; word-break: break-word;">
@@ -98,13 +98,13 @@ const otherProjects = allProjects
 
     {
       otherProjects.length > 0 && (
-        <section style="max-width: var(--max-width-content); margin: 0 auto;">
-          <h2 style="text-align: center; margin-bottom: var(--space-6);">
+        <section class="project-catalogue">
+          <h2>
             Other Projects
           </h2>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
+          <div class="project-grid">
             {otherProjects.map((project: CollectionEntry<'projects'>) => (
-              <article id={project.id} class="content-card" style="border-color: var(--colour-stone); opacity: 0.8;">
+              <article id={project.id} class="content-card project-card-muted">
                 <h3 style="margin-bottom: var(--space-3); overflow-wrap: break-word; word-break: break-word;">
                   {project.data.name}
                 </h3>
@@ -141,6 +141,32 @@ const otherProjects = allProjects
       )
     }
   </div>
+
+  <style>
+    .project-catalogue + .project-catalogue {
+      margin-block-start: var(--space-12);
+    }
+
+    .project-catalogue h2 {
+      margin-block-end: var(--space-6);
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+
+    .project-card-muted {
+      border-color: var(--colour-stone);
+    }
+
+    @media (max-width: 1024px) {
+      .project-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+      }
+    }
+  </style>
 
   <script is:inline>
     document.querySelectorAll('article').forEach(function (article) {

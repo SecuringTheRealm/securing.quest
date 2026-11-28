@@ -19,37 +19,36 @@ const TAG_LIMIT = 4;
 ---
 
 <Base title="Library - Blog Posts">
-  <div class="container page-shell">
-    <PageHeader title="The Library · Blog" eyebrow="The Library" realm="library">
+  <div class="container page-shell library-page">
+    <PageHeader title="The Library · Blog" realm="library">
       <LibraryIcon slot="icon" />
       Writeups from the Library: the architecture, the security work, and what broke on the way.
       <a
         slot="actions"
         href="/blog/rss.xml"
         class="btn-primary btn-sm"
-        style="border-radius: var(--radius-full);"
       >
         RSS Feed
       </a>
     </PageHeader>
 
-    <div style="max-width: var(--max-width-content); margin: 0 auto;" data-realm="library">
+    <div class="post-list" data-realm="library">
       {sortedPosts.length === 0 && (
-        <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg);">
+        <p class="empty-list">
           The shelves are bare. New scrolls will appear here.
         </p>
       )}
       {sortedPosts.map((post: CollectionEntry<'blog'>) => (
-        <article class="content-card" style="margin-bottom: var(--space-8);">
-          <h2 style="margin-bottom: var(--space-3);">
+        <article class="post-row">
+          <h2>
             <a href={`/blog/${post.id}/`}>{post.data.title}</a>
           </h2>
-          <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-3);">
-            {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-          <p style="margin-bottom: var(--space-4);">{post.data.description}</p>
+          <time datetime={post.data.pubDate.toISOString()}>
+            {post.data.pubDate.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+          </time>
+          <p>{post.data.description}</p>
           {post.data.tags.length > 0 && (
-            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;">
+            <div class="post-tags">
               {post.data.tags.slice(0, TAG_LIMIT).map((tag: string) => (
                 <a href={`/tags/${tag}/`} class="tag-chip">
                   {tag}
@@ -65,3 +64,50 @@ const TAG_LIMIT = 4;
     </div>
   </div>
 </Base>
+
+<style>
+  .library-page {
+    max-width: var(--max-width-content);
+  }
+
+  .post-list {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .post-row {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    border-inline-start: 2px solid var(--realm-accent);
+    background: var(--colour-teal-dark);
+  }
+
+  .post-row h2,
+  .post-row p {
+    margin: 0;
+  }
+
+  .post-row time,
+  .empty-list {
+    color: var(--colour-stone-light);
+  }
+
+  .post-row time {
+    font-size: var(--font-size-sm);
+  }
+
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-block-start: var(--space-2);
+  }
+
+  @media (max-width: 768px) {
+    .post-row {
+      padding-inline: var(--space-4);
+    }
+  }
+</style>

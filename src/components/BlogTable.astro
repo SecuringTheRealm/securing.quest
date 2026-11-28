@@ -1,0 +1,40 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'table'> {}
+
+const tableProps = Astro.props;
+---
+
+<div class="table-scroll" role="region" aria-label="Scrollable table" tabindex="0">
+  <table {...tableProps}>
+    <slot />
+  </table>
+</div>
+
+<style>
+  .table-scroll {
+    max-inline-size: 100%;
+    overflow-x: auto;
+    margin-block: var(--space-4);
+  }
+
+  .table-scroll:focus-visible {
+    outline: 2px solid var(--colour-gold);
+    outline-offset: var(--space-1);
+  }
+
+  .table-scroll > table {
+    margin-block: 0;
+  }
+
+  .table-scroll :global(code) {
+    overflow-wrap: anywhere;
+  }
+
+  @media print {
+    .table-scroll {
+      overflow: visible;
+    }
+  }
+</style>

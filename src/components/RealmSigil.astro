@@ -1,0 +1,33 @@
+---
+interface Props {
+	realm: 'tower' | 'library' | 'forge' | 'moon' | 'keep';
+	size?: number;
+	x?: number;
+	y?: number;
+}
+
+const { realm, size = 96, x, y } = Astro.props;
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  class="realm-sigil"
+  data-realm={realm}
+  width={size}
+  height={size}
+  viewBox="0 0 64 64"
+  x={x}
+  y={y}
+  shape-rendering="crispEdges"
+  aria-hidden="true"
+  focusable="false"
+>
+  <use href={`#str-sigil-${realm}`} />
+</svg>
+
+<style>
+  .realm-sigil {
+    color: var(--realm-accent);
+    image-rendering: pixelated;
+  }
+</style>

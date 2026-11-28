@@ -139,10 +139,11 @@ const { tag, items } = Astro.props as Props;
                 {toSummary(item.description, 150)}
               </p>
               <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
-                {item.date.toLocaleDateString('en-US', {
+                {item.date.toLocaleDateString('en-GB', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
+                  timeZone: 'UTC',
                 })}
               </p>
             </div>

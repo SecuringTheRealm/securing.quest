@@ -4,7 +4,7 @@ import { getYouTubeVideoId } from './youtube';
 export interface ManualTalkLike {
 	id: string;
 	data: {
-		videoUrl: string;
+		videoUrl?: string;
 	};
 }
 

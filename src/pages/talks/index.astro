@@ -15,6 +15,7 @@ interface UnifiedTalk {
 	date: Date;
 	event: string;
 	videoUrl?: string;
+	previewUrl?: string;
 	slidesUrl?: string;
 	eventUrl?: string;
 	summary: string;
@@ -36,6 +37,7 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	date: talk.data.date,
 	event: talk.data.event,
 	videoUrl: talk.data.videoUrl,
+	previewUrl: talk.data.previewUrl,
 	slidesUrl: talk.data.slidesUrl,
 	eventUrl: talk.data.eventUrl,
 	summary: talk.data.summary,
@@ -69,7 +71,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
   <div class="container page-shell">
     <PageHeader title="The Tower · Talks" eyebrow="The Tower" realm="tower">
       <TowerIcon slot="icon" />
-      Full sessions and recorded talks, from conference stages and from the studio.
+      Workshops, talks and full episodes from conference stages and the studio.
       <SubscribeChip
         slot="actions"
         href="https://www.youtube.com/@SecuringTheRealm"
@@ -88,7 +90,7 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
         <article id={talk.id} class="content-card" style="margin-bottom: var(--space-12);">
           <h2 style="margin-bottom: var(--space-3);">{talk.title}</h2>
           <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
-            {talk.event} • {talk.date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            {talk.event} • {talk.date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
           </p>
           <p style="margin-bottom: var(--space-4);">{talk.summary}</p>
 
@@ -116,6 +118,11 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
             {talk.videoUrl && !talk.embedUrl && (
               <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">
                 Watch Video
+              </a>
+            )}
+            {talk.previewUrl && (
+              <a href={talk.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" data-action="preview">
+                Watch preview
               </a>
             )}
             {talk.slidesUrl && (

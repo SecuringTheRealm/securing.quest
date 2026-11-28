@@ -10,7 +10,7 @@ export interface Props {
 
 const SHOW_DESCRIPTION =
 	'Chris Lloyd-Jones and Josh McDonald host Securing the Realm, a podcast about AI governance, platforms and cybersecurity.';
-const DEFAULT_SOCIAL_IMAGE = '/social-card.png';
+const DEFAULT_SOCIAL_IMAGE = '/social-card.png?v=2';
 const ORGANISATION_LOGO = '/str-logo.png';
 
 const {
@@ -28,7 +28,7 @@ const socialImage = new URL(image, Astro.site);
 const logo = new URL(ORGANISATION_LOGO, Astro.site);
 const isDefaultSocialImage = image === DEFAULT_SOCIAL_IMAGE;
 const socialImageAlt = isDefaultSocialImage
-	? 'Securing the Realm. AI governance, platforms and cybersecurity. With Chris Lloyd-Jones and Josh McDonald.'
+	? 'Securing the Realm shield. AI governance, platforms and cybersecurity.'
 	: description;
 
 // JSON-LD for organization

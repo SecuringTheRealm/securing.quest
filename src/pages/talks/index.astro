@@ -4,9 +4,15 @@ import { getCollection } from 'astro:content';
 import PageHeader from '../../components/PageHeader.astro';
 import SubscribeChip from '../../components/SubscribeChip.astro';
 import TowerIcon from '../../components/TowerIcon.astro';
+import VideoFacade from '../../components/VideoFacade.astro';
 import Base from '../../layouts/Base.astro';
 import { getDedupedYouTubeTalks } from '../../utils/talks';
-import { fetchYouTubeTalks, getYouTubeEmbedUrl, getYouTubeThumbnailUrl } from '../../utils/youtube';
+import {
+	fetchYouTubeTalks,
+	getYouTubeEmbedUrl,
+	getYouTubeThumbnailUrl,
+	type YouTubeTalk,
+} from '../../utils/youtube';
 
 // Unified talk type for rendering
 interface UnifiedTalk {
@@ -49,27 +55,29 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
 
 // Convert YouTube talks to unified format
-const unifiedYouTubeTalks: UnifiedTalk[] = dedupedYouTubeTalks.map((talk, index) => ({
-	id: `youtube-${index}`,
-	title: talk.title,
-	date: talk.date,
-	event: talk.event,
-	videoUrl: talk.videoUrl,
-	summary: talk.summary,
-	tags: talk.tags,
-	embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
-	thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
-}));
+const unifiedYouTubeTalks: UnifiedTalk[] = dedupedYouTubeTalks.map(
+	(talk: YouTubeTalk, index: number) => ({
+		id: `youtube-${index}`,
+		title: talk.title,
+		date: talk.date,
+		event: talk.event,
+		videoUrl: talk.videoUrl,
+		summary: talk.summary,
+		tags: talk.tags,
+		embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+		thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
+	})
+);
 
 // Merge and sort all talks by date (newest first)
 const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
-	(a, b) => b.date.valueOf() - a.date.valueOf()
+	(a: UnifiedTalk, b: UnifiedTalk) => b.date.valueOf() - a.date.valueOf()
 );
 ---
 
 <Base title="Tower - Talks & Presentations">
-  <div class="container page-shell">
-    <PageHeader title="The Tower · Talks" eyebrow="The Tower" realm="tower">
+  <div class="container page-shell talks-shell">
+    <PageHeader title="The Tower · Talks" realm="tower">
       <TowerIcon slot="icon" />
       Workshops, talks and full episodes from conference stages and the studio.
       <SubscribeChip
@@ -80,165 +88,137 @@ const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
       />
     </PageHeader>
 
-    <div style="max-width: var(--max-width-content); margin: 0 auto;" data-realm="tower">
+    <div class="talk-list" data-realm="tower">
       {allTalks.length === 0 && (
         <p style="text-align: center; color: var(--colour-stone-light); font-size: var(--font-size-lg);">
           No talks yet. Check back soon for upcoming presentations!
         </p>
       )}
       {allTalks.map((talk: UnifiedTalk, index: number) => (
-        <article id={talk.id} class="content-card" style="margin-bottom: var(--space-12);">
-          <h2 style="margin-bottom: var(--space-3);">{talk.title}</h2>
-          <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-2);">
-            {talk.event} • {talk.date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
-          </p>
-          <p style="margin-bottom: var(--space-4);">{talk.summary}</p>
-
-          {talk.embedUrl && (
-            <div class="video-frame">
-              <a
-                class="video-facade"
-                href={talk.videoUrl}
-                data-embed={talk.embedUrl}
-                data-title={talk.title}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-action="video"
-                aria-label={`Play video: ${talk.title} (opens YouTube)`}
-              >
-                {talk.thumbnailUrl && (
-                  <img src={talk.thumbnailUrl} alt="" loading={index === 0 ? 'eager' : 'lazy'} width="480" height="270" />
-                )}
-                <span class="video-facade__play" aria-hidden="true" />
-              </a>
+        <article id={talk.id} class="talk-card content-card">
+          <div class="talk-copy">
+            <h2>{talk.title}</h2>
+            <p class="talk-meta">
+              {talk.event} • {talk.date.toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}
+            </p>
+            <p class="talk-summary">{talk.summary}</p>
+          </div>
+          {talk.embedUrl && talk.videoUrl && (
+            <div class="talk-media">
+              <VideoFacade
+                embedUrl={talk.embedUrl}
+                videoUrl={talk.videoUrl}
+                thumbnailUrl={talk.thumbnailUrl}
+                title={talk.title}
+                eager={index === 0}
+              />
             </div>
           )}
+          <div class="talk-links">
+            <div class="talk-actions">
+              {talk.videoUrl && !talk.embedUrl && (
+                <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">
+                  Watch Video
+                </a>
+              )}
+              {talk.previewUrl && (
+                <a href={talk.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" data-action="preview">
+                  Watch preview
+                </a>
+              )}
+              {talk.slidesUrl && (
+                <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
+                  View Slides
+                </a>
+              )}
+              {talk.eventUrl && (
+                <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
+                  Event Details
+                </a>
+              )}
+            </div>
 
-          <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
-            {talk.videoUrl && !talk.embedUrl && (
-              <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="btn-primary btn-sm">
-                Watch Video
-              </a>
-            )}
-            {talk.previewUrl && (
-              <a href={talk.previewUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm" data-action="preview">
-                Watch preview
-              </a>
-            )}
-            {talk.slidesUrl && (
-              <a href={talk.slidesUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
-                View Slides
-              </a>
-            )}
-            {talk.eventUrl && (
-              <a href={talk.eventUrl} target="_blank" rel="noopener noreferrer" class="btn-outline btn-sm">
-                Event Details
-              </a>
+            {talk.tags.length > 0 && (
+              <div class="talk-tags">
+                {talk.tags.map((tag: string) => (
+                  <a href={`/tags/${tag}/`} class="tag-chip">
+                    {tag}
+                  </a>
+                ))}
+              </div>
             )}
           </div>
-
-          {talk.tags.length > 0 && (
-            <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4);">
-              {talk.tags.map((tag: string) => (
-                <a href={`/tags/${tag}/`} class="tag-chip">
-                  {tag}
-                </a>
-              ))}
-            </div>
-          )}
         </article>
       ))}
     </div>
   </div>
 
   <style>
-    .video-frame {
-      position: relative;
-      margin-bottom: var(--space-4);
-      aspect-ratio: 16 / 9;
-      background: var(--colour-black);
-      border: 2px solid var(--colour-gold);
-      border-radius: var(--radius-pixel);
-      overflow: hidden;
+    .talks-shell {
+      max-width: min(var(--container), calc(var(--max-width-content) + var(--space-12)));
     }
 
-    .video-facade {
-      position: absolute;
-      inset: 0;
-      display: block;
-    }
-
-    /* Inset ring so it isn't clipped by the frame's overflow:hidden */
-    .video-facade:focus-visible {
-      outline: 3px solid var(--colour-gold);
-      outline-offset: calc(-1 * var(--space-1));
-    }
-
-    .video-facade img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .video-facade__play {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 64px;
-      height: 64px;
-      background: var(--colour-gold);
-      border: 2px solid var(--colour-ink);
-      border-radius: var(--radius-pixel);
+    .talk-list {
       display: grid;
-      place-items: center;
-      transition: background var(--transition-fast);
+      gap: var(--space-6);
     }
 
-    .video-facade:hover .video-facade__play,
-    .video-facade:focus-visible .video-facade__play {
-      background: var(--colour-gold-light);
+    .talk-card {
+      display: grid;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      border-color: var(--realm-accent);
     }
 
-    .video-facade__play::after {
-      content: '';
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 16px 0 16px 24px;
-      border-color: transparent transparent transparent var(--colour-ink);
-      margin-left: 4px;
+    .talk-copy h2,
+    .talk-meta {
+      margin-block-end: var(--space-2);
     }
 
-    .video-frame iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
+    .talk-meta {
+      font-size: var(--font-size-sm);
+      color: var(--colour-stone-light);
+    }
+
+    .talk-summary {
+      margin: 0;
+    }
+
+    .talk-links {
+      display: grid;
+      gap: var(--space-3);
+    }
+
+    .talk-links:empty,
+    .talk-actions:empty {
+      display: none;
+    }
+
+    .talk-actions,
+    .talk-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .talk-media {
+      min-width: 0;
+      border: 2px solid var(--realm-accent);
+      border-radius: var(--radius-pixel);
+    }
+
+    @media (min-width: 769px) {
+      :global(.talk-card:has(.talk-media):not(:has(.video-player.is-playing))) {
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        align-items: start;
+      }
+
+      :global(.talk-card:has(.talk-media):not(:has(.video-player.is-playing))) .talk-media {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+      }
     }
   </style>
-
-  <script is:inline>
-    // Click-to-load YouTube facade: defer the heavy player until intent.
-    document.querySelectorAll('.video-facade').forEach(function (facade) {
-      facade.addEventListener('click', function (event) {
-        var embed = facade.getAttribute('data-embed');
-        if (!embed) return; // without JS the link just opens YouTube
-        event.preventDefault();
-        var frame = facade.parentNode;
-        var iframe = document.createElement('iframe');
-        iframe.setAttribute('src', embed + '?autoplay=1');
-        iframe.setAttribute('title', facade.getAttribute('data-title') || 'Video');
-        iframe.setAttribute(
-          'allow',
-          'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-        );
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
-        frame.replaceChild(iframe, facade);
-      });
-    });
-  </script>
 
   <script is:inline>
     document.querySelectorAll('article').forEach(function (article) {

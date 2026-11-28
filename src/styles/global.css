@@ -335,8 +335,8 @@ img {
   text-align: left;
 }
 
-/* Sections own every gap; nothing owns a rhythm margin. One seam is exactly one
-   --space-section, never a bottom margin plus a top padding plus a wrapper. */
+/* Each section supplies one half of its seam. With adjacent sections,
+   the shell contributes no extra block padding. */
 .page-shell {
   padding-block: var(--space-section);
 }
@@ -731,10 +731,11 @@ button:hover {
 @media (max-width: 768px) {
   html {
     font-size: 14px;
+    scroll-padding-block-start: var(--masthead-scroll-clearance);
   }
 
-  /* Sticky header on mobile */
-  header {
+  /* Only the masthead follows the reader. */
+  body > header {
     position: sticky;
     top: 0;
     z-index: var(--z-index-sticky);
@@ -749,7 +750,7 @@ button:hover {
   }
 
   /* Fade effect at bottom of header */
-  header::after {
+  body > header::after {
     content: '';
     position: absolute;
     bottom: -20px;
@@ -774,15 +775,18 @@ button:hover {
 
   .logo-link {
     order: 1;
-    flex: 0 0 auto;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .logo-img {
     max-height: 36px;
+    flex: none;
   }
 
   .logo-text {
     font-size: var(--font-size-xs);
+    white-space: normal;
   }
 
   .nav-search {
@@ -825,6 +829,14 @@ button:hover {
     width: 100%;
   }
 
+  html:not(.js) body > header {
+    position: static;
+  }
+
+  html:not(.js) .nav-menu {
+    position: static;
+  }
+
   html.js .nav-menu {
     opacity: 0;
     visibility: hidden;
@@ -832,6 +844,8 @@ button:hover {
   }
 
   html.js .nav-menu.is-open {
+    max-block-size: calc(100dvh - var(--masthead-scroll-clearance));
+    overflow-y: auto;
     opacity: 1;
     visibility: visible;
     transform: translateY(0);

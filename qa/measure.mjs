@@ -80,7 +80,7 @@ await browser.close();
 // lower block's own top is still where its background starts.
 // --space-section steps down at 768px, so the target does too.
 for (const [w, blocks] of rows) {
-  const target = w <= 768 ? 56 : 96;
+  const target = w <= 768 ? 32 : 48;
   console.log(`\n${label} @${w} — seam bisection (target ${target} / ${target})\n`);
   console.log('seam                       above  below  total  bisected');
   for (let i = 0; i < blocks.length - 1; i++) {

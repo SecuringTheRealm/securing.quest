@@ -16,37 +16,59 @@ export interface Props {
 const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
 ---
 
-<div class="video-frame">
-	<a
-		class="video-facade"
-		href={videoUrl}
-		data-embed={embedUrl}
-		data-title={title}
-		target="_blank"
-		rel="noopener noreferrer"
-		data-action="video"
-		aria-label={`Play video: ${title} (opens YouTube)`}
-	>
-		{/* A poster slot beats the raw YouTube still: multi-cam recordings letterbox
-		    and crop faces. Callers pass a branded poster; the still is the fallback. */}
-		<slot name="poster">
-			{
-				thumbnailUrl && (
-					<img
-						src={thumbnailUrl}
-						alt=""
-						loading={eager ? 'eager' : 'lazy'}
-						width="480"
-						height="270"
-					/>
-				)
-			}
-		</slot>
-		<span class="video-facade__play" aria-hidden="true"></span>
+<div class="video-player">
+	<div class="video-frame">
+		<a
+			class="video-facade"
+			href={videoUrl}
+			data-embed={embedUrl}
+			data-title={title}
+			target="_blank"
+			rel="noopener noreferrer"
+			data-action="video"
+			aria-label={`Play video: ${title} (opens YouTube)`}
+		>
+			{/* A poster slot beats the raw YouTube still: multi-cam recordings letterbox
+			    and crop faces. Callers pass a branded poster; the still is the fallback. */}
+			<slot name="poster">
+				{
+					thumbnailUrl && (
+						<img
+							src={thumbnailUrl}
+							alt=""
+							loading={eager ? 'eager' : 'lazy'}
+							width="480"
+							height="270"
+						/>
+					)
+				}
+			</slot>
+			<span class="video-facade__play" aria-hidden="true"></span>
+		</a>
+	</div>
+	<a class="video-player__external" href={videoUrl} target="_blank" rel="noopener noreferrer" data-action="video" hidden>
+		Watch on YouTube <span class="sr-only">(opens in a new tab)</span>
 	</a>
 </div>
 
 <style>
+	.video-player {
+		min-width: 0;
+	}
+
+	.video-player.is-playing .video-frame {
+		/* YouTube requires a player viewport of at least 200 × 200 px. */
+		inline-size: 100%;
+		min-block-size: 200px;
+	}
+
+	.video-player__external:not([hidden]) {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: var(--space-12);
+		padding-inline: var(--space-4);
+	}
+
 	.video-frame {
 		position: relative;
 		aspect-ratio: 16 / 9;
@@ -61,7 +83,8 @@ const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
 	}
 
 	/* Inset ring so it isn't clipped by the frame's overflow: hidden */
-	.video-facade:focus-visible {
+	.video-facade:focus-visible,
+	.video-frame :global(iframe:focus-visible) {
 		outline: 3px solid var(--colour-gold);
 		outline-offset: calc(-1 * var(--space-1));
 	}
@@ -106,28 +129,33 @@ const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
 	}
 </style>
 
-<script is:inline>
-	// Defer the heavy player until intent.
-	document.querySelectorAll('.video-facade').forEach(function (facade) {
-		facade.addEventListener('click', function (event) {
-			var embed = facade.getAttribute('data-embed');
-			if (!embed) return; // without JS the link just opens YouTube
+<script>
+	// Astro includes this script once even when the page renders many facades.
+	document.querySelectorAll<HTMLAnchorElement>('.video-facade').forEach((facade: HTMLAnchorElement) => {
+		facade.addEventListener('click', (event: MouseEvent) => {
+			if (
+				event.defaultPrevented || event.button !== 0 || event.metaKey ||
+				event.ctrlKey || event.shiftKey || event.altKey
+			) return;
+
+			const embed = facade.dataset.embed;
+			const player = facade.closest('.video-player');
+			const externalLink = player?.querySelector<HTMLAnchorElement>('.video-player__external');
+			if (!embed || !player || !externalLink) return;
+
 			event.preventDefault();
-			var frame = facade.parentNode;
-			var iframe = document.createElement('iframe');
-			iframe.setAttribute('src', embed + '?autoplay=1');
-			iframe.setAttribute('title', facade.getAttribute('data-title') || 'Video');
-			iframe.setAttribute(
-				'allow',
-				'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
-			);
-			iframe.setAttribute('allowfullscreen', '');
-			iframe.setAttribute(
-				'sandbox',
-				'allow-scripts allow-same-origin allow-presentation allow-popups'
-			);
+			const iframe = document.createElement('iframe');
+			const video = new URL(embed);
+			video.searchParams.set('autoplay', '1');
+			iframe.src = video.href;
+			iframe.title = facade.dataset.title || 'Video';
+			iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+			iframe.allowFullscreen = true;
+			iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
 			iframe.setAttribute('tabindex', '0');
-			frame.replaceChild(iframe, facade);
+			facade.replaceWith(iframe);
+			player.classList.add('is-playing');
+			externalLink.hidden = false;
 			iframe.focus();
 		});
 	});

@@ -77,7 +77,7 @@
 
   /* Semantic rhythm. These values carry the whole vertical page; any gap that
      is none of these is an ad-hoc value and should be replaced by one. */
-  --space-section: var(--space-24); /* seam between bands (see breakpoint below) */
+  --space-section: var(--space-12); /* one side of a section boundary */
   --space-heading: var(--space-10); /* heading to its subhead or content */
   --space-subhead: var(--space-12); /* subhead line to the section's major content */
   --space-inner: var(--space-6);    /* card and panel padding */
@@ -174,7 +174,8 @@
    already steps, so the page changes gear once. */
 @media (max-width: 768px) {
   :root {
-    --space-section: var(--space-14);
+    --space-section: var(--space-8);
+    --masthead-scroll-clearance: calc(var(--space-16) + var(--space-6));
   }
 }
 

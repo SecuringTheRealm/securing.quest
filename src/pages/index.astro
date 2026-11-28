@@ -153,7 +153,7 @@ const latestContent: FeedItem[] = [
 // Editorial feed: newest item leads, the rest run as compact rows.
 const [heroItem, ...restItems] = latestContent;
 
-const DATE_FORMAT = { year: 'numeric', month: 'long', day: 'numeric' } as const;
+const DATE_FORMAT = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' } as const;
 const DATE_LOCALE = 'en-GB';
 ---
 

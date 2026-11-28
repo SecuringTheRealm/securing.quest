@@ -55,7 +55,13 @@ import { AUTHORS } from '../utils/authors';
       </div>
     </section>
 
-    <ListenHub />
+    <ListenHub>
+      <p slot="featured-episode" class="featured-episode">
+        New to the party? Start with
+        <a href="https://www.youtube.com/watch?v=Z5aPUgfwKQc">Red Teaming AI Agents with Pramin Pradeep</a>.
+        We talk through how to test AI agents before deployment and monitor them in production.
+      </p>
+    </ListenHub>
 
     <section
       style="text-align: center; background: var(--colour-teal-dark); padding: var(--space-8); border-radius: var(--radius-pixel); border: 2px solid var(--colour-gold); margin-top: var(--space-12);"
@@ -73,6 +79,14 @@ import { AUTHORS } from '../utils/authors';
 </Base>
 
 <style>
+  .featured-episode {
+    margin: 0;
+  }
+
+  .featured-episode a {
+    text-decoration: underline;
+  }
+
   .host-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

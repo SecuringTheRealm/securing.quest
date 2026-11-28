@@ -1,17 +1,26 @@
 ---
-import type { Author, AuthorLink } from '../utils/authors';
+import type { Author, AuthorBioPart, AuthorLink } from '../utils/authors';
 
 export interface Props {
 	author: Author;
 }
 
 const { author } = Astro.props;
+const displayName = author.postNominals ? `${author.name}, ${author.postNominals}` : author.name;
 ---
 
 <article class="content-card author-card">
-	<h3 class="author-card__name">{author.name}</h3>
+	<h3 class="author-card__name">{displayName}</h3>
 	<p class="author-card__role">{author.role}</p>
-	<p class="author-card__bio">{author.bio}</p>
+	{
+		author.bio.map((paragraph: readonly AuthorBioPart[]) => (
+			<p class="author-card__bio">
+				{paragraph.map((part: AuthorBioPart) =>
+					typeof part === 'string' ? part : <a href={part.href}>{part.label}</a>
+				)}
+			</p>
+		))
+	}
 	<ul class="author-card__links">
 		{
 			author.links.map((link: AuthorLink) => (
@@ -44,6 +53,10 @@ const { author } = Astro.props;
 	.author-card__bio {
 		color: var(--colour-parchment);
 		line-height: var(--line-height-relaxed);
+	}
+
+	.author-card__bio a {
+		text-decoration: underline;
 	}
 
 	.author-card__links {

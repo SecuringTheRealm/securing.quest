@@ -9,7 +9,7 @@ import VideoFacade from '../components/VideoFacade.astro';
 import Base from '../layouts/Base.astro';
 import { formatIndexDate } from '../utils/dates';
 import { selectQuestLog } from '../utils/quest-log';
-import { getDedupedYouTubeTalks, getTalkKind, type TalkKind } from '../utils/talks';
+import { getTalkCatalogue, getTalkKind, type TalkKind } from '../utils/talks';
 import {
 	fetchYouTubeShorts,
 	fetchYouTubeTalks,
@@ -58,10 +58,10 @@ const blogItems = blogPosts.map(
 );
 
 // Get latest talks (manual + YouTube)
-const manualTalks = await getCollection('talks');
-const youtubeTalks = await fetchYouTubeTalks();
-
-const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
+const { manualTalks, youtubeTalks } = getTalkCatalogue<CollectionEntry<'talks'>>(
+	await getCollection('talks'),
+	await fetchYouTubeTalks()
+);
 
 const allTalks: FeedItem[] = [
 	...manualTalks.map(
@@ -78,7 +78,7 @@ const allTalks: FeedItem[] = [
 			videoUrl: talk.data.videoUrl,
 		})
 	),
-	...dedupedYouTubeTalks.map(
+	...youtubeTalks.map(
 		(talk: YouTubeTalk, index: number): FeedItem => ({
 			title: talk.title,
 			url: `/talks/#youtube-${index}`,

@@ -4,7 +4,7 @@ import { getCollection } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
 import { formatIndexDate } from '../../utils/dates';
-import { getDedupedYouTubeTalks } from '../../utils/talks';
+import { getTalkCatalogue } from '../../utils/talks';
 import { fetchYouTubeShorts, fetchYouTubeTalks, toSummary } from '../../utils/youtube';
 
 interface TaggedContent {
@@ -20,11 +20,11 @@ export const getStaticPaths = (async () => {
 		return data.draft !== true;
 	});
 
-	const manualTalks = await getCollection('talks');
-	const youtubeTalks = await fetchYouTubeTalks();
+	const { manualTalks, youtubeTalks } = getTalkCatalogue<CollectionEntry<'talks'>>(
+		await getCollection('talks'),
+		await fetchYouTubeTalks()
+	);
 	const youtubeShorts = await fetchYouTubeShorts();
-
-	const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
 
 	// Collect all tags and their content
 	const tagMap = new Map<string, TaggedContent[]>();
@@ -63,7 +63,7 @@ export const getStaticPaths = (async () => {
 	}
 
 	// YouTube talks
-	for (const [index, talk] of dedupedYouTubeTalks.entries()) {
+	for (const [index, talk] of youtubeTalks.entries()) {
 		for (const tag of talk.tags) {
 			addToTag(tag, {
 				title: talk.title,

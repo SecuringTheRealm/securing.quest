@@ -7,7 +7,12 @@ import TowerIcon from '../../components/TowerIcon.astro';
 import VideoFacade from '../../components/VideoFacade.astro';
 import Base from '../../layouts/Base.astro';
 import { formatIndexDate } from '../../utils/dates';
-import { getDedupedYouTubeTalks, getTalkKind, type TalkKind } from '../../utils/talks';
+import {
+	getFormerTalkAnchor,
+	getTalkCatalogue,
+	getTalkKind,
+	type TalkKind,
+} from '../../utils/talks';
 import {
 	fetchYouTubeTalks,
 	getYouTubeEmbedUrl,
@@ -32,11 +37,10 @@ interface UnifiedTalk {
 	thumbnailUrl: string | null;
 }
 
-// Get manual talks from content collection
-const manualTalks = await getCollection('talks');
-
-// Get YouTube talks dynamically at build time
-const youtubeTalks = await fetchYouTubeTalks();
+const { manualTalks, youtubeTalks } = getTalkCatalogue<CollectionEntry<'talks'>>(
+	await getCollection('talks'),
+	await fetchYouTubeTalks()
+);
 
 // Convert manual talks to unified format
 const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry<'talks'>) => ({
@@ -55,23 +59,19 @@ const unifiedManualTalks: UnifiedTalk[] = manualTalks.map((talk: CollectionEntry
 	thumbnailUrl: getYouTubeThumbnailUrl(talk.data.videoUrl),
 }));
 
-const dedupedYouTubeTalks = getDedupedYouTubeTalks(manualTalks, youtubeTalks);
-
 // Convert YouTube talks to unified format
-const unifiedYouTubeTalks: UnifiedTalk[] = dedupedYouTubeTalks.map(
-	(talk: YouTubeTalk, index: number) => ({
-		id: `youtube-${index}`,
-		title: talk.title,
-		date: talk.date,
-		event: talk.event,
-		kind: getTalkKind(talk.event, talk.tags),
-		videoUrl: talk.videoUrl,
-		summary: talk.summary,
-		tags: talk.tags,
-		embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
-		thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
-	})
-);
+const unifiedYouTubeTalks: UnifiedTalk[] = youtubeTalks.map((talk: YouTubeTalk, index: number) => ({
+	id: `youtube-${index}`,
+	title: talk.title,
+	date: talk.date,
+	event: talk.event,
+	kind: getTalkKind(talk.event, talk.tags),
+	videoUrl: talk.videoUrl,
+	summary: talk.summary,
+	tags: talk.tags,
+	embedUrl: getYouTubeEmbedUrl(talk.videoUrl),
+	thumbnailUrl: getYouTubeThumbnailUrl(talk.videoUrl),
+}));
 
 // Merge and sort all talks by date (newest first)
 const allTalks = [...unifiedManualTalks, ...unifiedYouTubeTalks].sort(
@@ -132,7 +132,7 @@ const firstVideo = groups
               {group.talks.map((talk: UnifiedTalk) => (
                 <article id={talk.id} class="talk-card content-card">
                   <div class="talk-copy">
-                    <h3>{talk.title}</h3>
+                    <h3 id={getFormerTalkAnchor(talk.videoUrl)}>{talk.title}</h3>
                     <p class="talk-meta">
                       <span>{talk.kind}</span>
                       {talk.kind !== 'Full episode' && <span>{talk.event.replace(/\s*·\s*Workshop$/i, '')}</span>}

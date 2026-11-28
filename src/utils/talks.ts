@@ -8,6 +8,29 @@ export interface ManualTalkLike {
 	};
 }
 
+// The same episode was uploaded again after the move to Riverside. Keep the
+// original video and both incoming catalogue fragments.
+const DEEPFAKES_ORIGINAL = 'JqpfN8vmTxc';
+const DEEPFAKES_REUPLOAD = 'Nf1XwwfJT5M';
+
+export function getFormerTalkAnchor(videoUrl: string | undefined): string | undefined {
+	return getYouTubeVideoId(videoUrl) === DEEPFAKES_ORIGINAL
+		? 'deepfakes-ai-fraud-and-authenticity'
+		: undefined;
+}
+
+export function getTalkCatalogue<T extends ManualTalkLike>(
+	manualTalks: readonly T[],
+	youtubeTalks: readonly YouTubeTalk[]
+): { manualTalks: T[]; youtubeTalks: YouTubeTalk[] } {
+	return {
+		manualTalks: manualTalks.filter(
+			(talk: T) => getYouTubeVideoId(talk.data.videoUrl) !== DEEPFAKES_REUPLOAD
+		),
+		youtubeTalks: getDedupedYouTubeTalks(manualTalks, youtubeTalks),
+	};
+}
+
 export function getDedupedYouTubeTalks(
 	manualTalks: readonly ManualTalkLike[],
 	youtubeTalks: readonly YouTubeTalk[]
@@ -20,7 +43,7 @@ export function getDedupedYouTubeTalks(
 
 	return youtubeTalks.filter((talk: YouTubeTalk) => {
 		const videoId = getYouTubeVideoId(talk.videoUrl);
-		return videoId !== null && !manualVideoIds.has(videoId);
+		return videoId !== null && videoId !== DEEPFAKES_REUPLOAD && !manualVideoIds.has(videoId);
 	});
 }
 

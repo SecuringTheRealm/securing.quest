@@ -22,10 +22,10 @@ export const AUTHORS: Record<'chris' | 'josh', Author> = {
 		role: 'AI transformation and platform engineering · Co-host',
 		bio: [
 			[
-				'Chris builds AI platforms and the teams that run them. At Kyndryl, he created the Forward Deployed Engineering capability so engineers could build software alongside clients and stay responsible for it. His background in law and engineering shapes the questions he brings to Securing the Realm. What is an agent authorised to do? How do you test those limits? Who owns the outcome when it gets something wrong?',
+				'Chris builds AI platforms and the teams that run them. At Kyndryl, he set up Forward Deployed Engineering so engineers could build software alongside clients and stay responsible for it. His background is in law and engineering. On the podcast, he asks who decides what an agent can do and who answers when it gets something wrong.',
 			],
 			[
-				'Chris is a seven-time Microsoft MVP in AI and Developer Technologies and co-leads the Seattle chapter of the Global AI Community. The community named him ',
+				'A seven-time Microsoft MVP in AI and Developer Technologies, Chris co-leads the Global AI Community’s Seattle chapter. The community named him ',
 				{
 					label: 'Organizer of the Week',
 					href: 'https://globalai.community/awards/organizer-of-the-week/2026-W48',
@@ -48,12 +48,15 @@ export const AUTHORS: Record<'chris' | 'josh', Author> = {
 		role: 'Data & AI Security Lead · Avanade',
 		bio: [
 			[
-				"Josh McDonald is a two-time Microsoft MVP in AI, awarded in the Trustworthy AI category, and a data and AI security specialist at Avanade. He leads Avanade's Global Security SME team and its Data Security community of practice, working closely with the Microsoft product group on Microsoft Purview and driving security innovation within the Office of the CTO. On his KnowledgeRatio blog he explores the intersection of AI, work, and security, championing least-privilege and trustworthy AI for the enterprise.",
+				'Josh works on data security and AI governance at Avanade. He leads the company’s global team of security specialists and its data security community of practice and works with the Microsoft Purview product team. On Securing the Realm, he and Chris have looked at what happens when agents share information and how much access each one actually needs.',
+			],
+			[
+				'Microsoft first recognised Josh as an MVP for Trustworthy AI. He now holds MVP awards in Microsoft Foundry and Developer Security. On his KnowledgeRatio blog he writes about AI at work. He also writes about the work people take on alongside their day jobs, a subject he calls “side of desk” culture.',
 			],
 		],
 		links: [
 			{ label: 'Blog', href: 'https://knowledgeratio.github.io/KnowledgeRatio/' },
-			{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/joshmcdonalduk/' },
+			{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/joshmcdonaldmvp/' },
 			{ label: 'GitHub', href: 'https://github.com/KnowledgeRatio' },
 			{ label: 'Microsoft MVP', href: 'https://mvp.microsoft.com/en-us/PublicProfile/466754' },
 		],

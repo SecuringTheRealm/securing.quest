@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import hostStill from '../assets/hosts-purview.jpg';
 import AuthorCard from '../components/AuthorCard.astro';
 import ListenHub from '../components/ListenHub.astro';
 import RealmSigil from '../components/RealmSigil.astro';
@@ -17,10 +19,7 @@ import { AUTHORS } from '../utils/authors';
         <h1>About Our Quest</h1>
       </div>
       <p class="mission-lede">
-        We’re Chris Lloyd-Jones and Josh McDonald. On Securing the Realm, we compare notes on AI
-        with the people building platforms, setting policy and investigating what can go wrong.
-        Our fondness for Dungeons &amp; Dragons turns up in the <a href="https://www.youtube.com/watch?v=CzzeOotjlwU">Christmas special</a>,
-        where we talk about building an AI dungeon master.
+        We compare notes on AI with people building platforms, setting policy and investigating what goes wrong.
       </p>
       <div class="mission-actions">
         <a href="#listen" class="btn-primary">Listen to the Podcast</a>
@@ -29,6 +28,10 @@ import { AUTHORS } from '../utils/authors';
     </section>
 
     <section class="about-party">
+      <figure class="party-photo">
+        <Image src={hostStill} loading="eager" widths={[384, 640, 900]} sizes="(max-width: 768px) 100vw, 640px" alt="The hosts on a split-screen video call" />
+        <figcaption>Josh McDonald (left) and Chris Lloyd-Jones recording <a href="https://www.youtube.com/watch?v=Y8XAdQiR1D0">Purview MCP and Agentic Communication</a>.</figcaption>
+      </figure>
       <h2 class="section-heading">Meet the Party</h2>
       <div class="host-grid">
         <AuthorCard author={AUTHORS.chris} />
@@ -52,6 +55,7 @@ import { AUTHORS } from '../utils/authors';
           <li><strong>Platforms.</strong> In <a href="https://www.youtube.com/watch?v=FKG8-H6RVDU">Foundry Local Launch</a>, we run models on our own hardware to work with sensitive material.</li>
           <li><strong>Cybersecurity.</strong> We look at how deepfakes are used in fraud and how to test what an AI agent will do with the permissions it has.</li>
         </ul>
+        <p>Our fondness for Dungeons &amp; Dragons turns up in the <a href="https://www.youtube.com/watch?v=CzzeOotjlwU">Christmas special</a>, where we talk about building an AI dungeon master.</p>
       </section>
     </div>
 
@@ -60,9 +64,14 @@ import { AUTHORS } from '../utils/authors';
 </Base>
 
 <style>
+  .party-photo a,
+  .about-scope li a {
+    text-decoration: underline;
+  }
+
   .about-page {
     display: grid;
-    gap: var(--space-section);
+    gap: var(--space-10);
   }
 
   .about-mission,
@@ -80,6 +89,14 @@ import { AUTHORS } from '../utils/authors';
   .about-scope {
     max-width: var(--max-width-content);
   }
+
+  .party-photo {
+    max-width: min(100%, 40rem);
+    margin: 0 auto var(--space-6);
+  }
+  .party-photo img { display: block; width: 100%; height: auto; }
+  .party-photo figcaption { margin-top: var(--space-2); font-size: var(--font-size-sm); }
+  .about-scope ul + p { margin-top: var(--space-4); }
 
   .about-heading {
     display: flex;

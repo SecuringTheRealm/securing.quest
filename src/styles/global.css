@@ -20,7 +20,7 @@
 
 html {
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 100%;
   line-height: var(--line-height-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -38,8 +38,6 @@ body {
   /* Use dvh for iOS Safari address bar; fallback to vh */
   min-height: 100vh;
   min-height: 100dvh;
-  /* Prevent horizontal overflow on mobile */
-  overflow-x: hidden;
 }
 
 /* Typography — headings are bold Georgia. Press Start 2P is reserved for the
@@ -55,14 +53,11 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: var(--space-4);
 }
 
-/* Small-caps is the card/feed voice only — prose headings stay plain so the
-   page carries two voices (pixel label, serif heading), not three */
 .content-card h2,
 .content-card h3,
 .feed-item h3,
 .short-title {
-  font-variant-caps: small-caps;
-  letter-spacing: var(--tracking-display-readable);
+  color: var(--colour-parchment);
 }
 
 /* Pixel eyebrow: the one place Press Start 2P belongs outside the wordmark */
@@ -86,8 +81,6 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   gap: var(--space-4);
   font-family: var(--font-display);
-  /* Flat 24px, not a viewport clamp — a clamp made the same heading a different
-     size per breakpoint. html drops to 14px under 768px, so this is 21px there. */
   font-size: var(--font-size-2xl);
   line-height: var(--line-height-display);
   letter-spacing: 0.1em;
@@ -115,7 +108,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Fluid so long headings shrink instead of wrapping brutally on mobile */
 h1 {
-  font-size: clamp(var(--font-size-2xl), 5vw, var(--font-size-5xl));
+  font-size: clamp(var(--font-size-3xl), 5vw, var(--font-size-5xl));
   margin-bottom: var(--space-6);
 }
 
@@ -163,7 +156,7 @@ button:focus-visible {
 }
 
 .nav-link::after {
-  content: attr(data-castle-name);
+  content: attr(data-castle-name) / "";
   position: absolute;
   top: 100%;
   left: 50%;
@@ -270,7 +263,8 @@ img {
 }
 
 /* Inline prose links: distinguished beyond hue (WCAG 1.4.1) */
-.prose a {
+.prose a,
+main p a:where(:not(.btn-primary, .btn-outline)) {
   text-decoration: underline;
   text-decoration-color: var(--colour-gold);
   text-decoration-thickness: 2px;
@@ -403,11 +397,9 @@ img {
   clip-path: none;
 }
 
-/* The site's one date style. Serif small-caps, not pixel: at <=768px the root
-   drops to 14px, which would put Press Start 2P off its own pixel grid. */
+/* Dates use the same serif as the text around them. */
 .meta-date {
   font-family: var(--font-body);
-  font-variant-caps: small-caps;
   font-size: var(--font-size-sm);
   letter-spacing: var(--tracking-display-readable);
   color: var(--colour-stone-light);
@@ -459,15 +451,10 @@ img {
   line-height: 1.4;
 }
 
-/* Search collapses to a 44px icon, so the header no longer reserves a wide column.
-   order:1 puts it after the nav links (every other nav-wrapper child is order:0),
-   far right of the bar. No auto margin: .nav-wrapper's space-between does the
-   spreading, so the links sit between the wordmark and the search icon. */
 .nav-search {
   display: flex;
   justify-content: flex-end;
-  order: 1;
-  margin-left: var(--space-6);
+  margin-inline: auto var(--space-6);
   z-index: var(--z-index-dropdown);
 }
 
@@ -589,7 +576,7 @@ img {
 .content-card {
   padding: var(--space-inner);
   background: var(--colour-teal-dark);
-  border: 2px solid var(--colour-gold);
+  border: 2px solid var(--colour-stone-dark);
   border-radius: var(--radius-pixel);
   box-shadow: var(--card-chrome);
 }
@@ -706,6 +693,8 @@ button:hover {
 /* Tag/source chip: gold fill + ink text (AA), house colour on the border */
 /* Outline, not filled: tags are metadata and must not outrank the title or the CTA */
 .tag-chip {
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
   font-size: var(--font-size-sm);
   padding: var(--space-1) var(--space-3);
   background: transparent;
@@ -730,7 +719,6 @@ button:hover {
 /* Responsive utilities */
 @media (max-width: 768px) {
   html {
-    font-size: 14px;
     scroll-padding-block-start: var(--masthead-scroll-clearance);
   }
 
@@ -767,9 +755,13 @@ button:hover {
     padding-top: var(--space-2);
   }
 
+  body > header > nav.container {
+    padding-inline: var(--space-4);
+  }
+
   .nav-wrapper {
     flex-wrap: wrap;
-    gap: var(--space-2);
+    gap: var(--space-1);
     padding: var(--space-2) 0;
   }
 
@@ -777,6 +769,7 @@ button:hover {
     order: 1;
     flex: 1 1 0;
     min-width: 0;
+    gap: var(--space-2);
   }
 
   .logo-img {
@@ -821,9 +814,7 @@ button:hover {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
-    transition: opacity var(--transition-base),
-                transform var(--transition-base),
-                visibility var(--transition-base);
+    transition: opacity var(--transition-base), transform var(--transition-base);
     box-shadow: var(--shadow-lg);
     order: 4;
     width: 100%;
@@ -874,10 +865,14 @@ button:hover {
     display: none;
   }
 
-  /* 96px each side would push a pixel heading off-centre at 390px */
+  .section-heading {
+    gap: var(--space-2);
+    font-size: var(--font-size-lg);
+  }
+
   .section-heading::before,
   .section-heading::after {
-    flex-basis: var(--space-8);
+    flex: 0 1 var(--space-8);
   }
 
   /* Improve mobile buttons — enforce 44px minimum touch target */

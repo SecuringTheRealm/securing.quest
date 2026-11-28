@@ -3,6 +3,7 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
+import { formatIndexDate } from '../../utils/dates';
 import { getDedupedYouTubeTalks } from '../../utils/talks';
 import { fetchYouTubeShorts, fetchYouTubeTalks, toSummary } from '../../utils/youtube';
 
@@ -107,68 +108,91 @@ const { tag, items } = Astro.props as Props;
 ---
 
 <Base title={`Tag: ${tag}`} description={`Content tagged with "${tag}" on Securing the Realm.`}>
-  <div class="container page-shell">
-    <div style="text-align: center; margin-bottom: var(--space-12);">
-      <p style="font-size: var(--font-size-sm); color: var(--colour-stone-light); margin-bottom: var(--space-3);">
-        Tag
-      </p>
-      <h1 style="margin-bottom: var(--space-4);">{tag}</h1>
-      <p style="font-size: var(--font-size-lg); color: var(--colour-parchment);">
-        {items.length} {items.length === 1 ? 'item' : 'items'} tagged
-      </p>
-    </div>
+  <div class="container page-shell archive-page">
+    <header class="archive-heading">
+      <p>Tag</p>
+      <h1>{tag}</h1>
+      <p>{items.length} {items.length === 1 ? 'item' : 'items'} tagged</p>
+    </header>
 
-    <div style="max-width: var(--max-width-content); margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-4);">
-      {items.map((item: TaggedContent) => (
-        <a
-          href={item.url}
-          style="display: block; padding: var(--space-4); text-decoration: none;"
-          class="feed-item content-card"
-        >
-          <div style="display: flex; align-items: flex-start; gap: var(--space-3);">
-            <div style="flex: 1; min-width: 0;">
-              <div style="display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); flex-wrap: wrap;">
-                <h2 style="margin: 0; font-size: var(--font-size-lg); color: var(--colour-gold);">
-                  {item.title}
-                </h2>
-                <span style="font-size: var(--font-size-xs); color: var(--colour-stone-light); white-space: nowrap;">
-                  {item.source}
-                </span>
-              </div>
-              <p style="margin: 0; color: var(--colour-parchment); font-size: var(--font-size-sm); line-height: var(--line-height-relaxed);">
-                {toSummary(item.description, 150)}
-              </p>
-              <p style="margin-top: var(--space-2); margin-bottom: 0; font-size: var(--font-size-xs); color: var(--colour-stone-light);">
-                {item.date.toLocaleDateString('en-GB', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  timeZone: 'UTC',
-                })}
-              </p>
-            </div>
+    <div class="archive-list">
+      {items.map((item: TaggedContent, index: number) => (
+        <a href={item.url} class="feed-item content-card" aria-labelledby={`result-${index}`}>
+          <h2 id={`result-${index}`}>{item.title}</h2>
+          <div class="archive-meta">
+            <span>{item.source}</span>
+            <time datetime={item.date.toISOString()}>{formatIndexDate(item.date)}</time>
           </div>
+          <p>{toSummary(item.description, 150)}</p>
         </a>
       ))}
     </div>
 
-    <div style="text-align: center; margin-top: var(--space-12);">
-      <a href="/" class="btn-primary">
-        ← Back to Castle Gate
-      </a>
-    </div>
+    <a href="/" class="archive-home">← Back to Castle Gate</a>
   </div>
 </Base>
 
 <style>
-  .feed-item:hover {
-    transform: translate(2px, 2px);
-    box-shadow: var(--card-chrome-pressed);
+  .archive-page {
+    max-width: var(--max-width-content);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .feed-item:hover {
-      transform: none;
-    }
+  .archive-heading {
+    margin-block-end: var(--space-6);
+  }
+
+  .archive-heading h1 {
+    margin-block: var(--space-1) var(--space-2);
+  }
+
+  .archive-heading p,
+  .feed-item h2,
+  .feed-item p {
+    margin: 0;
+  }
+
+  .archive-heading p,
+  .archive-meta {
+    color: var(--colour-stone-light);
+    font-size: var(--font-size-sm);
+  }
+
+  .archive-list,
+  .feed-item {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .feed-item {
+    color: var(--colour-parchment);
+    padding: var(--space-6);
+    border-color: var(--colour-stone-dark);
+    box-shadow: none;
+  }
+
+  .feed-item h2 {
+    color: var(--colour-parchment);
+    font-size: var(--font-size-xl);
+    text-decoration: underline;
+    text-decoration-color: var(--colour-stone-dark);
+    text-underline-offset: 0.16em;
+  }
+
+  .feed-item:hover h2,
+  .feed-item:focus-visible h2 {
+    color: var(--colour-gold-light);
+    text-decoration-color: currentColor;
+  }
+
+  .archive-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .archive-home {
+    display: inline-block;
+    margin-block-start: var(--space-10);
+    text-decoration: underline;
   }
 </style>

@@ -18,8 +18,7 @@ import Base from '../layouts/Base.astro';
       <p>
         The site is a folder of static files served by GitHub Pages. Every request for a page
         goes to GitHub's servers, so GitHub sees your IP address and browser user agent, the
-        same as any web server would. What they do with that is covered by the
-        <a
+        same as any web server would. What they do with that is covered by the <a
           href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
           target="_blank"
           rel="noopener noreferrer"
@@ -39,8 +38,7 @@ import Base from '../layouts/Base.astro';
       <p>
         Plausible sets no cookies and, by their own account, does not identify individual
         visitors or follow them across sites. We can tell you what this site sends. What
-        Plausible stores is covered by their
-        <a
+        Plausible stores is covered by their <a
           href="https://plausible.io/data-policy"
           target="_blank"
           rel="noopener noreferrer"
@@ -52,12 +50,12 @@ import Base from '../layouts/Base.astro';
     <section class="privacy-section">
       <h2>Video</h2>
       <p>
-        Talks and shorts show a still image with a play button over it. The still is served by
-        YouTube's image host, i.ytimg.com, so a request reaches Google when the page loads.
+        Home, Talks and Shorts show video stills from YouTube’s image host, i.ytimg.com.
+        Your browser contacts Google when it loads a still, even before you press play.
       </p>
       <p>
-        The player is different. It only appears after you click, and it loads from
-        youtube-nocookie.com. Until you click there is no YouTube player on the page.
+        On Home and Talks, pressing play loads the player from youtube-nocookie.com.
+        On Shorts, the video opens on YouTube.
       </p>
     </section>
 
@@ -83,8 +81,7 @@ import Base from '../layouts/Base.astro';
     <section class="privacy-section">
       <h2>Search</h2>
       <p>
-        The search box runs in your browser. Its index is already inside the page you
-        downloaded, so what you type stays on your machine.
+        Site search runs in your browser. After a brief pause in typing, we send your search phrase and the total number of matches to Plausible Analytics to understand what readers are looking for. This happens without submitting a search.
       </p>
     </section>
 
@@ -115,15 +112,16 @@ import Base from '../layouts/Base.astro';
       <p>
         Ways to reach us are on the <a href="/contact/">contact page</a>.
       </p>
-      <p class="privacy-updated">Checked against the site's code on 28 July 2026.</p>
+      <p class="privacy-updated">Checked against the site's code on 27 November 2026.</p>
     </section>
   </div>
 </Base>
 
 <style>
   .privacy-section {
-    max-width: var(--max-width-prose);
-    margin-bottom: var(--space-8);
+    max-width: var(--reading-measure);
+    margin: 0 auto var(--space-10);
+    font-size: var(--font-size-lg);
   }
 
   .privacy-section h2 {

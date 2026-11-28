@@ -4,20 +4,23 @@
  * iframe is only created on click, so no third-party player loads on page view.
  * Without JS the anchor is a plain link to YouTube.
  */
+import EpisodePoster from './EpisodePoster.astro';
+
 export interface Props {
 	embedUrl: string;
 	videoUrl: string;
 	title: string;
 	thumbnailUrl?: string | null;
+	realm?: 'tower' | 'moon';
 	/** Set on the first facade in the viewport so the poster is not lazy-loaded. */
 	eager?: boolean;
 }
 
-const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
+const { embedUrl, videoUrl, title, thumbnailUrl, realm = 'tower', eager = false } = Astro.props;
 ---
 
 <div class="video-player">
-	<div class="video-frame">
+	<div class="video-frame" data-realm={realm}>
 		<a
 			class="video-facade"
 			href={videoUrl}
@@ -26,23 +29,13 @@ const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
 			target="_blank"
 			rel="noopener noreferrer"
 			data-action="video"
-			aria-label={`Play video: ${title} (opens YouTube)`}
+			aria-label={`Play ${title}`}
 		>
-			{/* A poster slot beats the raw YouTube still: multi-cam recordings letterbox
-			    and crop faces. Callers pass a branded poster; the still is the fallback. */}
-			<slot name="poster">
-				{
-					thumbnailUrl && (
-						<img
-							src={thumbnailUrl}
-							alt=""
-							loading={eager ? 'eager' : 'lazy'}
-							width="480"
-							height="270"
-						/>
-					)
-				}
-			</slot>
+			<EpisodePoster
+				realm={realm}
+				thumbnailUrl={thumbnailUrl}
+				eager={eager}
+			/>
 			<span class="video-facade__play" aria-hidden="true"></span>
 		</a>
 	</div>
@@ -89,20 +82,20 @@ const { embedUrl, videoUrl, title, thumbnailUrl, eager = false } = Astro.props;
 		outline-offset: calc(-1 * var(--space-1));
 	}
 
-	.video-facade img,
-	.video-facade :global(> *:not(.video-facade__play)) {
-		width: 100%;
+	.video-frame[data-realm='moon'] {
+		aspect-ratio: 4 / 3;
+	}
+
+	.video-facade :global(.poster) {
 		height: 100%;
-		object-fit: cover;
-		display: block;
 	}
 
 	.video-facade__play {
 		position: absolute;
 		right: var(--space-4);
 		bottom: var(--space-4);
-		width: var(--space-16);
-		height: var(--space-16);
+		width: var(--space-12);
+		height: var(--space-12);
 		background: var(--colour-gold);
 		border: 2px solid var(--colour-ink);
 		border-radius: var(--radius-pixel);

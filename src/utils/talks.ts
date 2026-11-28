@@ -23,3 +23,12 @@ export function getDedupedYouTubeTalks(
 		return videoId !== null && !manualVideoIds.has(videoId);
 	});
 }
+
+export type TalkKind = 'Full episode' | 'Conference talk' | 'Workshop';
+
+export function getTalkKind(event: string, tags: readonly string[]): TalkKind {
+	if (/\bworkshop\b/i.test(event) || tags.includes('Workshop')) return 'Workshop';
+	if (event === 'YouTube - Securing the Realm' && !tags.includes('In Person'))
+		return 'Full episode';
+	return 'Conference talk';
+}

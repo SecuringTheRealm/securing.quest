@@ -3,22 +3,21 @@ import type { CollectionEntry } from 'astro:content';
 import { getCollection } from 'astro:content';
 import CastleSceneRetro from '../components/CastleSceneRetro.astro';
 import CredibilityStrip from '../components/CredibilityStrip.astro';
-import EpisodePoster from '../components/EpisodePoster.astro';
-import ForgeIcon from '../components/ForgeIcon.astro';
-import LibraryIcon from '../components/LibraryIcon.astro';
 import ListenHub from '../components/ListenHub.astro';
-import MoonIcon from '../components/MoonIcon.astro';
-import TowerIcon from '../components/TowerIcon.astro';
+import RealmSigil from '../components/RealmSigil.astro';
 import VideoFacade from '../components/VideoFacade.astro';
 import Base from '../layouts/Base.astro';
+import { formatIndexDate } from '../utils/dates';
 import { selectQuestLog } from '../utils/quest-log';
-import { getDedupedYouTubeTalks } from '../utils/talks';
+import { getDedupedYouTubeTalks, getTalkKind, type TalkKind } from '../utils/talks';
 import {
 	fetchYouTubeShorts,
 	fetchYouTubeTalks,
 	getYouTubeEmbedUrl,
 	getYouTubeThumbnailUrl,
 	toSummary,
+	type YouTubeShort,
+	type YouTubeTalk,
 } from '../utils/youtube';
 
 // Unified content item for the Quest Log feed
@@ -26,7 +25,7 @@ interface FeedItem {
 	title: string;
 	url: string;
 	date: Date;
-	source: string;
+	kind: TalkKind | 'Short' | 'Article' | 'Project';
 	description: string;
 	realm: 'tower' | 'library' | 'forge' | 'moon';
 	external: boolean;
@@ -41,25 +40,22 @@ interface FeedItem {
 const blogPosts = await getCollection('blog', ({ data }: CollectionEntry<'blog'>) => {
 	return data.draft !== true;
 });
-const latestBlogPosts: FeedItem[] = blogPosts
-	.sort(
-		(a: CollectionEntry<'blog'>, b: CollectionEntry<'blog'>) =>
-			b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-	)
-	.slice(0, 3)
-	.map(
-		(post: CollectionEntry<'blog'>): FeedItem => ({
-			title: post.data.title,
-			url: `/blog/${post.id}/`,
-			date: post.data.pubDate,
-			source: 'Library · Blog',
-			description: post.data.description,
-			realm: 'library',
-			external: false,
-			thumbnailUrl: null,
-			embedUrl: null,
-		})
-	);
+const blogItems = blogPosts.map(
+	(post: CollectionEntry<'blog'>): FeedItem => ({
+		title: post.data.title,
+		url: `/blog/${post.id}/`,
+		date: post.data.pubDate,
+		kind: 'Article',
+		description:
+			post.id === 'one-key-to-the-whole-dungeon'
+				? 'This issue of Arcane Scrolls explains how a shared token cache can let one person use another’s permissions.'
+				: post.data.description,
+		realm: 'library',
+		external: false,
+		thumbnailUrl: null,
+		embedUrl: null,
+	})
+);
 
 // Get latest talks (manual + YouTube)
 const manualTalks = await getCollection('talks');
@@ -73,7 +69,7 @@ const allTalks: FeedItem[] = [
 			title: talk.data.title,
 			url: `/talks/#${talk.id}`,
 			date: talk.data.date,
-			source: 'Tower · Talks',
+			kind: getTalkKind(talk.data.event, talk.data.tags),
 			description: talk.data.summary,
 			realm: 'tower',
 			external: false,
@@ -83,11 +79,11 @@ const allTalks: FeedItem[] = [
 		})
 	),
 	...dedupedYouTubeTalks.map(
-		(talk, index): FeedItem => ({
+		(talk: YouTubeTalk, index: number): FeedItem => ({
 			title: talk.title,
 			url: `/talks/#youtube-${index}`,
 			date: talk.date,
-			source: 'Tower · Talks',
+			kind: getTalkKind(talk.event, talk.tags),
 			description: talk.summary,
 			realm: 'tower',
 			external: false,
@@ -98,62 +94,47 @@ const allTalks: FeedItem[] = [
 	),
 ];
 
-const latestTalks = allTalks.sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 3);
-
-// Get latest projects
 const projects = await getCollection('projects');
-const latestProjects: FeedItem[] = projects
-	.filter((p: CollectionEntry<'projects'>) => p.data.firstPublic !== undefined)
-	.sort((a: CollectionEntry<'projects'>, b: CollectionEntry<'projects'>) => {
-		if (!a.data.firstPublic && !b.data.firstPublic) return 0;
-		if (!a.data.firstPublic) return 1;
-		if (!b.data.firstPublic) return -1;
-		return b.data.firstPublic.valueOf() - a.data.firstPublic.valueOf();
-	})
-	.slice(0, 2)
-	.map(
-		(project: CollectionEntry<'projects'>): FeedItem => ({
-			title: project.data.name,
-			url: `/forge/#${project.id}`,
-			date: project.data.firstPublic || new Date(),
-			source: 'Forge · Code',
-			description: project.data.description,
-			realm: 'forge',
-			external: false,
-			thumbnailUrl: null,
-			embedUrl: null,
-		})
-	);
+const projectItems = projects.flatMap((project: CollectionEntry<'projects'>): FeedItem[] =>
+	project.data.firstPublic
+		? [
+				{
+					title: project.data.name,
+					url: `/forge/#${project.id}`,
+					date: project.data.firstPublic,
+					kind: 'Project',
+					description: project.data.description,
+					realm: 'forge',
+					external: false,
+					thumbnailUrl: null,
+					embedUrl: null,
+				},
+			]
+		: []
+);
 
-// Get latest shorts
 const youtubeShorts = await fetchYouTubeShorts();
-const latestShorts: FeedItem[] = [...youtubeShorts]
-	.sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf())
-	.slice(0, 3)
-	.map(
-		(short): FeedItem => ({
-			title: short.title,
-			url: short.videoUrl,
-			date: short.pubDate,
-			source: 'Moon · Shorts',
-			description: short.description || 'A short from the Securing the Realm YouTube channel.',
-			realm: 'moon',
-			external: true,
-			thumbnailUrl: short.thumbnailUrl || null,
-			embedUrl: short.embedUrl || null,
-			videoUrl: short.videoUrl,
-		})
-	);
+const shortItems = youtubeShorts.map(
+	(short: YouTubeShort): FeedItem => ({
+		title: short.title,
+		url: short.videoUrl,
+		date: short.pubDate,
+		kind: 'Short',
+		description: toSummary(short.description, 150),
+		realm: 'moon',
+		external: true,
+		thumbnailUrl: short.thumbnailUrl,
+		embedUrl: short.embedUrl,
+		videoUrl: short.videoUrl,
+	})
+);
 
-const [heroItem, ...restItems] = selectQuestLog([
-	...latestBlogPosts,
-	...latestTalks,
-	...latestProjects,
-	...latestShorts,
+const { featured: heroItem, rows: restItems } = selectQuestLog([
+	...blogItems,
+	...allTalks,
+	...projectItems,
+	...shortItems,
 ]);
-
-const DATE_FORMAT = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' } as const;
-const DATE_LOCALE = 'en-GB';
 ---
 
 <Base title="Securing the Realm - Castle Gate">
@@ -161,54 +142,26 @@ const DATE_LOCALE = 'en-GB';
     <section class="section-stack hero">
       <div class="hero__copy">
         <h1 class="hero__title">AI governance, platforms and cybersecurity</h1>
-        <p class="hero-lede">
-          Pull up a chair with Chris Lloyd-Jones and Josh McDonald. How do you test an AI agent
-          before you trust it? What happens when staff start using AI before their company has a
-          policy? On Securing the Realm, we talk through questions like these with the people doing
-          the work.
-        </p>
+        <CredibilityStrip />
         <p class="hero-cta">
           <a href="/#listen" class="btn-primary">Listen to the podcast</a>
         </p>
-        <CredibilityStrip itemCount={allTalks.length + youtubeShorts.length} />
       </div>
 
       {
-        heroItem && (
+        heroItem?.embedUrl && heroItem.videoUrl && (
           <article class="lead-story content-card" data-realm={heroItem.realm}>
             <div class="lead-story__media">
-              {heroItem.embedUrl && heroItem.videoUrl ? (
-                <VideoFacade
-                  embedUrl={heroItem.embedUrl}
-                  videoUrl={heroItem.videoUrl}
-                  title={heroItem.title}
-                  thumbnailUrl={heroItem.thumbnailUrl}
-                  eager
-                >
-                  <EpisodePoster
-                    slot="poster"
-                    variant="card"
-                    title={heroItem.title}
-                    source={heroItem.source}
-                    realm={heroItem.realm}
-                  />
-                </VideoFacade>
-              ) : (
-                <div class="lead-story__crest" aria-hidden="true">
-                  {heroItem.realm === 'library' && <LibraryIcon />}
-                  {heroItem.realm === 'tower' && <TowerIcon />}
-                  {heroItem.realm === 'forge' && <ForgeIcon />}
-                  {heroItem.realm === 'moon' && <MoonIcon />}
-                </div>
-              )}
+              <VideoFacade
+                embedUrl={heroItem.embedUrl}
+                videoUrl={heroItem.videoUrl}
+                title={heroItem.title}
+                thumbnailUrl={heroItem.thumbnailUrl}
+                realm={heroItem.realm === 'moon' ? 'moon' : 'tower'}
+                eager
+              />
             </div>
             <div class="lead-story__body">
-              <p class="quest-eyebrow">
-                <span>{heroItem.source}</span>
-                <time datetime={heroItem.date.toISOString()}>
-                  {heroItem.date.toLocaleDateString(DATE_LOCALE, DATE_FORMAT)}
-                </time>
-              </p>
               <h2 class="lead-story__title">
                 <a
                   href={heroItem.url}
@@ -224,71 +177,67 @@ const DATE_LOCALE = 'en-GB';
                   {heroItem.external && <span class="sr-only"> (opens in new tab)</span>}
                 </a>
               </h2>
+              <p class="quest-eyebrow">
+                <span class="quest-kind"><RealmSigil realm={heroItem.realm} size={20} />{heroItem.kind}</span>
+                <time datetime={heroItem.date.toISOString()}>{formatIndexDate(heroItem.date)}</time>
+              </p>
             </div>
           </article>
         )
       }
     </section>
 
-    <section class="section-stack" aria-labelledby="map-heading">
-      <h2 id="map-heading" class="section-heading">Map of the Realm</h2>
-      <p class="map-subhead">Pick a door.</p>
-      <div style="max-width: var(--max-width-content); margin-inline: auto;">
+    <div class="discovery section-stack">
+      <section class="log-section" aria-labelledby="quest-heading">
+        <div class="log-heading">
+          <h2 id="quest-heading" class="section-heading">Quest Log</h2>
+          <a href="/talks/#full-episodes">Browse full episodes</a>
+        </div>
+        <ul class="quest-log">
+          {
+            restItems.map((item: FeedItem, index: number) => (
+              <li>
+                <a
+                  href={item.url}
+                  class="quest-row"
+                  aria-labelledby={`quest-title-${index}`}
+                  data-realm={item.realm}
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noopener noreferrer' : undefined}
+                >
+                  <div class="quest-row__body">
+                    <h3 id={`quest-title-${index}`} class="quest-row__title">
+                      {item.title}
+                      {item.external && (
+                        <span class="ext-glyph" aria-hidden="true">
+                          ↗
+                        </span>
+                      )}
+                      {item.external && <span class="sr-only"> (opens in new tab)</span>}
+                    </h3>
+                    <p class="quest-eyebrow">
+                      <span class="quest-kind"><RealmSigil realm={item.realm} size={20} />{item.kind}</span>
+                      <time datetime={item.date.toISOString()}>{formatIndexDate(item.date)}</time>
+                    </p>
+                    {item.description && <p class="quest-row__summary">{item.description}</p>}
+                  </div>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="quest-log__more">
+          <a href="/talks/">All talks and episodes →</a>
+          <a href="/shorts/">All shorts →</a>
+        </p>
+      </section>
+
+      <section class="map-section" aria-labelledby="map-heading">
+        <h2 id="map-heading" class="section-heading">Map of the Realm</h2>
+        <p class="map-subhead">Pick a door.</p>
         <CastleSceneRetro />
-      </div>
-    </section>
-
-    <!-- Latest Content Feed -->
-    <section class="section-stack" style="max-width: var(--max-width-content); margin: 0 auto;">
-      <h2 class="section-heading">Quest Log</h2>
-      <ul class="quest-log">
-        {
-          restItems.map((item: FeedItem) => (
-            <li>
-              <a
-                href={item.url}
-                class="quest-row"
-                data-realm={item.realm}
-                target={item.external ? '_blank' : undefined}
-                rel={item.external ? 'noopener noreferrer' : undefined}
-              >
-                <span class="quest-row__thumb" aria-hidden="true">
-                  <span class="quest-row__crest">
-                    {item.realm === 'library' && <LibraryIcon />}
-                    {item.realm === 'tower' && <TowerIcon />}
-                    {item.realm === 'forge' && <ForgeIcon />}
-                    {item.realm === 'moon' && <MoonIcon />}
-                  </span>
-                </span>
-                <div class="quest-row__body">
-                <p class="quest-eyebrow">
-                  <span>{item.source}</span>
-                  <time datetime={item.date.toISOString()}>
-                    {item.date.toLocaleDateString(DATE_LOCALE, DATE_FORMAT)}
-                  </time>
-                </p>
-                <h3 class="quest-row__title">
-                  {item.title}
-                  {item.external && (
-                    <span class="ext-glyph" aria-hidden="true">
-                      ↗
-                    </span>
-                  )}
-                  {item.external && <span class="sr-only"> (opens in new tab)</span>}
-                </h3>
-                <p class="quest-row__summary">{toSummary(item.description, 150)}</p>
-                </div>
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-      <p class="quest-log__more">
-        <a href="/talks/">All talks and episodes →</a>
-        <a href="/shorts/">All shorts →</a>
-      </p>
-    </section>
-
+      </section>
+    </div>
 
     <ListenHub band={true} />
 
@@ -343,6 +292,7 @@ const DATE_LOCALE = 'en-GB';
   }
 
   .hero__title {
+    line-height: var(--line-height-title);
     margin-bottom: var(--space-4);
     text-wrap: balance;
   }
@@ -365,15 +315,8 @@ const DATE_LOCALE = 'en-GB';
     border-bottom: 2px solid var(--realm-accent);
   }
 
-  .lead-story__crest {
-    display: grid;
-    place-items: center;
-    aspect-ratio: 16 / 9;
-    background: var(--colour-teal-dark);
-  }
-
   .lead-story__body {
-    padding: var(--space-4);
+    padding: var(--space-inner);
   }
 
   .content-card .lead-story__title {
@@ -381,15 +324,16 @@ const DATE_LOCALE = 'en-GB';
     font-family: var(--font-display-readable);
     font-weight: var(--font-weight-bold);
     font-variant-caps: normal;
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xl);
     line-height: var(--line-height-snug);
     letter-spacing: 0;
-    color: var(--colour-gold);
+    color: var(--colour-parchment);
   }
 
   .lead-story__title a {
     color: inherit;
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
   }
 
   .lead-story__title a:hover,
@@ -397,26 +341,45 @@ const DATE_LOCALE = 'en-GB';
     text-decoration: underline;
   }
 
-  .lead-story__summary {
-    margin: 0;
-    color: var(--colour-stone-light);
-    font-size: var(--font-size-sm);
-    line-height: var(--line-height-relaxed);
-  }
-
-  .hero-lede {
-    font-size: var(--font-size-lg);
-  }
-
   .hero-cta {
-    margin: var(--space-6) 0 var(--space-4);
+    margin: var(--space-4) 0 0;
   }
 
-  /* Realm cards: the accent is a committed material cue, not a hairline */
+  .discovery {
+    display: grid;
+    gap: var(--space-section);
+    align-items: start;
+  }
+
+  .log-heading {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .log-heading .section-heading,
+  .map-section .section-heading {
+    margin-bottom: 0;
+  }
+
+  .log-heading .section-heading::before,
+  .log-heading .section-heading::after {
+    display: none;
+  }
+
   .map-subhead {
-    margin: 0 0 var(--space-subhead);
+    margin: var(--space-2) 0 var(--space-3);
     text-align: center;
-    color: var(--colour-stone-light);
+    color: var(--colour-parchment);
+  }
+
+  @media (min-width: 72em) {
+    .discovery {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-8);
+    }
   }
 
   .newsletter-band {
@@ -438,125 +401,68 @@ const DATE_LOCALE = 'en-GB';
     color: var(--colour-parchment);
   }
 
-  /* The facade is a flex child; without a width its aspect-ratio resolves to zero */
-  /* Compact rows */
   .quest-log {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    /* Wide enough that the per-row accent bars read as five marks, not one spine */
-    gap: var(--space-4);
+    display: grid;
+    gap: var(--space-3);
   }
 
   .quest-log__more {
-    /* Indented to the row titles' x-position, not the container edge. The inset is
-       the row's own structure — accent bar, row padding, thumb column, grid gap —
-       read from the same tokens the row uses, so it tracks any change to them. */
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2) var(--space-6);
-    margin: var(--space-6) 0 0;
-    padding-left: calc(var(--space-1) + var(--space-4) + var(--space-20) + var(--space-4));
+    margin: var(--space-4) 0 0;
   }
 
   .quest-row {
-    display: grid;
-    grid-template-columns: var(--space-20) minmax(0, 1fr);
-    gap: var(--space-4);
-    align-items: start;
-    padding: var(--space-3) var(--space-4);
-    border-left: var(--space-1) solid var(--realm-accent);
+    display: block;
+    padding: var(--space-inner);
+    border: 1px solid var(--colour-stone-dark);
+    border-radius: var(--radius-pixel);
     text-decoration: none;
     color: inherit;
-    transition: background var(--transition-fast);
-  }
-
-  .quest-row__thumb {
-    display: block;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    background: var(--colour-teal-dark);
-  }
-
-  .quest-row__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .quest-row__crest {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-  .quest-row__crest :global(svg) {
-    width: var(--space-8);
-    height: var(--space-8);
   }
 
   .quest-row:hover,
   .quest-row:focus-visible {
     background: var(--colour-teal-dark);
+    border-color: var(--colour-gold);
   }
 
   .quest-row__title {
-    margin: 0 0 var(--space-1);
-    font-family: var(--font-display-readable);
-    font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-lg);
+    margin: 0 0 var(--space-2);
+    font-size: var(--font-size-xl);
     line-height: var(--line-height-snug);
-    letter-spacing: 0;
-    color: var(--colour-gold);
+    color: var(--colour-parchment);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
   }
 
   .quest-row__summary {
-    margin: 0;
-    color: var(--colour-stone-light);
-    font-size: var(--font-size-sm);
+    margin: var(--space-3) 0 0;
+    color: var(--colour-parchment);
+    font-size: var(--font-size-base);
     line-height: var(--line-height-relaxed);
   }
 
-  /* Shared eyebrow: source on the left, date on the right */
-  .quest-eyebrow {
+  .quest-eyebrow,
+  .quest-kind {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--space-3);
-    margin: 0 0 var(--space-2);
-    font-size: var(--font-size-xs);
-    letter-spacing: var(--tracking-display-readable);
-    text-transform: uppercase;
-    color: var(--realm-accent);
+    align-items: center;
   }
 
-  .quest-eyebrow time {
+  .quest-eyebrow {
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
     color: var(--colour-stone-light);
-    white-space: nowrap;
+    font-size: var(--font-size-sm);
   }
 
-  @media (max-width: 600px) {
-    .quest-row {
-      grid-template-columns: 1fr;
-    }
-
-    .quest-row__thumb {
-      display: none;
-    }
-
-    .quest-eyebrow {
-      flex-wrap: wrap;
-      gap: var(--space-1) var(--space-3);
-    }
-
-    /* Single column, so the title starts right after the bar and row padding */
-    .quest-log__more {
-      padding-left: calc(var(--space-1) + var(--space-4));
-    }
+  .quest-kind {
+    gap: var(--space-2);
   }
 
   .lead-story:hover {

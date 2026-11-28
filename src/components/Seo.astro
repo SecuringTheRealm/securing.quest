@@ -8,12 +8,14 @@ export interface Props {
 	tags?: string[];
 }
 
+const SHOW_DESCRIPTION =
+	'Chris Lloyd-Jones and Josh McDonald host Securing the Realm, a podcast about AI governance, platforms and cybersecurity.';
 const DEFAULT_SOCIAL_IMAGE = '/social-card.png';
 const ORGANISATION_LOGO = '/str-logo.png';
 
 const {
 	title = 'Securing the Realm',
-	description = 'Cybersecurity, Azure innovation, and Microsoft AI converge with the enchanting world of tabletop games.',
+	description = SHOW_DESCRIPTION,
 	image = DEFAULT_SOCIAL_IMAGE,
 	article = false,
 	publishDate,
@@ -26,7 +28,7 @@ const socialImage = new URL(image, Astro.site);
 const logo = new URL(ORGANISATION_LOGO, Astro.site);
 const isDefaultSocialImage = image === DEFAULT_SOCIAL_IMAGE;
 const socialImageAlt = isDefaultSocialImage
-	? 'Securing the Realm wordmark and hammer shield against a dark teal stone backdrop'
+	? 'Securing the Realm. AI governance, platforms and cybersecurity. With Chris Lloyd-Jones and Josh McDonald.'
 	: description;
 
 // JSON-LD for organization
@@ -36,8 +38,7 @@ const organizationSchema = {
 	name: 'Securing the Realm',
 	url: Astro.site,
 	logo,
-	description:
-		'Cybersecurity, Azure innovation, and Microsoft AI education through fantasy storytelling',
+	description: SHOW_DESCRIPTION,
 	sameAs: [
 		'https://www.youtube.com/@SecuringTheRealm',
 		'https://github.com/SecuringTheRealm',

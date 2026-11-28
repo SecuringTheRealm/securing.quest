@@ -19,16 +19,11 @@ const secondary = PODCAST_PLATFORMS.filter((p: PodcastPlatform) => !p.filled);
 >
 	<div class:list={[{ 'band-inner': band }]}>
 		<h2 id="listen-heading" class="section-heading">Listen to the Podcast</h2>
-		<p class="listen-hub__blurb">
-			Chris Lloyd-Jones and Josh McDonald run cloud security and Microsoft AI as a
-			tabletop campaign, where the monsters are misconfigurations and the loot is an
-			architecture that holds.
+		<p class="listen-hub__featured">
+			New to the party? Start with
+			<a href="https://www.youtube.com/watch?v=Z5aPUgfwKQc">Red Teaming AI Agents with Pramin Pradeep</a>.
+			We talk through how to test AI agents before deployment and monitor them in production.
 		</p>
-		{Astro.slots.has('featured-episode') && (
-			<div class="listen-hub__featured">
-				<slot name="featured-episode" />
-			</div>
-		)}
 		<div class="listen-hub__chips">
 			{
 				primary.map((platform: PodcastPlatform) => (
@@ -73,12 +68,8 @@ const secondary = PODCAST_PLATFORMS.filter((p: PodcastPlatform) => !p.filled);
 		margin: 0 auto var(--space-heading);
 	}
 
-	.listen-hub__blurb {
-		max-width: var(--max-width-narrow);
-		margin-inline: auto;
-		/* 40px down to the first cartridge row — the same step the heading takes
-		   down to this blurb, so the band reads as one ladder. */
-		margin-bottom: var(--space-heading);
+	.listen-hub__featured a {
+		text-decoration: underline;
 	}
 
 	/* 16px on both axes, so chips that wrap within a row sit the same distance

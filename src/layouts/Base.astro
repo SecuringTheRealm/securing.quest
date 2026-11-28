@@ -18,7 +18,7 @@ export interface Props {
 
 const {
 	title = 'Securing the Realm',
-	description = 'Cybersecurity, Azure innovation, and Microsoft AI converge with the enchanting world of tabletop games.',
+	description,
 	image,
 	article,
 	publishDate,
@@ -203,7 +203,7 @@ const currentPath = Astro.url.pathname;
             densities={[1, 2, 3]}
             loading="lazy"
           />
-          <p>Cloud security and Microsoft AI, run as a tabletop campaign.</p>
+          <p>A podcast about AI governance, platforms and cybersecurity.</p>
           {/* "4.0" was orphaning onto its own line. Non-breaking spaces alone
               don't fix it — the browser then breaks at the hyphen inside
               "BY-SA" — so the identifier is held by nowrap instead, which
